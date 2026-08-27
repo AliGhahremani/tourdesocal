@@ -274,10 +274,9 @@ const nameLink = (name, inner) => LINKS[name]
   ? '<a class="slink" href="'+LINKS[name]+'" target="_blank" rel="noopener noreferrer">'+inner+'</a>'
   : inner;
 const avImg = (name, cls) => AV[name] ? '<img class="'+cls+'" src="'+AV[name]+'" alt="'+name+'">' : '';
-// Jose's Strava profile shows only "Jose C", so he has no surname here until
-// Ali supplies one. A blank is better than a bare initial.
+// Jose's Strava profile shows only "Jose C"; the full name came from Ali.
 const SURNAMES = {Ali:"Ghahremani", Jake:"Graves", Randee:"Tolentino",
-                  Michael:"Parker", Abe:"Arechiga"};
+                  Michael:"Parker", Abe:"Arechiga", Jose:"Comino"};
 // Weights in lbs. Confirmed by Ali: Ali 181, Michael 175, Randee 187, Abe 160,
 // Jose 161. Jake 190 is an inherited placeholder and has never been checked.
 // Only affects the W/kg display, never the GC, which is pure elapsed time.
