@@ -67,13 +67,17 @@ jobs:
           # ---- credential preflight ----
           # Reveals nothing secret. Client ID is already public in auth.html.
           # Strava answering resource=Application means these are wrong, not the code.
-          # A Strava client ID is a short decimal number. The 40-hex mistake that
-          # burned three authorization codes on the other site was storing an access
-          # token here instead, so shape is checked before anything is spent.
-          if [[ "$CLIENT_ID" =~ ^[0-9]{1,10}$ ]]; then
-            echo "CLIENT_ID is $CLIENT_ID (public value, safe to print)."
+          # Strava allows one API application per account, so this site shares app
+          # 274192 with 2024michael. The 40-hex mistake that burned three
+          # authorization codes there was storing an access token in this field
+          # instead, so the value is checked before anything is spent.
+          if [[ "$CLIENT_ID" == "274192" ]]; then
+            echo "CLIENT_ID is 274192, matching auth.html (public value)."
+          elif [[ "$CLIENT_ID" =~ ^[0-9]{1,10}$ ]]; then
+            echo "::warning::CLIENT_ID is $CLIENT_ID but auth.html sends 274192. These must match."
           else
-            echo "::warning::CLIENT_ID is not a plain number. Length ${#CLIENT_ID}. This is almost certainly the wrong value."
+            echo "::error::CLIENT_ID is not a plain number. Length ${#CLIENT_ID}. This is almost certainly an access token, not the client ID."
+            exit 1
           fi
           echo "CLIENT_SECRET length: ${#CLIENT_SECRET} (a Strava client secret is 40 hex chars)."
           if [[ "$CLIENT_SECRET" =~ ^[0-9a-f]{40}$ ]]; then
