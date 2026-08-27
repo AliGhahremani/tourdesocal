@@ -16,6 +16,7 @@ STATE_PATH = os.path.join(ROOT, "data", "state.json")
 META_PATH = os.path.join(ROOT, "data", "meta.json")
 DATA_JS_PATH = os.path.join(ROOT, "data.js")
 HONOURS_PATH = os.path.join(ROOT, "data", "honours.json")
+LAST_RUN_PATH = os.path.join(ROOT, "data", "last_run.json")
 
 API = "https://www.strava.com/api/v3"
 _meta = json.load(open(META_PATH))
@@ -32,8 +33,17 @@ PWINDOWS = [300, 600, 1200, 1800, 3600]  # power best-effort windows (sec)
 # Strava reports usage on every response via X-ReadRateLimit-Usage / -Limit, each
 # "fifteen_minute,daily". We read those instead of guessing, which is the whole
 # reason this is not just a hardcoded counter.
-DAILY_RESERVE = 60          # leave this many daily reads unused, as headroom
-MAX_WINDOW_WAITS = 4        # at most ~4 x 15 min of waiting in a single run
+# Headroom left on the daily counter. It is deliberately larger than one run
+# needs, because 2024michael shares this allowance and runs at 08:00. A backfill
+# chewing through every last read would starve the other site.
+DAILY_RESERVE = 200
+# Sleeps through a 15 minute window boundary allowed in ONE run, however the need
+# is discovered: pre-emptively, or by eating a 429. Kept low because the backfill
+# is driven by a workflow that fires every 15 minutes and commits each time, so a
+# run that stops early loses nothing and a long run risks losing everything to a
+# job timeout.
+MAX_WINDOW_WAITS = 1
+MAX_RETRIES = 4             # attempts for a single request, not a time budget
 _rl = {"reads": 0, "waits": 0, "win_used": None, "win_limit": None,
        "day_used": None, "day_limit": None}
 
@@ -59,7 +69,7 @@ def _seconds_to_next_window():
 
 def http(url, data=None, token=None):
     is_read = data is None
-    for attempt in range(MAX_WINDOW_WAITS + 1):
+    for attempt in range(MAX_RETRIES + 1):
         # If Strava has told us the daily allowance is effectively gone, stop now.
         # Waiting cannot help: the daily counter only resets at midnight UTC.
         if is_read and _rl["day_limit"] is not None:
@@ -95,8 +105,8 @@ def http(url, data=None, token=None):
                 raise BudgetExhausted(
                     f"daily read limit reached ({_rl['day_used']}/{_rl['day_limit']}); "
                     f"resets at midnight UTC")
-            if attempt >= MAX_WINDOW_WAITS:
-                raise BudgetExhausted("still rate limited after waiting out the windows")
+            if _rl["waits"] >= MAX_WINDOW_WAITS or attempt >= MAX_RETRIES:
+                raise BudgetExhausted("out of window waits for this run")
             _rl["waits"] += 1
             w = _seconds_to_next_window()
             print(f"429. waiting {w}s for the window "
@@ -164,6 +174,23 @@ def main():
         "jose": os.environ.get("STRAVA_REFRESH_JOSE", ""),
     }
 
+    # The backfill fires every 15 minutes. Once the daily allowance is gone,
+    # every firing would otherwise spend one read per rider learning that again,
+    # which is about 500 wasted reads over the rest of a day. The flag carries the
+    # UTC date it was set, so it clears itself when Strava's counter resets.
+    today = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+    try:
+        prev = json.load(open(LAST_RUN_PATH))
+    except Exception:
+        prev = {}
+    if prev.get("daily_spent_on") == today:
+        print(f"daily read allowance already spent today "
+              f"({prev.get('rate_limit_daily')}). resets at midnight UTC. "
+              f"nothing to do.", flush=True)
+        print("::notice::Daily Strava read allowance already spent; skipped.")
+        return
+
+    connected = [k for k, v in tokens.items() if v]
     state = json.load(open(STATE_PATH))
     changed = False
     summary = []
@@ -184,6 +211,11 @@ def main():
         access = tok["access_token"]
         since = max(0, int(ath.get("last_epoch", 0)) - OVERLAP)
         now = int(time.time())
+        # Defined before the try, not inside it. The budget can run out on the
+        # very first call of a rider's pass, and the handler below reads this. If
+        # it only existed further down, that raise turned into an
+        # UnboundLocalError and killed the whole run without saving anything.
+        progress_epoch = None
         try:
 
             # ---- Strava athlete id, fetched once and cached ----
@@ -213,7 +245,6 @@ def main():
             # Oldest first. If we run out of budget partway, last_epoch can advance to
             # the last activity we actually finished and tomorrow picks up from there.
             acts.sort(key=lambda a: a.get("start_date") or "")
-            progress_epoch = None
 
             for a in acts:
                 if a.get("type") not in ("Ride", "VirtualRide", "GravelRide", "MountainBikeRide"):
@@ -494,11 +525,24 @@ def main():
         "tokens_present": sorted(k for k, v in tokens.items() if v),
         "tokens_missing": sorted(k for k, v in tokens.items() if not v),
         "changes": summary,
-        "backfill_complete": all(
-            not r.get("stopped_early") for r in report["riders"].values()
-        ) and not report["notes"],
+        # Complete is a fact about the data, not about whether THIS run did any
+        # work: every connected rider is caught up to roughly now. Defining it as
+        # "nobody stopped early" made a run that did nothing at all look finished,
+        # which is how the 15 minute backfill would have switched itself off with
+        # the job half done.
+        "backfill_complete": bool(connected) and all(
+            int((state["athletes"].get(k) or {}).get("last_epoch") or 0)
+            >= int(time.time()) - 6 * 3600
+            for k in connected if k in state["athletes"]
+        ),
+        # Set only when Strava's own counter says the day is spent, so the next
+        # firing can skip straight out.
+        "daily_spent_on": today if (
+            _rl["day_limit"] is not None
+            and _rl["day_limit"] - _rl["day_used"] <= DAILY_RESERVE
+        ) else None,
     })
-    with open(os.path.join(os.path.dirname(STATE_PATH), "last_run.json"), "w") as f:
+    with open(LAST_RUN_PATH, "w") as f:
         json.dump(report, f, indent=2)
         f.write("\n")
 
