@@ -1,0 +1,158 @@
+name: Exchange Strava code
+
+# Turns a rider's one-time authorization code into a refresh token and stores it
+# as STRAVA_REFRESH_<RIDER>. Nobody has to run a script or see the token.
+#
+# Requires a secret named ACTIONS_PAT: a fine-grained personal access token,
+# scoped to this repository only, with "Secrets: Read and write" permission.
+# GITHUB_TOKEN cannot write secrets, which is why the PAT exists.
+
+on:
+  workflow_dispatch:
+    inputs:
+      rider:
+        description: "Which rider is this code for"
+        required: true
+        type: choice
+        options:
+          - ALI
+          - JAKE
+          - RANDEE
+          - MICHAEL
+          - ABE
+          - JOSE
+      code:
+        description: "Paste the code from tourdesocal.com/auth.html (a full URL also works)"
+        required: true
+        type: string
+
+# GITHUB_TOKEN is not used by this workflow at all, so give it nothing.
+permissions: {}
+
+concurrency:
+  group: exchange-strava-code
+  cancel-in-progress: false
+
+jobs:
+  exchange:
+    runs-on: ubuntu-latest
+    steps:
+      # One step on purpose. The refresh token never crosses a step boundary,
+      # so it is never written to GITHUB_OUTPUT on the runner disk.
+      - name: Exchange the code and store the refresh token
+        env:
+          CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          RAW_INPUT: ${{ inputs.code }}
+          GH_TOKEN: ${{ secrets.ACTIONS_PAT }}
+          RIDER: ${{ inputs.rider }}
+        run: |
+          set -euo pipefail
+
+          # Accept either a bare code or a full redirect URL with ?code=...
+          CODE="$RAW_INPUT"
+          if [[ "$CODE" == *"code="* ]]; then
+            CODE="$(sed -E 's/.*[?&]code=([^&]*).*/\1/' <<< "$CODE")"
+          fi
+          CODE="$(tr -d '[:space:]' <<< "$CODE")"
+
+          if [[ -z "$CODE" ]]; then
+            echo "::error::No code found in the input."
+            exit 1
+          fi
+
+          # Length only, never the value. A Strava code is 40 hex characters.
+          echo "Code received: ${#CODE} characters."
+
+          # ---- credential preflight ----
+          # Reveals nothing secret. Client ID is already public in auth.html.
+          # Strava answering resource=Application means these are wrong, not the code.
+          # A Strava client ID is a short decimal number. The 40-hex mistake that
+          # burned three authorization codes on the other site was storing an access
+          # token here instead, so shape is checked before anything is spent.
+          if [[ "$CLIENT_ID" =~ ^[0-9]{1,10}$ ]]; then
+            echo "CLIENT_ID is $CLIENT_ID (public value, safe to print)."
+          else
+            echo "::warning::CLIENT_ID is not a plain number. Length ${#CLIENT_ID}. This is almost certainly the wrong value."
+          fi
+          echo "CLIENT_SECRET length: ${#CLIENT_SECRET} (a Strava client secret is 40 hex chars)."
+          if [[ "$CLIENT_SECRET" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "CLIENT_SECRET is 40 lowercase hex characters, correct shape."
+          else
+            echo "::warning::CLIENT_SECRET is not 40 lowercase hex characters. Wrong value, or stray whitespace."
+          fi
+
+          # ---- credential probe, runs BEFORE the code is spent ----
+          # Asks Strava to refresh a deliberately bogus refresh token. Good app
+          # credentials get resource=RefreshToken back. Bad ones get
+          # resource=Application. Costs nothing and consumes no authorization code,
+          # so a credential problem can never burn a rider's code again.
+          PROBE="$(curl -sS -X POST https://www.strava.com/oauth/token \
+            -d client_id="$CLIENT_ID" \
+            -d client_secret="$CLIENT_SECRET" \
+            -d grant_type=refresh_token \
+            -d refresh_token=0000000000000000000000000000000000000000 || true)"
+          PROBE_RES="$(echo "$PROBE" | jq -r '.errors[0].resource // "none"' 2>/dev/null || echo "unparseable")"
+
+          if [[ "$PROBE_RES" == "Application" ]]; then
+            echo "::error::App credentials rejected by Strava. STRAVA_CLIENT_ID or STRAVA_CLIENT_SECRET is wrong."
+            echo "::error::Common cause: the value stored is Your Access Token, not Client Secret. Both are 40 hex characters and sit next to each other on strava.com/settings/api."
+            echo "::error::Your authorization code was NOT used and is still valid."
+            exit 1
+          elif [[ "$PROBE_RES" == "RefreshToken" ]]; then
+            echo "Credential check passed. Strava accepted the app credentials."
+          else
+            echo "::warning::Credential probe inconclusive, continuing. Raw: $PROBE"
+          fi
+
+          RESPONSE="$(curl -sS -X POST https://www.strava.com/oauth/token \
+            -d client_id="$CLIENT_ID" \
+            -d client_secret="$CLIENT_SECRET" \
+            -d code="$CODE" \
+            -d grant_type=authorization_code)"
+
+          # If it is not JSON at all, say so instead of letting jq fail silently.
+          if ! echo "$RESPONSE" | jq -e . > /dev/null 2>&1; then
+            echo "::error::Strava did not return JSON. Raw response below."
+            echo "$RESPONSE"
+            exit 1
+          fi
+
+          if echo "$RESPONSE" | jq -e 'has("errors")' > /dev/null; then
+            # Safe to print: a failed exchange contains no token. This is here
+            # because "(: invalid)" with an empty field name told us nothing.
+            echo "Raw Strava error response:"
+            echo "$RESPONSE" | jq -c .
+            FIELD="$(echo "$RESPONSE" | jq -r '.errors[0].field // "unknown"')"
+            RESOURCE="$(echo "$RESPONSE" | jq -r '.errors[0].resource // "unknown"')"
+            REASON="$(echo "$RESPONSE" | jq -r '.errors[0].code // "unknown"')"
+            MSG="$(echo "$RESPONSE" | jq -r '.message // "unknown"')"
+            echo "::error::Strava rejected this. message=$MSG resource=$RESOURCE field=$FIELD code=$REASON"
+            echo "::error::If it says invalid, the code has already expired or been used. Have the rider open tourdesocal.com/auth.html again."
+            echo "::error::If it mentions the athlete limit, click Upgrade at strava.com/settings/api first."
+            exit 1
+          fi
+
+          REFRESH="$(echo "$RESPONSE" | jq -r '.refresh_token')"
+          echo "::add-mask::$REFRESH"
+
+          if [[ -z "$REFRESH" || "$REFRESH" == "null" ]]; then
+            echo "::error::No refresh token came back. Nothing was stored."
+            exit 1
+          fi
+
+          GRANTED="$(echo "$RESPONSE" | jq -r '.athlete.firstname // "unknown"')"
+          echo "Authorized athlete: $GRANTED"
+
+          # Strava does not return the granted scope on this endpoint, so there is
+          # nothing here to verify it against. The only place that information
+          # exists is the redirect back to auth.html, which refuses to hand out a
+          # code when activity:read_all is missing. If a rider somehow gets one
+          # through anyway, the symptom is an Update standings run that finds no
+          # activities for them. Have them reauthorize with every box ticked.
+
+          gh secret set "STRAVA_REFRESH_${RIDER}" \
+            --repo "${{ github.repository }}" \
+            --body "$REFRESH"
+          echo "Stored STRAVA_REFRESH_${RIDER}."
+          echo "Next: run the Update standings workflow to confirm it works."

@@ -1,0 +1,51 @@
+name: Update standings
+
+on:
+  schedule:
+    # Cron is UTC and cannot follow daylight saving, so run one or the other by month.
+    # 8:30 rather than 8:00 on purpose: 2024michael runs at 8:00 and Strava rate
+    # limits are per application, so the two runs must not share a 15-minute window.
+    - cron: "30 15 * 3-10 *"      # 15:30 UTC = 8:30 AM PDT (Mar-Oct)
+    - cron: "30 16 * 1,2,11,12 *" # 16:30 UTC = 8:30 AM PST (Nov-Feb)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pull latest efforts from Strava
+        env:
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_ALI: ${{ secrets.STRAVA_REFRESH_ALI }}
+          STRAVA_REFRESH_JAKE: ${{ secrets.STRAVA_REFRESH_JAKE }}
+          STRAVA_REFRESH_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
+          STRAVA_REFRESH_MICHAEL: ${{ secrets.STRAVA_REFRESH_MICHAEL }}
+          STRAVA_REFRESH_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
+          STRAVA_REFRESH_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+        run: python scripts/update.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/state.json data.js data/last_run.json data/honours.json
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "Auto-update standings $(date -u +%F)"
+            git push
+          fi
