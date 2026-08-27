@@ -1,0 +1,48 @@
+{
+  "updated": "",
+  "athletes": {
+    "ali": {
+      "id": 20156041,
+      "display": "Ali",
+      "last_epoch": 1767484800,
+      "strava_id": 20156041,
+      "season": {}
+    },
+    "jake": {
+      "id": 2977194,
+      "display": "Jake",
+      "last_epoch": 1767484800,
+      "strava_id": 2977194,
+      "season": {}
+    },
+    "randee": {
+      "id": 100854849,
+      "display": "Randee",
+      "last_epoch": 1767484800,
+      "strava_id": 100854849,
+      "season": {}
+    },
+    "michael": {
+      "id": 37685935,
+      "display": "Michael",
+      "last_epoch": 1767484800,
+      "strava_id": 37685935,
+      "season": {}
+    },
+    "abe": {
+      "id": "abe",
+      "display": "Abe",
+      "last_epoch": 1767484800,
+      "strava_id": 17625052,
+      "season": {}
+    },
+    "jose": {
+      "id": "jose",
+      "display": "Jose",
+      "last_epoch": 1767484800,
+      "strava_id": 106484862,
+      "season": {}
+    }
+  },
+  "season_start_epoch": 1767225600
+}
