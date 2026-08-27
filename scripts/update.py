@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Daily updater for 2024michael.com.
+"""Daily updater for tourdesocal.com.
 
 For each athlete with a refresh token, pulls activities since their last check,
-scans segment_efforts for the tracked segments, updates rolling PRs and
-attempt counts in data/state.json, then regenerates data.js for the site.
+scans segment_efforts for the tracked segments, and updates that year's PRs,
+attempt counts, power bests and season mileage in data/state.json, then
+regenerates data.js for the site.
 
-All four riders (Ali, Jake, Randee, Michael) are tracked live. The "2024 Michael"
-branding on the site is a gimmick, not a frozen data set.
+Everything is scoped to the competition year. A time, an attempt, a power best or
+a mile ridden in 2025 counts for 2025 and never leaks into 2026.
 """
 import json, os, sys, time, datetime, urllib.request, urllib.parse, urllib.error
 
