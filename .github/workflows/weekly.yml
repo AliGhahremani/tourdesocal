@@ -17,10 +17,20 @@ name: Weekly digest
 
 on:
   schedule:
-    # Monday, 45 minutes after the daily update, so it diffs fresh data.
-    - cron: "15 16 * 3-10 1"      # 16:15 UTC = 9:15 AM PDT Monday (Mar-Oct)
-    - cron: "15 17 * 1,2,11,12 1" # 17:15 UTC = 9:15 AM PST Monday (Nov-Feb)
-  workflow_dispatch: {}
+    # Sunday 8:30 PM local, which is Monday morning in UTC.
+    - cron: "30 3 * 3-10 1"       # 03:30 UTC Mon = 8:30 PM PDT Sun (Mar-Oct)
+    - cron: "30 4 * 1,2,11,12 1"  # 04:30 UTC Mon = 8:30 PM PST Sun (Nov-Feb)
+  workflow_dispatch:
+    inputs:
+      test_to:
+        description: "Send only to this address instead of the usual list. Leave blank for the real send."
+        required: false
+        type: string
+      skip_update:
+        description: "Skip the Strava catch-up (use when only testing the email)"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -38,6 +48,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Catch up on today's rides first
+        if: inputs.skip_update != true
+        continue-on-error: true
+        env:
+          STRAVA_CLIENT_ID: "274192"
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_ALI: ${{ secrets.STRAVA_REFRESH_ALI }}
+          STRAVA_REFRESH_JAKE: ${{ secrets.STRAVA_REFRESH_JAKE }}
+          STRAVA_REFRESH_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
+          STRAVA_REFRESH_MICHAEL: ${{ secrets.STRAVA_REFRESH_MICHAEL }}
+          STRAVA_REFRESH_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
+          STRAVA_REFRESH_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+        run: |
+          # Sunday rides land after the morning run, and Sunday is when people
+          # actually ride. Without this the digest reports a week that ends
+          # Saturday. continue-on-error so a rate limit cannot kill the digest.
+          python scripts/update.py
 
       - name: Build the digest
         id: build
@@ -70,16 +98,20 @@ jobs:
           from: Tour de SoCal
           # MAIL_TO is optional. With it unset the digest goes to the sender only,
           # so adding riders later is one secret and no code change.
-          to: ${{ secrets.MAIL_TO || secrets.MAIL_USERNAME }}
-          subject: "Tour de SoCal, week ending ${{ steps.build.outputs.week }}"
+          # A manual run can override the recipient list, so the formatting can
+          # be checked without mailing everybody.
+          to: ${{ inputs.test_to != '' && inputs.test_to || (secrets.MAIL_TO || secrets.MAIL_USERNAME) }}
+          subject: "${{ inputs.test_to != '' && '[TEST] ' || '' }}Tour de SoCal, week ending ${{ steps.build.outputs.week }}"
           html_body: file:///tmp/weekly_email.html
           convert_markdown: false
 
       - name: Commit the digest and next week's snapshot
+        if: inputs.test_to == ''
         run: |
           git config user.name "tourdesocal-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add weekly.html data/weekly_snapshot.json data/weekly_latest.json
+          git add weekly.html data/weekly_snapshot.json data/weekly_latest.json \
+                  data/state.json data.js data/last_run.json data/honours.json
           if git diff --cached --quiet; then
             echo "No digest changes."
           else
