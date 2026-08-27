@@ -1,0 +1,88 @@
+name: Weekly digest
+
+# Emails the week's changes and archives them at tourdesocal.com/weekly.html.
+#
+# Reads nothing from Strava, so it costs nothing against the shared 2,000/day
+# rate limit. It only diffs data/state.json against last week's snapshot, so it
+# must run AFTER the daily update has landed.
+#
+# Requires two secrets:
+#   MAIL_USERNAME  the Gmail address the mail is sent from and to
+#   MAIL_PASSWORD  a Gmail App Password, NOT the account password.
+#                  Needs 2-Step Verification on: myaccount.google.com/apppasswords
+#
+# Without them the digest is still computed and committed; only the send is
+# skipped, with a warning. That way the archive keeps working if the app
+# password ever expires.
+
+on:
+  schedule:
+    # Monday, 45 minutes after the daily update, so it diffs fresh data.
+    - cron: "15 16 * 3-10 1"      # 16:15 UTC = 9:15 AM PDT Monday (Mar-Oct)
+    - cron: "15 17 * 1,2,11,12 1" # 17:15 UTC = 9:15 AM PST Monday (Nov-Feb)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the digest
+        id: build
+        run: |
+          python scripts/weekly.py
+          echo "week=$(date -u +'%b %d, %Y' | sed 's/ 0/ /')" >> "$GITHUB_OUTPUT"
+
+      - name: Check mail credentials
+        id: mail
+        env:
+          U: ${{ secrets.MAIL_USERNAME }}
+          P: ${{ secrets.MAIL_PASSWORD }}
+        run: |
+          if [[ -n "$U" && -n "$P" ]]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::MAIL_USERNAME or MAIL_PASSWORD is not set, so no email was sent. The digest was still built and committed."
+          fi
+
+      - name: Email the digest
+        if: steps.mail.outputs.ready == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Tour de SoCal
+          # MAIL_TO is optional. With it unset the digest goes to the sender only,
+          # so adding riders later is one secret and no code change.
+          to: ${{ secrets.MAIL_TO || secrets.MAIL_USERNAME }}
+          subject: "Tour de SoCal, week ending ${{ steps.build.outputs.week }}"
+          html_body: file:///tmp/weekly_email.html
+          convert_markdown: false
+
+      - name: Commit the digest and next week's snapshot
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add weekly.html data/weekly_snapshot.json data/weekly_latest.json
+          if git diff --cached --quiet; then
+            echo "No digest changes."
+          else
+            git commit -m "Weekly digest $(date -u +%F)"
+            git push
+          fi
