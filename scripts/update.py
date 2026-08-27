@@ -317,6 +317,15 @@ def main():
                             season["dist_m"] += float(a.get("distance") or 0)
                             season["elev_m"] += float(a.get("total_elevation_gain") or 0)
                             season["rides"] += 1
+                            # Time on the bike, split indoor vs outdoor. Zwift and
+                            # other trainers arrive as VirtualRide. They count for
+                            # everything, but the weekly digest likes to know who
+                            # has been riding a screen all week.
+                            mt = int(a.get("moving_time") or 0)
+                            season["time_s"] = int(season.get("time_s") or 0) + mt
+                            if a.get("type") == "VirtualRide" or a.get("trainer"):
+                                season["vtime_s"] = int(season.get("vtime_s") or 0) + mt
+                                season["vrides"] = int(season.get("vrides") or 0) + 1
                             changed = True
                 except Exception as e:
                     print(f"[{key}] season totals failed for {a.get('id')}: {e}",

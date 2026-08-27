@@ -14,7 +14,10 @@ It runs after the daily update, on whatever state that update left behind.
 The first run has no snapshot to compare against, so it writes a baseline and
 says so rather than inventing a week of progress.
 """
-import json, os, datetime
+import json, os, sys, datetime
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from roast import blurb
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "data", "state.json")
@@ -60,6 +63,9 @@ def build_current(state, meta, year):
             "dist_m": float(y.get("dist_m") or 0),
             "elev_m": float(y.get("elev_m") or 0),
             "rides": int(y.get("rides") or 0),
+            "time_s": int(y.get("time_s") or 0),
+            "vtime_s": int(y.get("vtime_s") or 0),
+            "vrides": int(y.get("vrides") or 0),
         }
 
     # GC: total elapsed time, a missed segment costs last place plus 10 percent.
@@ -162,7 +168,7 @@ def diff(cur, prev):
     return d
 
 
-def render(cur, d, week_end):
+def render(cur, d, week_end, note):
     """One HTML body used for both the email and the archive page."""
     C = {"yellow": "#d9a400", "polka": "#c8102e", "green": "#0a7d3c"}
     JN = {"yellow": "Yellow", "polka": "Polka Dot", "green": "Green"}
@@ -176,11 +182,9 @@ def render(cur, d, week_end):
     A(f'<div style="color:#6d6d78;font-size:13px;margin-bottom:22px">'
       f'Week ending {week_end}</div>')
 
-    if d["baseline"]:
-        A('<p style="background:#fff6e5;border:1px solid #f0d9a8;padding:12px 14px;'
-          'border-radius:8px;font-size:14px">First digest, so there is nothing to '
-          'compare against yet. These are the season totals so far. Next week '
-          'reports the change.</p>')
+    # The blurb. Everything in it is earned by something in the numbers below.
+    A('<div style="background:#fff6e5;border:1px solid #f0d9a8;padding:14px 16px;'
+      'border-radius:10px;font-size:14.5px;line-height:1.6">' + note + '</div>')
 
     # jerseys
     A('<h2 style="font-size:15px;margin:22px 0 8px">Jerseys</h2><table '
@@ -294,12 +298,16 @@ def main():
             print(f"snapshot unreadable, treating as baseline: {e}")
 
     d = diff(cur, prev)
-    week_end = datetime.date.today().strftime("%b %d, %Y").replace(" 0", " ")
-    body = render(cur, d, week_end)
+    today = datetime.date.today()
+    week_end = today.strftime("%b %d, %Y").replace(" 0", " ")
+    week_no = today.isocalendar()[1] + today.isocalendar()[0] * 100
+    note = blurb(cur, d, prev, week_no)
+    print("blurb:", note)
+    body = render(cur, d, week_end, note)
 
     open(EMAIL_HTML, "w").write(body)
-    json.dump({"generated": week_end, "baseline": d["baseline"], "diff": d},
-              open(OUT_JSON, "w"), indent=2)
+    json.dump({"generated": week_end, "baseline": d["baseline"],
+               "blurb": note, "diff": d}, open(OUT_JSON, "w"), indent=2)
 
     page = (
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
