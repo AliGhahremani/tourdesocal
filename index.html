@@ -166,6 +166,12 @@
   .segmap{height:230px;border-radius:8px}
   .routebox .lg{display:flex;gap:14px;font-size:11px;color:var(--muted);margin-top:8px;font-family:'JetBrains Mono',monospace;padding:0 4px 2px}
   .routebox .lg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+  .routebox .gl{margin-top:4px;padding:0 4px 2px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+  .routebox .gl .glab{display:block;font-size:9px;letter-spacing:.09em;margin-bottom:3px}
+  .routebox .gl .gbar{display:flex;height:7px;border-radius:3px;overflow:hidden}
+  .routebox .gl .gbar b{flex:1}
+  .routebox .gl .gtick{display:flex;margin-top:2px}
+  .routebox .gl .gtick i{flex:1;text-align:center;font-style:normal;font-size:9px}
   .tbl{width:100%;border-collapse:collapse;font-size:14.5px}
   .tbl th{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 7px;border-bottom:1px solid var(--line);font-weight:400;white-space:nowrap}
   .tbl td{padding:10px 7px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -499,7 +505,44 @@ const powerRows = {};
 const TILES = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
 const TILES_LABELS = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
 const TILE_OPTS = {attribution:'Tiles &copy; Esri', maxZoom: 18, maxNativeZoom: 16};
-function routeMap(divId, pl, interactive){
+// Colour by how steep the road is, the way a rider reads a profile: green is a
+// drag, red is a wall. Bands rather than a smooth ramp, because a smooth ramp
+// says a piece of road is "sort of orange" where a band says 9 percent. Each
+// number below is the TOP of its band, so a colour covers up to that grade.
+const GRADE_BANDS = [
+  [0,        "#7ba7c7"],
+  [3,        "#4fa564"],
+  [6,        "#d6b13a"],
+  [9,        "#e07a2a"],
+  [12,       "#cf3b2b"],
+  [15,       "#96201c"],
+  [Infinity, "#5d1220"]
+];
+function gradeColor(g){
+  for (let i=0;i<GRADE_BANDS.length;i++) if (g < GRADE_BANDS[i][0]) return GRADE_BANDS[i][1];
+  return GRADE_BANDS[GRADE_BANDS.length-1][1];
+}
+// Neighbouring points in the same band become one line, so a 70 point route is
+// about a dozen layers instead of seventy. Without grades it stays one orange
+// line, which is what every segment looked like before.
+function drawRoute(map, pl, gr, weight){
+  const parts = [];
+  if (!gr || gr.length !== pl.length) {
+    parts.push(L.polyline(pl, {color:"#fc5200", weight:weight, opacity:.95}));
+  } else {
+    let i = 0;
+    while (i < pl.length - 1) {
+      const c = gradeColor(gr[i]);
+      let j = i + 1;
+      while (j < pl.length - 1 && gradeColor(gr[j]) === c) j++;
+      parts.push(L.polyline(pl.slice(i, j+1),
+        {color:c, weight:weight, opacity:.95, lineCap:"round", lineJoin:"round"}));
+      i = j;
+    }
+  }
+  return L.featureGroup(parts).addTo(map);
+}
+function routeMap(divId, pl, interactive, gr){
   // Leaflet comes from a CDN. If it fails to load, the map is the only thing
   // that should be lost, not the segment tables underneath it.
   if (typeof L === "undefined") {
@@ -509,9 +552,13 @@ function routeMap(divId, pl, interactive){
   }
   const map = L.map(divId, {zoomControl:interactive, dragging:interactive, scrollWheelZoom:false,
     doubleClickZoom:interactive, boxZoom:false, keyboard:false, touchZoom:interactive, attributionControl:false});
+  // A view has to exist before any line is added. fitBounds below replaces it
+  // immediately, but without this the renderer has no bounds yet and the first
+  // line thrown at it dies in Leaflet with an unhelpful error.
+  map.setView(pl[0], 13);
   L.tileLayer(TILES, TILE_OPTS).addTo(map);
   L.tileLayer(TILES_LABELS, {maxZoom:18, maxNativeZoom:16}).addTo(map);
-  const line = L.polyline(pl, {color:"#fc5200", weight:4, opacity:.95}).addTo(map);
+  const line = drawRoute(map, pl, gr, 5);
   L.circleMarker(pl[0], {radius:6, color:"#ffffff", weight:2, fillColor:"#12813f", fillOpacity:1}).addTo(map);
   L.circleMarker(pl[pl.length-1], {radius:6, color:"#ffffff", weight:2, fillColor:"#fc5200", fillOpacity:1}).addTo(map);
   map.fitBounds(line.getBounds(), {padding:[24,24]});
@@ -555,11 +602,11 @@ function routeMap(divId, pl, interactive){
      '</div>'+
      '<div class="seg-body">'+
        '<div class="routebox"><div class="segmap" id="map'+sg.id+'"></div>'+
-       '<div class="lg"><span><i style="background:#12813f"></i>START</span><span><i style="background:#fc5200"></i>FINISH</span><span style="margin-left:auto">GPS · Strava</span></div></div>'+
+       '<div class="lg"><span><i style="background:#12813f"></i>START</span><span><i style="background:#fc5200"></i>FINISH</span><span style="margin-left:auto">GPS · Strava</span></div><div class="gl"><span class="glab">GRADE %</span><span class="gbar"><b style="background:#7ba7c7"></b><b style="background:#4fa564"></b><b style="background:#d6b13a"></b><b style="background:#e07a2a"></b><b style="background:#cf3b2b"></b><b style="background:#96201c"></b><b style="background:#5d1220"></b></span><span class="gtick"><i>DOWN</i><i>0</i><i>3</i><i>6</i><i>9</i><i>12</i><i>15%+</i></span></div></div>'+
        '<div><div class="tblwrap"><table class="tbl"><thead><tr><th>Rider</th><th>Time</th><th>Avg Speed</th><th>Power</th><th>Date</th><th>Attempts</th><th>Gap to 1st</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
        '</div></div>';
     list.appendChild(el);
-    try { routeMap('map'+sg.id, sg.pl, false); }
+    try { routeMap('map'+sg.id, sg.pl, false, sg.gr); }
     catch (e) { console.warn('segment map failed', sg.id, e); }
   });
 })();
@@ -577,9 +624,10 @@ function routeMap(divId, pl, interactive){
   map.attributionControl.setPrefix('');
   L.tileLayer(TILES, TILE_OPTS).addTo(map);
   L.tileLayer(TILES_LABELS, {maxZoom:18, maxNativeZoom:16}).addTo(map);
+  map.setView(D.segs[0].pl[0], 10);   // see the note in routeMap
   let bounds = null;
   D.segs.forEach(sg=>{
-    const line = L.polyline(sg.pl, {color:"#fc5200", weight:4, opacity:.9}).addTo(map);
+    const line = drawRoute(map, sg.pl, sg.gr, 4);
     line.bindTooltip(sg.num+' · '+sg.name, {sticky:true});
     line.on('click', ()=>{ document.getElementById('map'+sg.id).closest('.seg').scrollIntoView({behavior:'smooth'}); });
     L.circleMarker(sg.pl[0], {radius:5, color:"#ffffff", weight:2, fillColor:"#12813f", fillOpacity:1}).addTo(map);

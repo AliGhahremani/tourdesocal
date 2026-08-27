@@ -382,6 +382,12 @@ def main():
         seg_out = dict(seg)
         seg_out["riders"] = riders
         seg_out["pl"] = meta["polylines"][sid_s]
+        # Grades are optional. A segment without them draws in one flat colour
+        # rather than not drawing at all, so meta.json can be added to a segment
+        # at a time without breaking the map.
+        gr = (meta.get("grades") or {}).get(sid_s)
+        if gr and len(gr) == len(seg_out["pl"]):
+            seg_out["gr"] = gr
         segs_out.append(seg_out)
 
     power_out = {}
