@@ -132,6 +132,15 @@ def build_hooks(cur, d, prev):
         if not r["bests"] and not d["baseline"]:
             hooks.append(("no_segments_ever", 40, {"who": name}))
 
+    # ---- rode, but nothing worth writing home about ----
+    # Every rider has to get a mention, so this is the fallback material.
+    for w in d["week"]:
+        if w["rides"] > 0:
+            hooks.append(("unremarkable", 5, {
+                "who": w["name"], "mi": f"{w['miles']:,.0f}",
+                "ft": f"{w['feet']:,.0f}", "n": w["rides"],
+                "s": "" if w["rides"] == 1 else "s"}))
+
     # ---- power ----
     for x in d["power"]:
         if x["was"] and x["watts"] - x["was"] >= 15:
@@ -228,6 +237,17 @@ LINES = {
         "{who} still has not put a time on a single tracked segment this season. The segments are listed on the site. With maps.",
         "Season to date, {who} has attempted zero of the tracked segments. Genuinely impressive avoidance.",
     ],
+    "unremarkable": [
+        "{who} quietly did {mi} miles over {n} ride{s}. No drama, no headlines, no complaints.",
+        "{who} put in {mi} miles and {ft} feet without troubling the standings either way.",
+        "A steady, forgettable week from {who}: {mi} miles, {n} ride{s}, nothing to see.",
+        "{who} rode {mi} miles and kept out of trouble. We will allow it.",
+    ],
+    "silent": [
+        "Not a single data point from {who} this week. Presumed alive.",
+        "{who} contributed nothing measurable. Not even a bad ride.",
+        "{who} remains a theoretical participant.",
+    ],
     "power": [
         "{who} put out {w} W for {win}. Someone has been eating their vegetables.",
         "New {win} best from {who} at {w} W. Suspiciously good.",
@@ -289,46 +309,58 @@ def _join(names):
 
 
 def blurb(cur, d, prev, week_no):
-    """A few lines about the week. Varies by week, never invents anything."""
+    """A paragraph about the week. Every rider gets a mention, and nothing is
+    said that the numbers do not support."""
     rng = random.Random(week_no * 7919 + len(cur["riders"]))
 
     if d["baseline"]:
         return rng.choice(BASELINE)
 
+    everyone = list(cur["riders"].keys())
     hooks = build_hooks(cur, d, prev)
     if not hooks:
-        return rng.choice(QUIET)
+        return rng.choice(QUIET) + " " + _join(everyone) + ", all of you."
 
-    # Group hooks of the same kind so one dull fact does not fill the whole blurb.
     by_kind = {}
     for kind, score, ctx in hooks:
         by_kind.setdefault(kind, []).append((score, ctx))
 
-    items = []  # (score, kind, ctx, grouped?)
+    items = []  # (score, kind, ctx, grouped, covers)
     for kind, entries in by_kind.items():
         if len(entries) >= 3 and kind in GROUPED:
-            names = _join([e[1]["who"] for e in entries])
-            items.append((entries[0][0] + 5, kind, {"names": names,
-                                                    "n": len(entries)}, True))
+            names = [e[1]["who"] for e in entries]
+            items.append((entries[0][0] + 5, kind,
+                          {"names": _join(names), "n": len(names)}, True, set(names)))
         else:
             for score, ctx in entries:
-                items.append((score, kind, ctx, False))
+                who = ctx.get("who")
+                items.append((score, kind, ctx, False, {who} if who else set()))
     items.sort(key=lambda x: -x[0])
 
-    # Best material first, one line per person and one per kind, up to four.
-    chosen, used_people, used_kinds = [], set(), set()
-    for score, kind, ctx, grouped in items:
-        if kind in used_kinds:
+    chosen, used_kinds, covered = [], set(), set()
+
+    # Pass one: the best story per rider, juiciest first, one line per person.
+    for score, kind, ctx, grouped, covers in items:
+        if kind in used_kinds and not grouped:
             continue
-        who = ctx.get("who")
-        if who and who in used_people:
+        if covers and covers <= covered:
             continue
         chosen.append((kind, ctx, grouped))
         used_kinds.add(kind)
-        if who:
-            used_people.add(who)
-        if len(chosen) >= 4:
-            break
+        covered |= covers
+
+    # Pass two: anyone still unmentioned gets their best remaining line, even a
+    # dull one. Better a boring sentence than being left out of the group chat.
+    for name in everyone:
+        if name in covered:
+            continue
+        pick = next((it for it in items if name in it[4]), None)
+        if pick:
+            chosen.append((pick[1], pick[2], pick[3]))
+            covered.add(name)
+        else:
+            chosen.append(("silent", {"who": name}, False))
+            covered.add(name)
 
     out = [rng.choice(OPENERS)]
     for kind, ctx, grouped in chosen:
