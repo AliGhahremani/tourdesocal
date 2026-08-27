@@ -1,0 +1,64 @@
+name: Rebuild segment maps
+
+# Redraws every segment's map line in data/meta.json and gives each point a
+# grade, so the maps on the site can be coloured by how steep the road is.
+#
+# Run this by hand after adding segments. It is not on a schedule: the shape of
+# a road does not change, and the daily read budget is shared with 2024michael.
+# One read per segment, so 22 reads for the whole set.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings   # same group as the daily run, so the two never race
+  cancel-in-progress: false
+
+jobs:
+  segmaps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pull segment elevation profiles
+        env:
+          STRAVA_CLIENT_ID: "274192"
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_ALI: ${{ secrets.STRAVA_REFRESH_ALI }}
+          STRAVA_REFRESH_JAKE: ${{ secrets.STRAVA_REFRESH_JAKE }}
+          STRAVA_REFRESH_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
+          STRAVA_REFRESH_MICHAEL: ${{ secrets.STRAVA_REFRESH_MICHAEL }}
+          STRAVA_REFRESH_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
+          STRAVA_REFRESH_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+        run: python scripts/segmaps.py
+
+      - name: Rebuild data.js so the site picks the new lines up
+        env:
+          STRAVA_CLIENT_ID: "274192"
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+        run: |
+          # No refresh tokens here on purpose. With none set update.py skips
+          # every rider and only regenerates data.js from what is already in
+          # data/state.json, which costs nothing and cannot lose anyone's data.
+          python scripts/update.py
+
+      - name: Commit
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/meta.json data.js
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Rebuild segment map lines with grades"
+            # The daily run may have pushed while this one was fetching.
+            git pull --rebase --autostash origin main
+            git push
+          fi
