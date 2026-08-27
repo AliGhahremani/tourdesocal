@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connect Strava · Tour de SoCal</title>
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --orange: #fc5200;
+    --orange-dark: #d94600;
+    --ink: #12141a;
+    --grey: #6b7280;
+    --line: #e4e6ea;
+    --paper: #ffffff;
+    --wash: #f7f7f8;
+    --ok: #1a7f4b;
+    --warn: #b45309;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--wash);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 28px 24px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin: 0 0 10px;
+  }
+
+  h1 {
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin: 0 0 14px;
+  }
+
+  p { margin: 0 0 14px; font-size: 16px; }
+  p.small { font-size: 14px; color: var(--grey); }
+  p:last-child { margin-bottom: 0; }
+
+  ol { margin: 0 0 20px; padding-left: 20px; font-size: 16px; }
+  li { margin-bottom: 8px; }
+  li:last-child { margin-bottom: 0; }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 15px 20px;
+    background: var(--orange);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--orange-dark); }
+  .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  .btn-quiet {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    font-size: 15px;
+    padding: 12px 20px;
+    margin-top: 10px;
+  }
+  .btn-quiet:hover { background: var(--wash); }
+
+  .checkbox-note {
+    background: var(--wash);
+    border-left: 3px solid var(--orange);
+    padding: 12px 14px;
+    margin: 0 0 20px;
+    font-size: 14px;
+  }
+
+  .code-slab {
+    background: var(--ink);
+    border-radius: 10px;
+    padding: 20px 16px;
+    margin: 0 0 12px;
+    text-align: center;
+  }
+  .code-slab .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #8b90a0;
+    margin-bottom: 10px;
+  }
+  code#code {
+    display: block;
+    font-family: var(--mono);
+    font-size: 19px;
+    font-weight: 600;
+    color: #fff;
+    word-break: break-all;
+    line-height: 1.4;
+    user-select: all;
+  }
+
+  .timer {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--grey);
+    text-align: center;
+    margin: 0 0 20px;
+  }
+  .timer.dead { color: var(--orange-dark); font-weight: 700; }
+
+  .flag {
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 20px;
+    font-size: 15px;
+  }
+  .flag.bad { background: #fdf2e9; border: 1px solid #f6d5b8; color: var(--warn); }
+
+  .foot {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--grey);
+  }
+  .foot a { color: var(--grey); }
+
+  [hidden] { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- START -->
+  <section class="card" id="view-start">
+    <p class="eyebrow">Tour de SoCal</p>
+    <h1>Connect your Strava</h1>
+    <p>This lets the standings page read your ride times on the tracked segments and your power numbers, so the site updates itself instead of Ali chasing you for screenshots.</p>
+    <ol>
+      <li>Tap the button below and log in to Strava if it asks.</li>
+      <li>Leave every permission box ticked.</li>
+      <li>You land back here with a code. Send it to Ali right away.</li>
+    </ol>
+    <div class="checkbox-note">
+      Strava reads your activities only. Nothing is posted, changed, or deleted, and private rides stay private to the site. You can disconnect any time under Strava settings, My Apps.
+    </div>
+    <a class="btn" id="authorize" href="#">Authorize on Strava</a>
+    <p class="foot">Six riders. Fourteen segments. Three jerseys.</p>
+  </section>
+
+  <!-- CODE RETURNED -->
+  <section class="card" id="view-code" hidden>
+    <p class="eyebrow">Step 2 of 2</p>
+    <h1>Send this code to Ali</h1>
+
+    <div class="flag bad" id="scope-warning" hidden>
+      A permission box was left unticked, so this code cannot give the site your ride data. Sending it will not work. Start over and leave every box ticked.
+    </div>
+
+    <div id="code-block">
+      <div class="code-slab">
+        <div class="label">Your code</div>
+        <code id="code"></code>
+      </div>
+      <p class="timer" id="timer"></p>
+
+      <button class="btn" id="copy">Copy code</button>
+      <a class="btn btn-quiet" id="email" href="#">Email it to Ali</a>
+    </div>
+    <a class="btn btn-quiet" id="retry" href="#" hidden>Start over</a>
+
+    <p class="small foot" id="code-foot">Codes go stale within minutes, so send it now rather than later. If Ali says it expired, come back to this page and do it again. Nothing breaks.</p>
+  </section>
+
+  <!-- DECLINED -->
+  <section class="card" id="view-denied" hidden>
+    <p class="eyebrow">Nothing connected</p>
+    <h1>Strava was not authorized</h1>
+    <p>The authorization was cancelled or declined, so the site still cannot see your rides. Your times will sit at whatever they were, and any segment you have not ridden gets scored as the slowest time plus ten percent.</p>
+    <p class="small">Your call. The button is here if you change your mind.</p>
+    <a class="btn" id="retry-denied" href="#">Try again</a>
+  </section>
+
+</div>
+
+<script>
+(function () {
+    // Public value, not a secret. Replace with the Tour de SoCal app's Client ID
+  // from strava.com/settings/api. Must match STRAVA_CLIENT_ID in repo secrets.
+  var CLIENT_ID = "REPLACE_WITH_TDS_CLIENT_ID";
+  var REDIRECT = "https://tourdesocal.com/auth.html";
+  var OWNER_EMAIL = "ghahremania@gmail.com";
+  var NEEDED_SCOPE = "activity:read_all";
+
+  if (CLIENT_ID.indexOf("REPLACE") === 0) {
+    document.getElementById("authorize").addEventListener("click", function (e) {
+      e.preventDefault();
+      alert("This page is not finished being set up yet. Tell Ali.");
+    });
+  }
+
+  var authUrl = "https://www.strava.com/oauth/authorize"
+    + "?client_id=" + CLIENT_ID
+    + "&response_type=code"
+    + "&redirect_uri=" + encodeURIComponent(REDIRECT)
+    + "&approval_prompt=force"
+    + "&scope=" + encodeURIComponent(NEEDED_SCOPE);
+
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get("code");
+  var error = params.get("error");
+  var scope = params.get("scope") || "";
+
+  var el = function (id) { return document.getElementById(id); };
+  var show = function (id) { el(id).hidden = false; };
+  var hide = function (id) { el(id).hidden = true; };
+
+  el("authorize").href = authUrl;
+  el("retry").href = authUrl;
+  el("retry-denied").href = authUrl;
+
+  if (error) {
+    hide("view-start");
+    show("view-denied");
+    return;
+  }
+
+  if (!code) { return; }
+
+  hide("view-start");
+  show("view-code");
+  el("code").textContent = code;
+
+  // Strava lets people untick the permission box. When that happens the code is
+  // real but useless: it exchanges into a token that cannot read rides, and the
+  // site then looks broken for days with no error anywhere. So do not offer the
+  // code at all. Send them back through instead.
+  if (scope.indexOf(NEEDED_SCOPE) === -1) {
+    show("scope-warning");
+    show("retry");
+    hide("code-block");
+    hide("code-foot");
+    el("view-code").querySelector("h1").textContent = "This one will not work";
+    el("view-code").querySelector(".eyebrow").textContent = "Almost";
+    return;
+  }
+
+  // Email fallback for anyone who would rather not paste into a text message.
+  var subject = "Strava code for Tour de SoCal";
+  var body = "Here is my Strava code:\n\n" + code + "\n\nSent from tourdesocal.com/auth.html";
+  el("email").href = "mailto:" + OWNER_EMAIL
+    + "?subject=" + encodeURIComponent(subject)
+    + "&body=" + encodeURIComponent(body);
+
+  // Copy
+  var copyBtn = el("copy");
+  copyBtn.addEventListener("click", function () {
+    var done = function () {
+      copyBtn.textContent = "Copied";
+      setTimeout(function () { copyBtn.textContent = "Copy code"; }, 2000);
+    };
+    var fallback = function () {
+      var ta = document.createElement("textarea");
+      ta.value = code;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); }
+      catch (e) { copyBtn.textContent = "Select the code above and copy it"; }
+      document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(code).then(done, fallback);
+    } else {
+      fallback();
+    }
+  });
+
+  // Countdown. Strava does not publish an exact lifetime, so this is a nudge,
+  // not a guarantee. Assume the code is dead when it hits zero.
+  var timer = el("timer");
+  var left = 600;
+  var tick = function () {
+    if (left <= 0) {
+      timer.textContent = "Assume this code is expired. Start over.";
+      timer.className = "timer dead";
+      show("retry");
+      return;
+    }
+    var m = Math.floor(left / 60);
+    var s = left % 60;
+    timer.textContent = "Send within " + m + ":" + (s < 10 ? "0" : "") + s;
+    left -= 1;
+    setTimeout(tick, 1000);
+  };
+  tick();
+})();
+</script>
+</body>
+</html>
