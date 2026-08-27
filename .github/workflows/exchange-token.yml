@@ -41,7 +41,7 @@ jobs:
       # so it is never written to GITHUB_OUTPUT on the runner disk.
       - name: Exchange the code and store the refresh token
         env:
-          CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          CLIENT_ID: "274192"   # public value, must match auth.html
           CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
           RAW_INPUT: ${{ inputs.code }}
           GH_TOKEN: ${{ secrets.ACTIONS_PAT }}
@@ -99,7 +99,7 @@ jobs:
           PROBE_RES="$(echo "$PROBE" | jq -r '.errors[0].resource // "none"' 2>/dev/null || echo "unparseable")"
 
           if [[ "$PROBE_RES" == "Application" ]]; then
-            echo "::error::App credentials rejected by Strava. STRAVA_CLIENT_ID or STRAVA_CLIENT_SECRET is wrong."
+            echo "::error::App credentials rejected by Strava. STRAVA_CLIENT_SECRET is wrong (the client ID is a literal in this workflow, so it cannot be the problem)."
             echo "::error::Common cause: the value stored is Your Access Token, not Client Secret. Both are 40 hex characters and sit next to each other on strava.com/settings/api."
             echo "::error::Your authorization code was NOT used and is still valid."
             exit 1

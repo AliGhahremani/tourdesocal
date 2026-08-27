@@ -28,7 +28,7 @@ jobs:
 
       - name: Pull latest efforts from Strava
         env:
-          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_ID: "274192"   # public value, same app as 2024michael
           STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
           STRAVA_REFRESH_ALI: ${{ secrets.STRAVA_REFRESH_ALI }}
           STRAVA_REFRESH_JAKE: ${{ secrets.STRAVA_REFRESH_JAKE }}
