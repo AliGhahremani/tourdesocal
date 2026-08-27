@@ -35,7 +35,7 @@ Weights are used only for the W/kg power display. Ali set them; ask before chang
 
 ## Scoring rules
 
-- **General Classification**: total elapsed time across all 14 segments. Lowest total
+- **General Classification**: total elapsed time across all 21 segments. Lowest total
   wins. Yellow jersey to first place.
 - **Did not attempt a segment**: you are assessed the slowest finisher's time on that
   segment **plus 10%** (`PENALTY = 1.10` in `index.html`). Ali picked 10% over a flat
@@ -158,7 +158,7 @@ self-service **Upgrade** button at https://www.strava.com/settings/api which rai
 the cap to 10 athletes (and to 200/2000 read, 400/4000 overall rate limits). Only
 above 10 athletes does Strava require a formal app review. Four riders fits fine.
 
-## Current standings snapshot (2026-08-24, 14 segments)
+## Current standings snapshot (2026-08-24, 14 segments; list grew to 21 on 2026-08-27)
 
 | | Rider | Total | Gap | KOMs | Boned |
 |---|---|---|---|---|---|
@@ -182,7 +182,7 @@ Done:
   (`object-fit: contain`, `aspect-ratio: 480/340`).
 - Irvine Boyz logo as favicon.
 - `auth.html`, the rider-facing Strava authorization page.
-- `README.md` rewritten for 14 segments, live Michael, and the workflow token flow.
+- `README.md` rewritten for the segment list, live Michael, and the workflow token flow.
 - `.github/workflows/exchange-token.yml`, so no one handles the client secret.
 
 Pending:
