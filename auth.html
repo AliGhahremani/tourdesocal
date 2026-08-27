@@ -226,19 +226,13 @@
 
 <script>
 (function () {
-    // Public value, not a secret. Replace with the Tour de SoCal app's Client ID
-  // from strava.com/settings/api. Must match STRAVA_CLIENT_ID in repo secrets.
-  var CLIENT_ID = "REPLACE_WITH_TDS_CLIENT_ID";
+    // Public value, not a secret. Strava allows one API application per account,
+  // so this is the same app 2024michael uses. Its Authorization Callback Domain
+  // was pointed at tourdesocal.com on 2026-08-27 so this page can hand back a code.
+  var CLIENT_ID = "274192";
   var REDIRECT = "https://tourdesocal.com/auth.html";
   var OWNER_EMAIL = "ghahremania@gmail.com";
   var NEEDED_SCOPE = "activity:read_all";
-
-  if (CLIENT_ID.indexOf("REPLACE") === 0) {
-    document.getElementById("authorize").addEventListener("click", function (e) {
-      e.preventDefault();
-      alert("This page is not finished being set up yet. Tell Ali.");
-    });
-  }
 
   var authUrl = "https://www.strava.com/oauth/authorize"
     + "?client_id=" + CLIENT_ID
