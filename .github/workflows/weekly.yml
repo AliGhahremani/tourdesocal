@@ -50,7 +50,10 @@ jobs:
           python-version: "3.12"
 
       - name: Catch up on today's rides first
-        if: inputs.skip_update != true
+        # A test send must never touch Strava. The commit step is skipped when
+        # test_to is set, so any reads spent here would be thrown away, and the
+        # daily budget is shared with 2024michael.
+        if: inputs.skip_update != true && inputs.test_to == ''
         continue-on-error: true
         env:
           STRAVA_CLIENT_ID: "274192"
