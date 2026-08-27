@@ -267,11 +267,10 @@ const avImg = (name, cls) => AV[name] ? '<img class="'+cls+'" src="'+AV[name]+'"
 const SURNAMES = {Randee:"Tolentino", Jake:"Graves", Ali:"Ghahremani"};
 // weights in lbs. Randee and Michael confirmed by Ali 2026-08-26.
 // Ali and Jake still unconfirmed. Only affects the W/kg display, never the GC.
-// Weights in lbs. Confirmed by Ali: Michael 175, Randee 187, Abe 160.
-// Jose 165 is a hold, not confirmed. Ali 183 and Jake 190 are inherited
-// placeholders and have never been checked. Only affects the W/kg display,
-// never the GC, which is pure elapsed time.
-const WEIGHT_LBS = {Ali:183, Michael:175, Randee:187, Jake:190, Abe:160, Jose:165};
+// Weights in lbs. Confirmed by Ali: Ali 181, Michael 175, Randee 187, Abe 160,
+// Jose 161. Jake 190 is an inherited placeholder and has never been checked.
+// Only affects the W/kg display, never the GC, which is pure elapsed time.
+const WEIGHT_LBS = {Ali:181, Michael:175, Randee:187, Jake:190, Abe:160, Jose:161};
 const KG = {}; for (const k in WEIGHT_LBS) KG[k] = WEIGHT_LBS[k]/2.20462;
 // Unknown weight means no W/kg figure rather than a wrong one.
 const wkg = (w, name) => (KG[name] ? (w/KG[name]).toFixed(2) : null);
