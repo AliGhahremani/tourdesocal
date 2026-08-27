@@ -27,9 +27,9 @@ Weights feed the W/kg display only. Ask Ali before changing them.
 
 ## Scoring
 
-Twenty one tracked segments, scored like a Tour de France General Classification.
+Twenty two tracked segments, scored like a Tour de France General Classification.
 
-- **GC**: total elapsed time across all 21 segments. Lowest total wins the yellow jersey.
+- **GC**: total elapsed time across all 22 segments. Lowest total wins the yellow jersey.
 - **Segment not attempted**: you are assessed the slowest finisher's time on that
   segment plus 10 percent (`PENALTY = 1.10` in `index.html`). The multiplier is
   deliberate so the penalty scales with segment length.
