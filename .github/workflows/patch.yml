@@ -1,0 +1,82 @@
+name: One off patch
+
+# Drops Glendora Mountain Road and Laguna Canyon to El Toro from the competition,
+# renumbers the rest 01..20, and regenerates data.js.
+#
+# state.json keeps whatever times those two already held. Nothing reads them: the
+# tracked set and the renderer both come from meta.json. Keeping them means
+# re-adding a segment later restores its history for free.
+#
+# Delete this file once it has run.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Drop the two segments
+        run: |
+          python - <<'PYEOF'
+          import base64, json, sys
+          sys.path.insert(0, "scripts")
+          from segmaps import dump          # reuse the exact file formatter
+
+          DROP = set(json.loads(base64.b64decode("eyJkcm9wIjogWzgzMDA3OSwgMjkwNTMzN119"))["drop"])
+          meta = json.load(open("data/meta.json"))
+          names = {s["id"]: s["name"] for s in meta["segments"]}
+          missing = DROP - set(names)
+          assert not missing, "not in meta.json: %s" % missing
+          for i in DROP:
+              print("dropping", i, "-", names[i])
+
+          before = len(meta["segments"])
+          meta["segments"] = [s for s in meta["segments"] if s["id"] not in DROP]
+          for i, s in enumerate(meta["segments"], 1):
+              s["num"] = "%02d" % i
+          for key in ("polylines", "grades"):
+              if key in meta:
+                  meta[key] = {k: v for k, v in meta[key].items() if int(k) not in DROP}
+
+          open("data/meta.json", "w").write(dump(meta))
+
+          m = json.load(open("data/meta.json"))
+          assert len(m["segments"]) == before - len(DROP)
+          assert len(m["polylines"]) == len(m["segments"])
+          assert all(len(m["grades"][k]) == len(m["polylines"][k]) for k in m["polylines"])
+          assert [s["num"] for s in m["segments"]] == ["%02d" % i for i in range(1, len(m["segments"]) + 1)]
+          print("segments %d -> %d, all renumbered and still aligned with their grades"
+                % (before, len(m["segments"])))
+          PYEOF
+      - name: Rebuild data.js
+        env:
+          STRAVA_CLIENT_ID: "274192"
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+        run: |
+          # No refresh tokens on purpose: update.py then skips every rider and only
+          # regenerates data.js from what is already in state.json. Costs nothing.
+          python scripts/update.py
+      - name: Commit
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/meta.json data.js data/state.json
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Twenty segments: drop Glendora and Laguna Canyon to El Toro"
+            git pull --rebase --autostash origin main
+            git push
+          fi
