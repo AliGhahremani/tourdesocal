@@ -122,5 +122,9 @@ jobs:
             echo "No digest changes."
           else
             git commit -m "Weekly digest $(date -u +%F)"
+            # Never push without rebasing first. A push that loses a race here
+            # is rejected and the digest is gone; the daily updater can still
+            # be in flight when this runs.
+            git pull --rebase --autostash origin main
             git push
           fi
