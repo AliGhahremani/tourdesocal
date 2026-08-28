@@ -1,0 +1,80 @@
+name: Restage the announcement email
+
+# Adds the note about Jose's 40 Only Me rides to data/announce_email.html, which
+# Ali asked for after the audit. A workflow may write anything outside
+# .github/workflows, so this is allowed.
+#
+# Ships the two edits rather than the whole 16 KB file, and asserts each one
+# matches exactly once, so a stale base fails loudly instead of silently.
+#
+# Delete this file once it has run.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Patch the email
+        run: |
+          cat > patch.b64 <<'B64EOF'
+          H4sIAKkSkWoC/+1WYW/bNhD9K4fkq+raaZoEThbAGwxsGdIUjYGiaPKBEk8WF4rUSCqa/v3eUXKaYcCwT/swNHBgmzwe79699+Sv
+          X4+uOopptPzDw1Grwt649eq0+4OWtLx8OLq+iil4t38Jqbz1YX2slhenyxxwc3e/XVy9ncKuaWv2TaJf725jQdr3pWVSbvSOiW3k
+          Bf3IMVHnBw6UPA2cwxVe1lJtnpl0H1Qy3uF8/t4a1yeOlJrg+30jpxTVPcIb34cF7ZrAjF3fR+W0hOFr0zsdWJOs1KZOI0kFrbFI
+          JGtX3F47n/Kqr3GIWzJOex/i1VvsSVoUZeRapmD0IYxGViGnMHlbklTWS2cf/JAjSqXJ8RDXNPqeGoUealRKVknnVlWM1l62HD8D
+          Ctyg2REgXVLLiUNBO247gPezsTaSD/RRhSfaPHORb5fzKgBUwY9xdOqtDr4llGMwsX2Q9QxXqxwNjcdAeCpZdZ30gU0/OAQEmYpW
+          44K+HAqzLGBmBCQbUlZMsQvy5VBB5XurQQ2Th+dMbASWxlstUQLubxwij+BHd31U0Heufefaf8K1B/fgCH//wLdOaTm5Xp1gQVYv
+          S1U97TF4p9fHta7PeHlZ+qA5vLFcp7UcjN4aTcd8UQoj592gtOnjeklniJD/f0/mgjZ0v/24+bTZbel2s9ttP73i9xcZpYCt9kx7
+          QPl7z8EcsBqYnwpUhA94uZSRqhqunjgzRu2VcYD6PgX1rEibwFWygP2XzKbKB1lY0Gdhn5Apn6XUB4cEfUdymkGwPBfEzB1dny6F
+          oKMUt1otM2PjVNJEWFAlcpKB3zk70i2/dFTQ4ENqXjKdL08nMr2KmISF677RFp23CrJQwoy9nUXSQfCmymKOrKJ3C9qC3+PEIVRT
+          e2tF/PGNlzrA62aivu9TEC6jdxZeuan/w64T0ZRcqT5y3nB9WyINQlueaD9jCvdoxFwacD6vo+Y8koyGEf2TLyOH52wzubcsCXys
+          KpiIrMKn+qkAkY5xQFHqRu8RAzeMmYHwIhGV/aUR9CW/yGnqHILjIECVXo+ETNgNqhIcKiVBWEmzH+IwICuEIQNuQNMSll0ptyB2
+          hTayNWGGfj1NGirOFZUidDCFg/jiCDV3GKmkOCnOVuezNwwN3vIEBylMValXEh1NSpNc6V3x7uRkQT8JphiI1DWYBOwjdcEnUBPY
+          FHQjfpcfH48F4cfKzJPdDHDmrXgiOkPHLJllDRfBHUfxI1RSvHLR1cXBhV8pTW6Rzamu96vF+wXIy3SvIAd4FWmuMs0Fxk2JhDfq
+          iXPWjTWZ8sLDc5EGJOuDWDPEJAGyGSaUay9kMUHjam2ep0fi/6Qj+pylHdWYB4yJWt/rtdQlMvJJ4dkCY7e95tkzOvby2Mkinx0D
+          ng+t8F/0N/5deN/M7MPMeVBTjosn4MmAnwGTDWCtRHKYHesJM/Gc+fkK4Ca6lpwG4XVtQpx8NHLlBWA3SbnCAzWa2lSzjsOhhews
+          GetZaIfJPj7+CS3G68hbCwAA
+          B64EOF
+          python3 - <<'PYEOF'
+          import base64, gzip, json
+          pairs = json.loads(gzip.decompress(base64.b64decode(
+              "".join(open("patch.b64").read().split()))))
+          p = "data/announce_email.html"
+          s = open(p, encoding="utf-8").read()
+          for old, new in pairs:
+              n = s.count(old)
+              assert n == 1, f"expected 1 match, found {n}: {old[:70]!r}"
+              s = s.replace(old, new)
+          open(p, "w", encoding="utf-8").write(s)
+          assert "Only Me" in s and "704 miles" in s, "the Jose note did not land"
+          assert "3:04:03" in s, "the standings table went missing"
+          print(f"patched {p}, now {len(s)} bytes, both checks passed")
+          PYEOF
+
+      - name: Commit
+        run: |
+          rm -f patch.b64
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/announce_email.html
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Final announcement copy: note Jose's private rides"
+            git pull --rebase --autostash origin main
+            git push
+          fi
