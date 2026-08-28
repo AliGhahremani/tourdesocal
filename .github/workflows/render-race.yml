@@ -1,0 +1,47 @@
+name: Render the race charts
+
+# Makes race/green.png and race/polka.png, the stills the Sunday email embeds.
+# weekly.yml does this itself before every send; this exists so the images can
+# be regenerated on demand, and so the render can be proven on a real runner
+# without sending an email to anybody.
+#
+# The logic is all in scripts/render_race.js, which screenshots race/still.html.
+# That page loads the same race.js as the live pages, so the picture in the
+# email can never drift from the chart on the site.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: race-render
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Render
+        run: |
+          npm i --no-save playwright@1.47.2
+          npx playwright install --with-deps chromium
+          node scripts/render_race.js race
+          ls -la race/*.png
+
+      - name: Commit
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add race/green.png race/polka.png
+          if git diff --cached --quiet; then
+            echo "Charts unchanged."
+          else
+            git commit -m "Race charts $(date -u +%F)"
+            git pull --rebase --autostash origin main
+            git push
+          fi
