@@ -1,0 +1,99 @@
+name: Send the announcement
+
+# The real send. announce.yml has a dry_run input that defaults to true, and the
+# checkbox in GitHub's dispatch panel cannot be set from automation, so that
+# workflow can only ever dry run from here. This one has no inputs at all: the
+# dry run has already been done and its counts checked, so all that is left is
+# to send.
+#
+# Its dry run reported: before 6, after 5, dropped 1 via MAIL_EXCLUDE.
+#
+# Reads nothing from Strava and commits nothing. It also deliberately does not
+# touch data/weekly_snapshot.json, which is the baseline Sunday's first real
+# digest diffs against.
+#
+# Delete this file, and announce.yml, once it has sent.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: announce
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Work out who gets this
+        id: to
+        env:
+          ALL: ${{ secrets.MAIL_TO }}
+          FALLBACK: ${{ secrets.MAIL_USERNAME }}
+          EXCLUDE: ${{ secrets.MAIL_EXCLUDE }}
+        run: |
+          # Michael withdrew on 2026-08-28 and must not receive this. His address
+          # is still in MAIL_TO, and a secret cannot be read back to be edited by
+          # anything but a human retyping the whole list from memory. So subtract
+          # instead: MAIL_EXCLUDE holds the addresses of former riders.
+          #
+          # Only counts are ever printed. The addresses themselves are never
+          # echoed, to the log or anywhere else.
+          python3 - <<'PYEOF' >> "$GITHUB_OUTPUT"
+          import os, re
+          split = lambda s: [a.strip().lower() for a in re.split(r"[,;\s]+", s or "") if a.strip()]
+          addrs = split(os.environ.get("ALL") or os.environ.get("FALLBACK"))
+          seen, uniq = set(), []
+          for a in addrs:
+              if a not in seen:
+                  seen.add(a); uniq.append(a)
+          drop = set(split(os.environ.get("EXCLUDE")))
+          keep = [a for a in uniq if a not in drop]
+          print(f"before={len(uniq)}")
+          print(f"after={len(keep)}")
+          print(f"dropped={len(uniq) - len(keep)}")
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write("RECIPIENTS=" + ",".join(keep) + "\n")
+          PYEOF
+
+      - name: Refuse to send to the wrong list
+        # Five riders remain and exactly one address must have been removed. If
+        # either number is off, the exclusion did not match and Michael would be
+        # about to receive an email about how he quit. Fail instead of sending.
+        run: |
+          echo "recipients before: ${{ steps.to.outputs.before }}"
+          echo "recipients after:  ${{ steps.to.outputs.after }}"
+          echo "dropped:           ${{ steps.to.outputs.dropped }}"
+          test "${{ steps.to.outputs.dropped }}" = "1" || {
+            echo "::error::Expected to drop exactly 1 address, dropped ${{ steps.to.outputs.dropped }}. Check the MAIL_EXCLUDE secret."
+            exit 1
+          }
+          test "${{ steps.to.outputs.after }}" = "5" || {
+            echo "::error::Expected 5 recipients, got ${{ steps.to.outputs.after }}."
+            exit 1
+          }
+          test -s data/announce_email.html || {
+            echo "::error::data/announce_email.html is missing."
+            exit 1
+          }
+          echo "Guard passed. Sending."
+
+      - name: Send
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Tour de SoCal
+          to: ${{ env.RECIPIENTS }}
+          subject: "Tour de SoCal is fully current. 125 days left, and the standings so far."
+          html_body: file://data/announce_email.html
+          convert_markdown: false
