@@ -463,7 +463,7 @@ def render(cur, d, week_end, note, head=None, cards=None):
                 tail = ' <span style="color:#0a7d3c">and now leads it</span>'
             elif x["behind"] is not None:
                 tail = (f' <span style="color:#6d6d78">still {fmt_gap(x["behind"])} '
-                        f'behind {x["leader"]}</span>')
+                        f'behind {x["leader"] or "the fastest time on it"}</span>')
             else:
                 tail = ""
             if x["first"]:
@@ -485,7 +485,7 @@ def render(cur, d, week_end, note, head=None, cards=None):
             tail = f' and did not beat {x["best"]}' if x["best"] else ""
             if x["behind"] is not None:
                 tail += (f', still {fmt_gap(x["behind"])} off '
-                         f'{x["leader"]}')
+                         f'{x["leader"] or "the fastest time on it"}')
             A(f'<li style="margin:5px 0"><b>{x["name"]}</b> hit '
               f'<b>{x["seg"]}</b> {times}{tail}</li>')
         A("</ul>")

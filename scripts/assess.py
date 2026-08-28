@@ -201,8 +201,7 @@ def season_facts(cur, meta, days_left, segs=None, d=None):
                      for pr, pool in ((True, (d or {}).get("prs") or []),
                                       (False, (d or {}).get("tried") or []))
                      for x in pool
-                     if x["name"] == name and x.get("behind") is not None
-                     and x.get("leader")],
+                     if x["name"] == name and x.get("behind") is not None],
             "have": dict(r["bests"]),
             "was_kom": set(koms[name]) | gone_kom.get(name, set()),
         }
@@ -391,7 +390,7 @@ def _a_volume(f, s):
 
 
 def _a_ahead(f, s):
-    if not f["ahead"] or f["ahead_gap"] is None:
+    if not f["ahead"] or not f["ahead_gap"]:
         return None
     return 71, [
         f"{f['ahead']} is {_mins(f['ahead_gap'])} up the road in {_o(f['pos'] - 1)}. "
@@ -409,7 +408,7 @@ def _a_ahead(f, s):
 
 
 def _a_behind(f, s):
-    if not f["behind"] or f["behind_gap"] is None or f["behind_gap"] > 900:
+    if not f["behind"] or not f["behind_gap"] or f["behind_gap"] > 900:
         return None
     return 67, [
         f"{f['behind']} is {_mins(f['behind_gap'])} behind you and closing is easier "
@@ -431,7 +430,7 @@ def _a_leader(f, s):
     if f["pos"] != 1:
         return None
     gap = f["behind_gap"]
-    if gap is None:
+    if not gap:
         return None
     return 75, [
         f"You are in yellow with {_mins(gap)} on {f['behind']}, and every week you "
@@ -637,6 +636,9 @@ def _a_near_miss(f, s):
         return None
     x = min(f["near"], key=lambda y: y["behind"])
     tries = _times(x["tries"])
+    # the fastest time can be shared, in which case nobody holds the segment
+    named = bool(x["leader"])
+    x = dict(x, leader=x["leader"] or "the fastest time on it")
     pr = " You did take a personal best out of it." if x["pr"] else ""
     if x["behind"] <= 15:
         return 93, [
@@ -646,11 +648,32 @@ def _a_near_miss(f, s):
             f"{_mins(x['behind'])}. That is all that stood between you and "
             f"{x['leader']} on {x['seg']} this week.{pr}",
         ]
-    return 87, [
+    out = [
         f"You attacked {x['seg']} {tries} this week and came up "
         f"{_mins(x['behind'])} short of {x['leader']}.{pr}",
         f"{x['seg']} {tries} this week, still {_mins(x['behind'])} off "
-        f"{x['leader']}.{pr} He has not had to respond yet.",
+        f"{x['leader']}.{pr}",
+    ]
+    if named:
+        # only say "he" when there is a he. A shared fastest time has no owner.
+        out.append(f"{x['seg']} {tries} this week, still {_mins(x['behind'])} off "
+                   f"{x['leader']}.{pr} He has not had to respond yet.")
+    return 87, out
+
+
+def _a_dead_level(f, s):
+    who = None
+    if f["ahead"] and f["ahead_gap"] == 0:
+        who = f["ahead"]
+    elif f["behind"] and f["behind_gap"] == 0:
+        who = f["behind"]
+    if not who:
+        return None
+    return 80, [
+        f"You and {who} are dead level on GC, to the second. One segment "
+        f"settles it either way.",
+        f"There is nothing between you and {who}. Identical totals. "
+        f"Whoever rides next wins the argument.",
     ]
 
 
@@ -682,6 +705,7 @@ ANGLES = {
     "new_seg": _a_new_seg, "new_seg_done": _a_new_seg_done,
     "lost_kom": _a_lost_kom, "lost_dns": _a_lost_dns,
     "took_kom": _a_took_kom, "kom_taken": _a_kom_taken,
+    "dead_level": _a_dead_level,
     "near_miss": _a_near_miss,
 }
 
@@ -693,7 +717,8 @@ NEWS = {"new_seg", "new_seg_done", "lost_kom", "lost_dns",
 # Angles that say much the same thing. Never use two from one set in one
 # paragraph, or it reads like the generator is stuck.
 CLASHES = [{"koms", "no_koms"}, {"never", "steep", "table", "complete"},
-           {"ahead", "yellow", "leader"}, {"green", "polka"},
+           {"ahead", "yellow", "leader", "behind", "dead_level"},
+           {"green", "polka"},
            {"volume", "fpm", "power"}, {"pace", "no_koms"},
            {"lasts", "no_koms"}, {"grind", "spread"},
            {"new_seg", "new_seg_done"}, {"lost_kom", "lost_dns"},
@@ -738,8 +763,7 @@ def _week_opener(rng, name, wk, d, seeded):
     # the opener stay off them. Otherwise the paragraph describes the same
     # ride twice, once badly and once well.
     took_ids = {k["id"] for k in (d.get("koms") or []) if k["to"] == name}
-    close = [x for x in prs + tried
-             if x.get("behind") is not None and x.get("leader")]
+    close = [x for x in prs + tried if x.get("behind") is not None]
     covered = set(took_ids)
     if close:
         covered.add(min(close, key=lambda y: y["behind"])["id"])

@@ -149,11 +149,12 @@ def build_hooks(cur, d, prev):
 
     # ---- attacked it, still not theirs ----
     for x in (d.get("tried") or []) + (d.get("prs") or []):
-        if x.get("behind") is None or not x.get("leader") or x.get("took"):
+        if x.get("behind") is None or x.get("took"):
             continue
         if x["behind"] <= 20:
             hooks.append(("so_close", 72, {
-                "who": x["name"], "seg": x["seg"], "owner": x["leader"],
+                "who": x["name"], "seg": x["seg"],
+                "owner": x["leader"] or "the fastest time",
                 "gap": _gap(x["behind"])}))
 
     # ---- PRs ----
@@ -311,6 +312,7 @@ LINES = {
     "so_close": [
         "{who} went at {seg} and finished {gap} behind {owner}. Close enough to hurt.",
         "{gap} is all that stood between {who} and {owner} on {seg}.",
+        "{who} came within {gap} of {owner} on {seg} and no closer.",
     ],
     "grinder": [
         "{who} has now hit {seg} {times} this season and {owner} still owns it. At some point that stops being persistence.",
