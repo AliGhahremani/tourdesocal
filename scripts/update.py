@@ -251,6 +251,15 @@ def main():
                     continue
                 try:
                     detail = http(f"{API}/activities/{a['id']}?include_all_efforts=true", token=access)
+                except BudgetExhausted:
+                    # Out of budget is not "this activity is broken, skip it". If
+                    # the handler below swallows it, every remaining activity is
+                    # skipped the same way, each one spending a real 429 that still
+                    # counts against the daily total, and then last_epoch is
+                    # stamped as though the whole year had been read. That is how a
+                    # rider ends up marked complete holding only January, with
+                    # their faster rides later in the year never looked at.
+                    raise
                 except Exception as e:
                     print(f"[{key}] activity {a['id']} fetch failed: {e}", file=sys.stderr)
                     continue
@@ -328,6 +337,8 @@ def main():
                                     changed = True
                                     summary.append(
                                         f"{ath['display']} new {act_year} {w//60} min power: {val} W")
+                except BudgetExhausted:
+                    raise          # same reason as the activity fetch above
                 except Exception as e:
                     print(f"[{key}] power calc failed for {a['id']}: {e}", file=sys.stderr)
                 # Season totals. Idempotent: every counted activity id is recorded,
