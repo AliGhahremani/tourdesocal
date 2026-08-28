@@ -478,6 +478,11 @@ def main():
         "</head><body>" + body + "</body></html>")
     open(OUT_HTML, "w").write(page)
 
+    # Archive this digest as its own dated page and rebuild the index. A test
+    # run writes it too, but weekly.yml only commits on a real send, so what
+    # ends up in the repo stays a record of emails that actually went out.
+    write_archive(body, week_end, datetime.date.today().isoformat())
+
     # snapshot for next week: drop the display-only fields
     snap = {"taken_utc": datetime.datetime.utcnow().isoformat(timespec="seconds") + "Z",
             "year": year,
