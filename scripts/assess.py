@@ -869,6 +869,63 @@ CLOSERS_MID = [
 ]
 
 
+def shame_of_the_week(F, d, rng):
+    """One rider, named, for the worst thing anybody did this week.
+
+    Ali's ask, 2026-08-28. Everything here has to be earned by a number, and it
+    has to be allowed to come back EMPTY: manufacturing a villain in a week when
+    nobody deserves one is how a running joke dies. If no candidate clears the
+    bar the digest says so, which is funnier anyway.
+
+    Bound by the roast rules: effort, laziness, indoor riding, bad tactics.
+    Never anything a rider cannot fix by riding their bike more.
+    """
+    picks = []
+    for name, f in F.items():
+        wk_mi, rides = f["wk_miles"], f["wk_rides"]
+
+        if rides == 0:
+            picks.append((100, name,
+                "did not ride a bike this week",
+                "Not a short week. Not a slow week. Nothing at all."))
+            continue
+
+        if f["avg_week"] and wk_mi < f["avg_week"] * 0.55:
+            r = wk_mi / f["avg_week"]
+            picks.append((90 + (0.55 - r) * 18, name,
+                f"managed {wk_mi:,.0f} miles",
+                f"His own average week is {f['avg_week']:,.0f}. That is "
+                f"{max(1, round(r * 100))} percent of a normal him, and nobody "
+                f"made him do it."))
+
+        for x in f["lost_to"]:
+            by = f" by {_mins(x['by'])}" if x.get("by") else ""
+            picks.append((80, name,
+                f"let {x['to']} take {x['seg']} off him{by}",
+                f"He held it coming into this week. He does not hold it now."))
+
+        tried = [x for x in (d.get("tried") or []) if x["name"] == name]
+        n_att = sum(x["tries"] for x in tried)
+        if n_att >= 3 and not any(p["name"] == name for p in (d.get("prs") or [])):
+            seg = max(tried, key=lambda x: x["tries"])["seg"]
+            picks.append((65, name,
+                f"made {n_att} attempts and improved nothing",
+                f"{seg} took the worst of it. Effort is not the problem."))
+
+    mv = [m for m in (d.get("movers") or []) if not m["up"]]
+    for m in mv:
+        picks.append((75, m["name"],
+            f"dropped from {_o(m['from'])} to {_o(m['to'])} on GC",
+            "Not from riding badly. From other people riding at all."))
+
+    if not picks:
+        return None
+    top = max(p[0] for p in picks)
+    best = [p for p in picks if p[0] == top]
+    _, name, verdict, detail = rng.choice(best)
+    return {"name": name, "verdict": verdict, "detail": detail}
+
+
 def assess(cur, meta, d, week_no, days_left, seen=None, seeded=False, said=None):
     """One paragraph per rider.
 
@@ -964,4 +1021,5 @@ def assess(cur, meta, d, week_no, days_left, seen=None, seeded=False, said=None)
         heard = picked + [t for t in said.get(name, []) if t not in picked]
         said[name] = heard[:SAID]
 
-    return out, seen, said
+    shame = shame_of_the_week(F, d, random.Random(week_no * 7717))
+    return out, seen, said, shame

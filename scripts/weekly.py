@@ -366,7 +366,7 @@ def rebuild_index():
         '</div></body></html>')
 
 
-def render(cur, d, week_end, note, head=None, cards=None):
+def render(cur, d, week_end, note, head=None, cards=None, shame=None):
     """One HTML body used for both the email and the archive page."""
     C = {"yellow": "#d9a400", "polka": "#c8102e", "green": "#0a7d3c"}
     JN = {"yellow": "Yellow", "polka": "Polka Dot", "green": "Green"}
@@ -568,6 +568,25 @@ def render(cur, d, week_end, note, head=None, cards=None):
             A(f'<p style="font-size:12.5px;color:#6d6d78;margin:0 0 16px">{cap}. '
               f'<a href="{SITE}/{page}" style="color:#fc5200">Watch it play out &rarr;</a></p>')
 
+    # Shame of the week. Allowed to be empty, and says so when it is: a
+    # manufactured villain in a week nobody earned one kills the joke.
+    if not d["baseline"]:
+        A('<h2 style="font-size:15px;margin:26px 0 8px">Shame of the week</h2>')
+        if shame:
+            A('<div style="background:#fff1f2;border:1px solid #f3ccd1;'
+              'border-left:4px solid #d8283e;border-radius:0 10px 10px 0;'
+              'padding:13px 16px;font-size:14.5px;line-height:1.6">'
+              f'<b style="font-size:16px">{shame["name"]}</b>, who '
+              f'{shame["verdict"]}.<br>'
+              f'<span style="color:#4a4a55">{shame["detail"]}</span></div>')
+        else:
+            A('<div style="background:#f2f7f2;border:1px solid #cfe0cf;'
+              'border-left:4px solid #12813f;border-radius:0 10px 10px 0;'
+              'padding:13px 16px;font-size:14.5px;line-height:1.6;color:#2a2a2e">'
+              'Nobody disgraced themselves this week. Everyone rode, nobody lost '
+              'anything they were holding, and the standings moved for honest '
+              'reasons. Enjoy it, it will not last.</div>')
+
     # Individual assessments. Everyone gets one every week, in GC order, so
     # the man in yellow reads his first and the man in last reads his last.
     if cards:
@@ -637,12 +656,13 @@ def main():
     days_left = (datetime.date(today.year, 12, 31) - today).days + 1
     seen = (prev or {}).get("assess_seen") or {}
     said = (prev or {}).get("assess_said") or {}
-    cards, seen, said = assess(cur, meta, d, week_no, days_left, seen,
-                               seeded=bool((prev or {}).get("seeded")), said=said)
+    cards, seen, said, shame = assess(cur, meta, d, week_no, days_left, seen,
+                                     seeded=bool((prev or {}).get("seeded")), said=said)
+    print("shame:", shame)
     for nm, txt in cards:
         print(f"  [{nm}] {txt}")
 
-    body = render(cur, d, week_end, note, head, cards)
+    body = render(cur, d, week_end, note, head, cards, shame)
 
     open(EMAIL_HTML, "w").write(body)
     json.dump({"generated": week_end, "baseline": d["baseline"],
