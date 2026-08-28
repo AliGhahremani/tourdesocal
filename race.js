@@ -68,9 +68,19 @@ function drawRace(root, H, key, opts){
   let G = null;          // geometry of the current render
   let raf = null, playing = false;
 
+  const shortDay = d => new Date(d+"T12:00:00").toLocaleDateString("en",{month:"short",day:"numeric"});
+  // "today" only when the last day in the file really is today. If the daily
+  // rebuild has failed, the last point is some earlier date and labelling it
+  // today would be a quiet lie about how current the chart is.
+  const lastIsToday = (()=>{
+    const t = new Date();
+    const iso = t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+
+                String(t.getDate()).padStart(2,"0");
+    return days[n-1] === iso;
+  })();
+
   function setReadout(i){
-    stamp.textContent = i===n-1 ? "today"
-      : new Date(days[i]+"T12:00:00").toLocaleDateString("en",{month:"short",day:"numeric"});
+    stamp.textContent = (i===n-1 && lastIsToday) ? "today" : shortDay(days[i]);
     R.forEach(r=>{
       const g = gap[r][i];
       cells[r].textContent = g===0 ? "leading" : fmt(-g)+" back";
@@ -225,6 +235,24 @@ function drawRace(root, H, key, opts){
     scrub.addEventListener("input", ()=>{ stop(); frame(Number(scrub.value)); });
   }
   if (play) play.addEventListener("click", start);
+
+  // freshness line, injected here so every page that draws a race gets it
+  (function(){
+    const built = H.updated || days[n-1];
+    const age = Math.round((Date.now() - new Date(built+"T12:00:00").getTime())/86400000);
+    const note = document.createElement("p");
+    note.className = "built";
+    if (age >= 2){
+      note.classList.add("stale");
+      note.textContent = "Heads up: the season history was last rebuilt on "
+        + shortDay(built) + ", " + age + " days ago. It normally rebuilds every "
+        + "morning, so this chart is behind the standings.";
+    } else {
+      note.textContent = "Rebuilt from Strava " + shortDay(built)
+        + ". Updates every morning.";
+    }
+    root.appendChild(note);
+  })();
 
   render();
   frame(n-1);
