@@ -227,7 +227,7 @@ def on_the_table(cur):
     """What each rider would gain by riding segments they have skipped.
 
     A DNS is scored at the slowest finisher plus ten percent, so a segment you
-    have never ridden is nearly always costing you more than riding it badly
+    have not ridden this year is nearly always costing you more than riding it badly
     would. This works out how much, using each rider's own typical pace
     relative to whoever holds the segment, not a fantasy.
 
@@ -399,7 +399,8 @@ def render(cur, d, week_end, note, head=None, cards=None):
         A('<h2 style="font-size:15px;margin:22px 0 8px">On the table</h2>')
         A('<p style="font-size:13px;color:#6d6d78;margin:0 0 8px">'
           'What you would save by riding segments you have skipped, at your own '
-          'usual pace. A segment you never ride is scored at the slowest time '
+          'usual pace. A segment with no time on it this year is scored at the '
+          'slowest time '
           'plus ten percent.</p>')
         A('<table style="border-collapse:collapse;font-size:14px;width:100%">')
         A('<tr style="color:#6d6d78;font-size:12px"><td>Rider</td>'
@@ -471,7 +472,7 @@ def render(cur, d, week_end, note, head=None, cards=None):
           'style="font-size:14px;padding-left:18px;margin:0;color:#4a4a55">')
         for x in d["tried"]:
             n = x["tries"]
-            times = "once" if n == 1 else f"{n} times"
+            times = {1: "once", 2: "twice"}.get(n, f"{n} times")
             tail = f' and did not beat {x["best"]}' if x["best"] else ""
             if x["behind"] is not None:
                 tail += (f', still {fmt_gap(x["behind"])} off '
