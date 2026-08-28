@@ -18,6 +18,11 @@ M_PER_MI = 1609.344
 FT_PER_M = 3.280839895
 
 
+def _ts(n):
+    """once / twice / N times, so a template never says "1 cracks"."""
+    return {1: "once", 2: "twice"}.get(n, f"{n} times")
+
+
 def _gap(sec):
     sec = int(round(sec))
     if sec < 60:
@@ -78,10 +83,11 @@ def build_hooks(cur, d, prev):
             kind = "failed_hard" if worst["best"] else "failed_hard_notime"
             hooks.append((kind, 90, {
                 "who": who, "seg": worst["seg"], "n": worst["tries"],
-                "best": worst["best"] or ""}))
+                "times": _ts(worst["tries"]), "best": worst["best"] or ""}))
         elif total >= 2:
             hooks.append(("failed_soft", 55, {
-                "who": who, "seg": worst["seg"], "n": worst["tries"]}))
+                "who": who, "seg": worst["seg"], "n": worst["tries"],
+                "times": _ts(worst["tries"])}))
 
     # ---- did not ride at all ----
     for w in d["week"]:
@@ -186,7 +192,7 @@ def build_hooks(cur, d, prev):
             sid, n_att, owner = worst
             hooks.append((
                 "grinder", 48, {"who": name, "seg": cur["seg_name"].get(sid, "that segment"),
-                                "n": n_att, "owner": owner}))
+                                "n": n_att, "times": _ts(n_att), "owner": owner}))
 
     # ---- season long shame: never touched a tracked segment ----
     for name, r in riders.items():
@@ -234,18 +240,18 @@ LINES = {
         "Down {places} place{s} for {who}, who is learning that standings move whether you do or not.",
     ],
     "failed_hard": [
-        "{who} hit {seg} {n} times this week and beat exactly none of them. The segment is fine. {who} is fine. The times are not.",
+        "{who} hit {seg} {times} this week and beat exactly none of them. The segment is fine. {who} is fine. The times are not.",
         "Special mention to {who}, who attacked {seg} {n} separate times and still could not get under {best}. Persistence is a virtue. Results are better.",
-        "{who} went at {seg} {n} times. {best} stands. At some point that stops being training and starts being a hobby.",
+        "{who} went at {seg} {times}. {best} stands. At some point that stops being training and starts being a hobby.",
         "{n} attempts at {seg} by {who}, zero improvements. Somebody check the brakes are not rubbing.",
     ],
     "failed_hard_notime": [
-        "{who} has now attacked {seg} {n} times without ever finishing one worth recording. That is commitment to the bit.",
+        "{who} has now attacked {seg} {times} without ever finishing one worth recording. That is commitment to the bit.",
         "{n} goes at {seg} from {who} and still no time on the board. The segment remains undefeated and slightly bored.",
     ],
     "failed_soft": [
-        "{who} had {n} cracks at {seg} and came away with nothing. There is always next week.",
-        "{seg} beat {who} {n} times this week. Not dramatic, just quietly humiliating.",
+        "{who} went at {seg} {times} and came away with nothing. There is always next week.",
+        "{seg} beat {who} {times} this week. Not dramatic, just quietly humiliating.",
     ],
     "zero": [
         "{who} put in zero miles this week. Not a slow week. Zero. Someone go and knock on the door.",
@@ -307,9 +313,9 @@ LINES = {
         "{gap} is all that stood between {who} and {owner} on {seg}.",
     ],
     "grinder": [
-        "{who} has now hit {seg} {n} times this season and {owner} still owns it. At some point that stops being persistence.",
-        "{n} cracks at {seg} for {who}, and the record is still {owner}'s. Admirable. Ineffective, but admirable.",
-        "Nobody has attacked {seg} more often than {who} this season, {n} times, and nobody has less to show for it. {owner} thanks you for the traffic.",
+        "{who} has now hit {seg} {times} this season and {owner} still owns it. At some point that stops being persistence.",
+        "{who} has gone at {seg} {times}, and the record is still {owner}'s. Admirable. Ineffective, but admirable.",
+        "Nobody has attacked {seg} more often than {who} this season, {times}, and nobody has less to show for it. {owner} thanks you for the traffic.",
     ],
     "no_segments_ever": [
         "{who} still has not put a time on a single tracked segment this season. The segments are listed on the site. With maps.",

@@ -129,11 +129,18 @@ def diff(cur, prev):
     # actually care about week to week, and until now the digest never said.
     # Both sides are computed from bests, so no new snapshot field is needed.
     def leader(pool, sid):
+        """Fastest rider on a segment, or (None, sec) when it is a dead heat.
+
+        Nobody holds a segment they are only equal fastest on, so a tie has no
+        holder. Without this, min() picks one of them arbitrarily and the
+        digest reports a takeover in a week where nothing changed.
+        """
         got = {n: b[sid] for n, b in pool.items() if sid in b}
         if not got:
             return None, None
-        who = min(got, key=got.get)
-        return who, got[who]
+        best = min(got.values())
+        top = [n for n, v in got.items() if v == best]
+        return (top[0] if len(top) == 1 else None), best
 
     now_b = {n: cur["riders"][n]["bests"] for n in cur["riders"]}
     old_b = {n: (pr_r.get(n) or {}).get("bests") or {} for n in cur["riders"]}
@@ -192,11 +199,13 @@ def diff(cur, prev):
             new = r["bests"].get(sid)
             seg = cur["seg_name"].get(sid, sid)
             who_lead, sec_lead = lead_now.get(sid, (None, None))
-            took = who_lead == n and (lead_was.get(sid) or (None,))[0] != n
-            behind = (new - sec_lead) if (new is not None and sec_lead is not None
-                                          and who_lead != n) else None
+            took = bool(who_lead) and who_lead == n \
+                and (lead_was.get(sid) or (None,))[0] != n
+            gap = (new - sec_lead) if (new is not None and sec_lead is not None) else None
+            # level with the fastest time is not "behind" it
+            behind = gap if (gap is not None and gap > 0) else None
             common = {"name": n, "seg": seg, "id": sid, "tries": new_att,
-                      "leader": who_lead if who_lead != n else None,
+                      "leader": who_lead if behind is not None else None,
                       "behind": behind, "took": took}
             if new is not None and (old is None or new < old):
                 d["prs"].append({**common,
