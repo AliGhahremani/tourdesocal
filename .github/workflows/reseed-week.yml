@@ -1,0 +1,200 @@
+name: Complete the seeded week
+
+# Finishes the job seed-snapshot.yml started, so the first Sunday digest covers
+# the FULL week of Aug 24-30 rather than only Aug 28-30 for segments.
+#
+# The original seed rolled riding totals back to the end of Sat 23 Aug but left
+# segment bests and attempts at today's values, on the assumption that a best
+# improved during the week could not be rolled back without inventing the number
+# it replaced.
+#
+# That assumption was not checked against the data. Every "best" in state.json
+# carries the DATE it was set, and the most recent one anywhere is 22 Aug. Not
+# one best was set on or after 24 Aug, so the bests already in the snapshot are
+# exactly right for 23 Aug and need no rollback at all.
+#
+# What IS wrong is attempts. state.json was synced at 02:45 UTC on 28 Aug, so
+# every effort ridden 24-27 Aug is already counted. Left alone, the Sunday diff
+# sees no new attempts for those and reports nothing. This subtracts them.
+#
+# Cost: about 2 reads per rider for summaries plus 1.26 per activity in the
+# window. Roughly 30 reads against the shared 2,000/day.
+#
+# It re-verifies the no-best-moved claim at run time rather than trusting this
+# comment, and refuses to write if a best HAS moved into the window since.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  reseed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Roll attempts back to the end of Aug 23
+        env:
+          CID: "274192"
+          CSEC: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          RT_ALI: ${{ secrets.STRAVA_REFRESH_ALI }}
+          RT_JAKE: ${{ secrets.STRAVA_REFRESH_JAKE }}
+          RT_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
+          RT_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
+          RT_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+        run: |
+          python3 - <<'PYEOF'
+          import datetime, json, os, sys, time, urllib.parse, urllib.request
+
+          YEAR = "2026"
+          CUTOFF = "2026-08-24"
+          COUNTED = ("Ride", "VirtualRide", "GravelRide", "MountainBikeRide")
+
+          def post(url, data):
+              r = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(),
+                                         method="POST")
+              with urllib.request.urlopen(r) as f:
+                  return json.load(f)
+
+          def get(url, token):
+              for attempt in range(4):
+                  try:
+                      r = urllib.request.Request(
+                          url, headers={"Authorization": f"Bearer {token}"})
+                      with urllib.request.urlopen(r) as f:
+                          return json.load(f), f.headers.get("X-RateLimit-Usage")
+                  except urllib.error.HTTPError as e:
+                      if e.code == 429 and attempt < 3:
+                          print("  429, waiting 60s")
+                          time.sleep(60)
+                          continue
+                      raise
+              raise RuntimeError("gave up")
+
+          state = json.load(open("data/state.json"))
+          meta = json.load(open("data/meta.json"))
+          snap = json.load(open("data/weekly_snapshot.json"))
+          seg_ids = {str(s["id"]) for s in meta["segments"]}
+          seg_name = {str(s["id"]): s["name"] for s in meta["segments"]}
+
+          # ---- 1. verify the premise before touching anything -----------------
+          cut = datetime.date(2026, 8, 24)
+          late = []
+          for key, ath in state["athletes"].items():
+              y = (ath.get("season") or {}).get(YEAR) or {}
+              for sid, b in (y.get("bests") or {}).items():
+                  d = datetime.datetime.strptime(b["date"], "%b %d, %Y").date()
+                  if d >= cut:
+                      late.append((ath["display"], seg_name.get(sid, sid), b["date"]))
+          if late:
+              print("A best HAS been set on or after Aug 24:")
+              for x in late:
+                  print("   ", x)
+              print("\nRolling attempts back without rolling that best back would "
+                    "report a personal best against the wrong previous time.")
+              raise SystemExit("refusing to write, see above")
+          print("verified: no segment best set on or after Aug 24, "
+                "so the snapshot's bests are already correct for Aug 23\n")
+
+          # ---- 2. count this week's efforts, per rider per segment ------------
+          usage = None
+          total_reads = 0
+          for key, ath in sorted(state["athletes"].items()):
+              name = ath["display"]
+              rt = os.environ.get("RT_" + key.upper())
+              if not rt or name not in snap.get("riders", {}):
+                  print(f"[{name}] no token, left alone")
+                  continue
+              tok = post("https://www.strava.com/oauth/token", {
+                  "client_id": os.environ["CID"], "client_secret": os.environ["CSEC"],
+                  "grant_type": "refresh_token", "refresh_token": rt})["access_token"]
+
+              after = int(datetime.datetime(2026, 8, 22,
+                                            tzinfo=datetime.timezone.utc).timestamp())
+              acts, page = [], 1
+              while page <= 3:
+                  batch, usage = get(
+                      "https://www.strava.com/api/v3/athlete/activities"
+                      f"?after={after}&per_page=200&page={page}", tok)
+                  total_reads += 1
+                  if not batch:
+                      break
+                  acts += batch
+                  page += 1
+
+              window = [a for a in acts
+                        if a.get("type") in COUNTED
+                        and (a.get("start_date_local") or "")[:10] >= CUTOFF]
+
+              counts = {}
+              for a in window:
+                  detail, usage = get(
+                      "https://www.strava.com/api/v3/activities/"
+                      f"{a['id']}?include_all_efforts=true", tok)
+                  total_reads += 1
+                  for e in (detail.get("segment_efforts") or []):
+                      sid = str(((e.get("segment") or {}).get("id")) or "")
+                      if sid in seg_ids:
+                          counts[sid] = counts.get(sid, 0) + 1
+
+              r = snap["riders"][name]
+              att = r.setdefault("attempts", {})
+              if not counts:
+                  print(f"[{name}] {len(window)} rides in the window, no tracked efforts")
+                  continue
+              print(f"[{name}] {len(window)} rides in the window:")
+              for sid, n in sorted(counts.items(), key=lambda kv: -kv[1]):
+                  before = int(att.get(sid, 0))
+                  after_v = max(0, before - n)
+                  att[sid] = after_v
+                  print(f"    {seg_name.get(sid, sid):32s} {before:3d} -> {after_v:3d}"
+                        f"   ({n} this week)")
+
+          # ---- 3. the snapshot is now a real Aug 23 snapshot ------------------
+          snap["taken_utc"] = "2026-08-23T23:59:59Z"
+          snap.pop("seeded", None)
+          snap["reseeded"] = (
+              "Riding totals and segment attempts both rolled back to the end of "
+              "2026-08-23. Segment bests needed no rollback: every best in "
+              "state.json carries its date and none was set on or after Aug 24, "
+              "verified at run time. The one thing still at today's values is "
+              "power, because state.json ratchets power upward and does not "
+              "retain the previous figure, so a power best set Aug 24-27 will "
+              "not be reported.")
+          json.dump(snap, open("data/weekly_snapshot.json", "w"), indent=2)
+          print(f"\nwrote data/weekly_snapshot.json")
+          print(f"reads used this run: {total_reads}")
+          print(f"rate limit usage: {usage}")
+          PYEOF
+
+      - name: Show what Sunday would say now
+        run: |
+          cp data/weekly_snapshot.json /tmp/seed.json
+          python3 scripts/weekly.py
+          cp /tmp/seed.json data/weekly_snapshot.json
+          rm -f weekly/2026-08-28.html
+
+      - name: Commit
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -- weekly.html data/weekly_latest.json 2>/dev/null || true
+          git clean -fd weekly/ 2>/dev/null || true
+          git add data/weekly_snapshot.json
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Complete the seeded week so Sunday covers Aug 24-30"
+            git pull --rebase --autostash origin main
+            git push
+          fi
