@@ -1,20 +1,38 @@
 {
-  "riders": {},
+  "riders": {
+    "ali": {
+      "activities_seen": 3
+    },
+    "jake": {
+      "activities_seen": 2
+    },
+    "randee": {
+      "activities_seen": 2
+    },
+    "abe": {
+      "activities_seen": 3
+    },
+    "jose": {
+      "activities_seen": 3
+    }
+  },
   "notes": [],
-  "finished_utc": "2026-08-28T12:32:43Z",
-  "reads_this_run": 0,
+  "finished_utc": "2026-08-28T19:10:07Z",
+  "reads_this_run": 27,
   "window_waits": 0,
-  "rate_limit_window": "None/None",
-  "rate_limit_daily": "None/None",
-  "tokens_present": [],
-  "tokens_missing": [
+  "rate_limit_window": "16/200",
+  "rate_limit_daily": "1684/2000",
+  "tokens_present": [
     "abe",
     "ali",
     "jake",
     "jose",
     "randee"
   ],
-  "changes": [],
-  "backfill_complete": false,
+  "tokens_missing": [],
+  "changes": [
+    "Jake new 2026 best on segment 22971497: 5:36"
+  ],
+  "backfill_complete": true,
   "daily_spent_on": null
 }
