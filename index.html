@@ -789,7 +789,12 @@ const SEG_POS = new Map(SEGS_AZ.map((sg,i)=>[sg.id, String(i+1).padStart(2,"0")]
 --------------------------------------------------------------------------- */
 const SERIES = ["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4"];
 const RACE_MS = 11000;              // full season sweep
-const REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+// prefers-reduced-motion is about motion a viewer did not ask for. Nothing
+// here ever autoplays: the race only starts when somebody presses Play or
+// clicks a jersey card, and refusing to animate what they just asked to watch
+// is not an accessibility win, it is a broken button. So the setting is
+// honoured where it belongs, on the scroll, and not on the race itself.
+const REDUCED = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
 
 function buildRace(H, key){
   const R = H.riders, n = H.days.length;
@@ -864,7 +869,7 @@ function drawRace(root, H, key, opts){
   function start(){
     if(!G) return;
     stop(); playing = true; if(play) play.textContent = "Playing";
-    if (REDUCED){ frame(n-1); stop(); return; }
+    frame(0);
     const t0 = performance.now();
     (function step(t){
       const p = Math.min(1, (t-t0)/RACE_MS);
@@ -1046,8 +1051,8 @@ function drawRace(root, H, key, opts){
     card.appendChild(hint);
     const go = () => {
       const el = document.getElementById(id);
-      el.scrollIntoView({behavior:"smooth", block:"start"});
-      setTimeout(()=>races[cls].play(), 450);
+      el.scrollIntoView({behavior: REDUCED ? "auto" : "smooth", block:"start"});
+      setTimeout(()=>races[cls].play(), REDUCED ? 80 : 450);
     };
     card.addEventListener("click", go);
     card.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); }});
