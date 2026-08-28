@@ -1,0 +1,188 @@
+name: Build season history
+
+# The site knows season TOTALS and nothing about how they got there, so there
+# is no way to draw the green jersey or polka dot race over time from
+# state.json. This rebuilds the whole season day by day from Strava activity
+# SUMMARIES, which carry start_date_local, distance and total_elevation_gain
+# and cost about 2 reads per rider. Roughly 10 reads for the entire year.
+#
+# Writes data/history.json:
+#   {"year","updated","riders":["..."],"days":["2026-01-01",...],
+#    "miles":{"Ali":[cumulative...]}, "feet":{"Ali":[cumulative...]}}
+#
+# One value per DAY from Jan 1 to today, cumulative, so a chart can read it
+# straight off without doing arithmetic in the browser. Days with no riding
+# repeat the previous total, which is what a cumulative race looks like.
+#
+# Same counting rules as scripts/update.py: Ride, VirtualRide, GravelRide and
+# MountainBikeRide all count, bucketed by start_date_local so a late ride
+# belongs to the day it started locally.
+#
+# Safe to re-run. It rebuilds from scratch every time rather than appending,
+# so it can never drift from Strava.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # after the 12:01 AM Pacific daily update has landed
+    - cron: "40 8 * 3-10 *"
+    - cron: "40 9 * 1,2,11,12 *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Rebuild the season day by day
+        env:
+          CID: "274192"
+          CSEC: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          RT_ALI: ${{ secrets.STRAVA_REFRESH_ALI }}
+          RT_JAKE: ${{ secrets.STRAVA_REFRESH_JAKE }}
+          RT_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
+          RT_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
+          RT_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+        run: |
+          python3 - <<'PYEOF'
+          import datetime, json, os, sys, time, urllib.parse, urllib.request
+
+          YEAR = 2026
+          COUNTED = ("Ride", "VirtualRide", "GravelRide", "MountainBikeRide")
+          M, FT = 1609.344, 3.280839895
+
+          def post(url, data):
+              r = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(),
+                                         method="POST")
+              with urllib.request.urlopen(r) as f:
+                  return json.load(f)
+
+          def get(url, token):
+              for attempt in range(4):
+                  try:
+                      r = urllib.request.Request(
+                          url, headers={"Authorization": f"Bearer {token}"})
+                      with urllib.request.urlopen(r) as f:
+                          return json.load(f), f.headers.get("X-RateLimit-Usage")
+                  except urllib.error.HTTPError as e:
+                      if e.code == 429 and attempt < 3:
+                          print("  429, waiting 60s")
+                          time.sleep(60)
+                          continue
+                      raise
+              raise RuntimeError("gave up")
+
+          state = json.load(open("data/state.json"))
+
+          # Pacific, not the runner. The season and every ride bucket by local day.
+          try:
+              from zoneinfo import ZoneInfo
+              today = datetime.datetime.now(ZoneInfo("America/Los_Angeles")).date()
+          except Exception:
+              today = (datetime.datetime.now(datetime.timezone.utc)
+                       - datetime.timedelta(hours=8)).date()
+          if today.year != YEAR:
+              today = datetime.date(YEAR, 12, 31)
+
+          start = datetime.date(YEAR, 1, 1)
+          days = [(start + datetime.timedelta(days=i)).isoformat()
+                  for i in range((today - start).days + 1)]
+          idx = {d: i for i, d in enumerate(days)}
+
+          miles, feet, names = {}, {}, []
+          usage = None
+          reads = 0
+          for key, ath in sorted(state["athletes"].items()):
+              name = ath["display"]
+              rt = os.environ.get("RT_" + key.upper())
+              if not rt:
+                  print(f"[{name}] no token, skipped")
+                  continue
+              names.append(name)
+              tok = post("https://www.strava.com/oauth/token", {
+                  "client_id": os.environ["CID"], "client_secret": os.environ["CSEC"],
+                  "grant_type": "refresh_token", "refresh_token": rt})["access_token"]
+
+              after = int(datetime.datetime(YEAR, 1, 1,
+                                            tzinfo=datetime.timezone.utc).timestamp()) - 86400
+              acts, page = [], 1
+              while page <= 8:
+                  batch, usage = get(
+                      "https://www.strava.com/api/v3/athlete/activities"
+                      f"?after={after}&per_page=200&page={page}", tok)
+                  reads += 1
+                  if not batch:
+                      break
+                  acts += batch
+                  page += 1
+
+              dm = [0.0] * len(days)
+              df = [0.0] * len(days)
+              n = 0
+              for a in acts:
+                  if a.get("type") not in COUNTED:
+                      continue
+                  d = (a.get("start_date_local") or "")[:10]
+                  if d not in idx:
+                      continue
+                  dm[idx[d]] += float(a.get("distance") or 0) / M
+                  df[idx[d]] += float(a.get("total_elevation_gain") or 0) * FT
+                  n += 1
+
+              cm, cf, rm, rf = [], [], 0.0, 0.0
+              for i in range(len(days)):
+                  rm += dm[i]
+                  rf += df[i]
+                  cm.append(round(rm, 1))
+                  cf.append(round(rf))
+              miles[name] = cm
+              feet[name] = cf
+              print(f"[{name}] {n:4d} rides  ->  {cm[-1]:,.1f} mi, {cf[-1]:,.0f} ft")
+
+          out = {"year": str(YEAR), "updated": today.isoformat(),
+                 "riders": names, "days": days, "miles": miles, "feet": feet}
+          json.dump(out, open("data/history.json", "w"), separators=(",", ":"))
+          sz = os.path.getsize("data/history.json")
+          print(f"\nwrote data/history.json  {len(days)} days, {len(names)} riders, {sz:,} bytes")
+          print(f"reads used: {reads}   rate limit usage: {usage}")
+
+          # cross check against the totals the rest of the site uses
+          print("\ncheck against state.json season totals:")
+          for key, ath in sorted(state["athletes"].items()):
+              nm = ath["display"]
+              if nm not in miles:
+                  continue
+              y = (ath.get("season") or {}).get(str(YEAR)) or {}
+              want_m = float(y.get("dist_m") or 0) / M
+              want_f = float(y.get("elev_m") or 0) * FT
+              dmi = miles[nm][-1] - want_m
+              dfe = feet[nm][-1] - want_f
+              flag = "" if (abs(dmi) < 15 and abs(dfe) < 900) else "   <-- CHECK"
+              print(f"  {nm:7s} miles {miles[nm][-1]:9,.1f} vs {want_m:9,.1f} "
+                    f"({dmi:+7.1f})   feet {feet[nm][-1]:9,.0f} vs {want_f:9,.0f} "
+                    f"({dfe:+7.0f}){flag}")
+          PYEOF
+
+      - name: Commit
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/history.json
+          if git diff --cached --quiet; then
+            echo "No history changes."
+          else
+            git commit -m "Rebuild season history $(date -u +%F)"
+            git pull --rebase --autostash origin main
+            git push
+          fi
