@@ -59,6 +59,50 @@
     border:1px solid var(--line);border-radius:999px;padding:9px 20px;
     box-shadow:0 1px 4px rgba(20,20,30,.06)}
   .hero .cdown b{font-weight:700;font-size:15px;color:#1c1c20;margin-right:6px}
+  /* ---- jersey race charts ---- */
+  .race{padding:10px 0 30px}
+  .rc{background:var(--card,#fff);border:1px solid var(--line);border-radius:14px;
+      padding:18px 18px 14px;margin-bottom:16px;scroll-margin-top:18px}
+  .rc .hd{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .rc .jd{width:12px;height:12px;border-radius:50%;flex:none}
+  .rc.green .jd{background:var(--green-j)}
+  .rc.polka .jd{background:#fff;border:1px solid var(--line);
+      background-image:radial-gradient(var(--polka-j) 33%,transparent 34%);background-size:7px 7px}
+  .rc h3{font-family:'Archivo Black';font-size:15px;margin:0}
+  .rc .stamp{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);
+      border:1px solid var(--line);border-radius:999px;padding:2px 9px;margin-left:auto}
+  .rc .sub{color:var(--muted);font-size:13px;margin:6px 0 10px;max-width:74ch}
+  .rc .lg{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 10px;font-size:13px}
+  .rc .lgi{display:inline-flex;align-items:center;gap:7px}
+  .rc .lgav{width:24px;height:24px;border-radius:50%;object-fit:cover;flex:none;border:2px solid}
+  .rc .lgav.nf{border:none}
+  .rc .lgi b{font-weight:600}
+  .rc .lgi em{font-family:'JetBrains Mono',monospace;font-style:normal;font-size:12px;
+      color:var(--muted);min-width:78px}
+  .rc .lgi em.lead{color:var(--orange);font-weight:700}
+  .rc svg{width:100%;height:auto;display:block;overflow:visible}
+  .rc text.ax{font-family:'JetBrains Mono',monospace;fill:#8a8a95}
+  .rc text.lbl{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700}
+  .rc .cx{stroke:#b9b9c4;stroke-width:1;stroke-dasharray:3 3}
+  .rc .hit{cursor:crosshair}
+  .rc .ctl{display:flex;align-items:center;gap:12px;margin-top:10px}
+  .rc .play{font-family:'JetBrains Mono',monospace;font-size:12px;border:1px solid var(--line);
+      background:#fff;border-radius:999px;padding:6px 14px;cursor:pointer;color:#242428;white-space:nowrap}
+  .rc .play:hover{border-color:var(--orange);color:var(--orange)}
+  .rc .scrub{flex:1;accent-color:var(--orange);min-width:0}
+  .rc details{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+  .rc details summary{font-size:12.5px;color:var(--muted);cursor:pointer}
+  .rc .tw{overflow-x:auto}
+  .rc table{border-collapse:collapse;font-size:12.5px;margin-top:8px;width:100%}
+  .rc th,.rc td{text-align:right;padding:4px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .rc th:first-child,.rc td:first-child{text-align:left}
+  .rc th{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);
+      font-weight:400;text-transform:uppercase;letter-spacing:.08em}
+  /* the two volume jersey cards open their own race */
+  .jcard.playable{cursor:pointer}
+  .jcard.playable:hover{border-color:var(--orange)}
+  .jcard .watch{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--orange);
+      margin-top:10px;display:inline-block}
   .digests .dgl{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--orange);text-decoration:none;border-bottom:2px solid rgba(252,82,0,.35);padding-bottom:2px}
   .digests .dgl:hover{border-bottom-color:var(--orange)}
   .score .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
@@ -269,6 +313,34 @@
   </div>
 </div></section>
 
+<section class="score race"><div class="wrap">
+  <h2>The Jersey Races</h2>
+  <p style="color:var(--muted);font-size:14px;margin:-8px 0 18px;max-width:72ch">
+    Both volume jerseys are cumulative, so the totals themselves are useless on a chart:
+    eighteen miles separate first and second after eight months, which is one pixel on a
+    three thousand mile axis. These plot the gap to whoever is leading. The leader rides
+    along the top; everyone else hangs below. Press play to watch the season happen, drag
+    the slider to any day, or hover the chart.</p>
+
+  <div class="rc green" id="race-green">
+    <div class="hd"><span class="jd"></span><h3>Green Jersey, miles</h3><span class="stamp"></span></div>
+    <div class="sub">Miles behind the leader. A line touching the top is a lead change.</div>
+    <div class="lg"></div><div class="plot"></div>
+    <div class="ctl"><button class="play">Play the season</button>
+      <input class="scrub" type="range" min="0" step="1" aria-label="Scrub through the season"></div>
+    <details><summary>Table view</summary><div class="tw" id="tGreen"></div></details>
+  </div>
+
+  <div class="rc polka" id="race-polka">
+    <div class="hd"><span class="jd"></span><h3>Polka Dot Jersey, climbing</h3><span class="stamp"></span></div>
+    <div class="sub">Feet of climbing behind the leader.</div>
+    <div class="lg"></div><div class="plot"></div>
+    <div class="ctl"><button class="play">Play the season</button>
+      <input class="scrub" type="range" min="0" step="1" aria-label="Scrub through the season"></div>
+    <details><summary>Table view</summary><div class="tw" id="tPolka"></div></details>
+  </div>
+</div></section>
+
 <section class="arena"><div class="wrap">
   <h2>The Battleground</h2>
   <div class="mapbox"><div id="bigmap"></div>
@@ -297,6 +369,7 @@
 </div></footer>
 
 <script src="data.js"></script>
+<script src="data/history.js"></script>
 <script src="avatars.js"></script>
 <script>window.PHOTOS={Ali:"photos/ali.webp",Jake:"photos/jake.webp",Randee:"photos/randee.webp",Abe:"photos/abe.webp",Jose:"photos/jose.webp"};</script>
 <script>
@@ -694,6 +767,291 @@ const SEG_POS = new Map(SEGS_AZ.map((sg,i)=>[sg.id, String(i+1).padStart(2,"0")]
     bounds = bounds ? bounds.extend(line.getBounds()) : line.getBounds();
   });
   map.fitBounds(bounds, {padding:[30,30]});
+})();
+</script>
+
+<script>
+/* ---------------------------------------------------------------------------
+   The jersey races, animated.
+
+   Plotted as raw cumulative totals these are unreadable: Randee and Jose are
+   18 miles apart on a 3,400 mile axis, which is one pixel. So the y axis is
+   GAP TO THE LEADER. Whoever leads at that moment rides along zero, everyone
+   else hangs below, and a lead change is a line touching the top.
+
+   The race plays out rather than appearing finished: a clip rect sweeps left
+   to right, each rider's face rides the head of their own line, and the legend
+   ticks the real numbers for the day being drawn. Nothing is pre-rendered, so
+   it is current the moment data/history.js is, and there is no weekly step to
+   forget.
+
+   Two measures, two charts. Never one chart with two y scales.
+--------------------------------------------------------------------------- */
+const SERIES = ["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4"];
+const RACE_MS = 11000;              // full season sweep
+const REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function buildRace(H, key){
+  const R = H.riders, n = H.days.length;
+  const lead = new Array(n);
+  for (let i=0;i<n;i++){ let m=-Infinity; for(const r of R){const v=H[key][r][i]; if(v>m)m=v;} lead[i]=m; }
+  const gap = {}; let worst = 0;
+  for (const r of R){
+    const a = new Array(n);
+    for (let i=0;i<n;i++){ a[i] = H[key][r][i] - lead[i]; if (a[i] < worst) worst = a[i]; }
+    gap[r] = a;
+  }
+  return {gap, worst};
+}
+
+function niceStep(span, want){
+  const raw = span/want, p = Math.pow(10, Math.floor(Math.log10(raw)));
+  for (const m of [1,2,2.5,5,10]) if (raw/p <= m) return m*p;
+  return 10*p;
+}
+
+function drawRace(root, H, key, opts){
+  const R = H.riders, days = H.days, n = days.length;
+  const {gap, worst} = buildRace(H, key);
+  const plot   = root.querySelector(".plot");
+  const legend = root.querySelector(".lg");
+  const stamp  = root.querySelector(".stamp");
+  const scrub  = root.querySelector(".scrub");
+  const play   = root.querySelector(".play");
+  const fmt = opts.fmt;
+  const AV = window.AVATARS || {};
+
+  legend.innerHTML = R.map((r,si)=>{
+    const c = SERIES[si%SERIES.length];
+    const f = AV[r] ? `<img class="lgav" src="${AV[r]}" alt="" style="border-color:${c}">`
+                    : `<i class="lgav nf" style="background:${c}"></i>`;
+    return `<span class="lgi" data-r="${r}">${f}<b>${r}</b><em></em></span>`;
+  }).join("");
+  const cells = {};
+  R.forEach(r => cells[r] = legend.querySelector(`.lgi[data-r="${r}"] em`));
+
+  let G = null;          // geometry of the current render
+  let raf = null, playing = false;
+
+  function setReadout(i){
+    stamp.textContent = i===n-1 ? "today"
+      : new Date(days[i]+"T12:00:00").toLocaleDateString("en",{month:"short",day:"numeric"});
+    R.forEach(r=>{
+      const g = gap[r][i];
+      cells[r].textContent = g===0 ? "leading" : fmt(-g)+" back";
+      cells[r].className = g===0 ? "lead" : "";
+    });
+  }
+
+  // Move the clip edge, the riding faces and the readout to day i.
+  function frame(i){
+    if(!G) return;
+    const {X, Y, pad, iw, reveal, riders, ends, narrow} = G;
+    reveal.setAttribute("width", Math.max(0, X(i)-pad.l+0.5).toFixed(1));
+    R.forEach((r,si)=>{
+      const g = riders[si];
+      g.setAttribute("transform", `translate(${X(i).toFixed(1)},${Y(gap[r][i]).toFixed(1)})`);
+    });
+    const done = i >= n-1;
+    riders.forEach(g=>g.style.display = done ? "none" : "");
+    if (ends) ends.style.opacity = done ? "1" : "0";
+    setReadout(i);
+    if (scrub) scrub.value = i;
+  }
+
+  function stop(){ if(raf) cancelAnimationFrame(raf); raf=null; playing=false; if(play) play.textContent="Replay"; }
+
+  function start(){
+    if(!G) return;
+    stop(); playing = true; if(play) play.textContent = "Playing";
+    if (REDUCED){ frame(n-1); stop(); return; }
+    const t0 = performance.now();
+    (function step(t){
+      const p = Math.min(1, (t-t0)/RACE_MS);
+      // Linear: a race is constant time, and an eased clock makes August look
+      // slower than March for no reason. The last frame is forced rather than
+      // computed, so the season always finishes ON the last day.
+      if (p >= 1){ frame(n-1); stop(); return; }
+      frame(Math.round(p*(n-1)));
+      raf = requestAnimationFrame(step);
+    })(t0);
+  }
+
+  function render(){
+    const narrow = plot.clientWidth < 560;
+    const W = narrow ? 460 : 900;
+    const HGT = narrow ? 300 : 340;
+    const pad = narrow ? {t:16,r:16,b:30,l:56} : {t:24,r:120,b:34,l:58};
+    const iw = W-pad.l-pad.r, ih = HGT-pad.t-pad.b;
+    const step = niceStep(Math.abs(worst)||1, narrow?3:4);
+    const yMax = Math.ceil(Math.abs(worst)/step)*step || step;
+    const X = i => pad.l + (n<2?0:i*iw/(n-1));
+    const Y = v => pad.t + (-v)/yMax*ih;
+    const fs = narrow ? 11 : 10.5;
+    const AR = narrow ? 11 : 13;
+    const RID = `${opts.id}`;
+
+    let defs = `<clipPath id="rev-${RID}"><rect id="revr-${RID}" x="${pad.l}" y="0" width="0" height="${HGT}"/></clipPath>`;
+    let s = `<svg viewBox="0 0 ${W} ${HGT}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${opts.aria}">`;
+
+    for (let v=0; v<=yMax+1e-9; v+=step){
+      const y = Y(-v);
+      s += `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${pad.l+iw}" y2="${y.toFixed(1)}" `+
+           `stroke="${v===0?'#c3c3cd':'#eeeef2'}" stroke-width="1"/>`;
+      s += `<text x="${pad.l-8}" y="${(y+4).toFixed(1)}" text-anchor="end" class="ax" style="font-size:${fs}px">${v===0?'leader':fmt(v)}</text>`;
+    }
+    let lastM=null;
+    days.forEach((d,i)=>{
+      const m=d.slice(0,7);
+      if(m!==lastM){ lastM=m;
+        if (narrow && Number(d.slice(5,7))%2===0) return;
+        const x=X(i), lbl=new Date(d+"T12:00:00").toLocaleDateString("en",{month:"short"});
+        s += `<line x1="${x.toFixed(1)}" y1="${pad.t}" x2="${x.toFixed(1)}" y2="${pad.t+ih}" stroke="#f4f4f8" stroke-width="1"/>`;
+        s += `<text x="${x.toFixed(1)}" y="${pad.t+ih+18}" text-anchor="middle" class="ax" style="font-size:${fs}px">${lbl}</text>`;
+      }
+    });
+
+    // the lines, revealed by the clip rect
+    s += `<g clip-path="url(#rev-${RID})">`;
+    R.forEach((r,si)=>{
+      let d0="";
+      for(let i=0;i<n;i++) d0 += (i?"L":"M")+X(i).toFixed(1)+" "+Y(gap[r][i]).toFixed(1);
+      s += `<path d="${d0}" fill="none" stroke="${SERIES[si%SERIES.length]}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    });
+    s += `</g>`;
+
+    // settled end labels, faded in when the race finishes
+    const ends = R.map((r,si)=>({name:r, c:SERIES[si%SERIES.length], y:Y(gap[r][n-1]), v:gap[r][n-1]}));
+    let endMarkup = "";
+    if(!narrow){
+      const MIN = AR*2+3;
+      ends.sort((a,b)=>a.y-b.y);
+      for(let i=1;i<ends.length;i++) if(ends[i].y-ends[i-1].y<MIN) ends[i].y=ends[i-1].y+MIN;
+      const over = ends[ends.length-1].y-(pad.t+ih+AR);
+      if(over>0) ends.forEach(e=>e.y-=over);
+      if(ends[0].y < AR+2){ const up = AR+2-ends[0].y; ends.forEach(e=>e.y+=up); }
+      ends.forEach((e,i)=>{
+        const cid=`ec-${RID}-${i}`, fx=pad.l+iw+10+AR;
+        defs += `<clipPath id="${cid}"><circle cx="${fx}" cy="${e.y.toFixed(1)}" r="${AR-1.5}"/></clipPath>`;
+        endMarkup += `<path d="M${pad.l+iw} ${Y(e.v).toFixed(1)} L${pad.l+iw+7} ${e.y.toFixed(1)} L${(fx-AR).toFixed(1)} ${e.y.toFixed(1)}" fill="none" stroke="${e.c}" stroke-width="1" opacity=".5"/>`;
+        endMarkup += `<circle cx="${pad.l+iw}" cy="${Y(e.v).toFixed(1)}" r="3" fill="${e.c}" stroke="#fff" stroke-width="1.5"/>`;
+        endMarkup += AV[e.name]
+          ? `<image href="${AV[e.name]}" x="${(fx-AR+1.5).toFixed(1)}" y="${(e.y-AR+1.5).toFixed(1)}" width="${(AR-1.5)*2}" height="${(AR-1.5)*2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${cid})"/>`
+          : `<circle cx="${fx}" cy="${e.y.toFixed(1)}" r="${AR-1.5}" fill="${e.c}" opacity=".25"/>`;
+        endMarkup += `<circle cx="${fx}" cy="${e.y.toFixed(1)}" r="${AR-0.75}" fill="none" stroke="${e.c}" stroke-width="1.75"/>`;
+        endMarkup += `<text x="${fx+AR+5}" y="${(e.y+4).toFixed(1)}" class="lbl" fill="${e.c}">${e.name}</text>`;
+      });
+    }
+    s += `<g class="ends" style="opacity:0;transition:opacity .35s">${endMarkup}</g>`;
+
+    // one face per rider, riding the head of its own line
+    s += `<g class="riders">`;
+    R.forEach((r,si)=>{
+      const c = SERIES[si%SERIES.length], cid = `rc-${RID}-${si}`;
+      defs += `<clipPath id="${cid}"><circle cx="0" cy="0" r="${AR-1.5}"/></clipPath>`;
+      s += `<g class="rid">`;
+      s += AV[r]
+        ? `<image href="${AV[r]}" x="${-(AR-1.5)}" y="${-(AR-1.5)}" width="${(AR-1.5)*2}" height="${(AR-1.5)*2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${cid})"/>`
+        : `<circle r="${AR-1.5}" fill="${c}"/>`;
+      s += `<circle r="${AR-0.75}" fill="none" stroke="${c}" stroke-width="2"/></g>`;
+    });
+    s += `</g>`;
+
+    s += `<g class="cross" style="display:none"><line class="cx" y1="${pad.t}" y2="${pad.t+ih}"/></g>`;
+    s += `<rect class="hit" x="${pad.l}" y="${pad.t}" width="${iw}" height="${ih}" fill="transparent"/></svg>`;
+    plot.innerHTML = s.replace("<svg", "<svg").replace(">", `><defs>${defs}</defs>`, 1);
+
+    const svg = plot.querySelector("svg");
+    G = {X, Y, pad, iw, narrow,
+         reveal: plot.querySelector(`#revr-${RID}`),
+         riders: [...plot.querySelectorAll(".riders .rid")],
+         ends: plot.querySelector(".ends")};
+
+    // hover / scrub reads a day without disturbing the animation state
+    const cross = plot.querySelector(".cross"), hit = plot.querySelector(".hit"),
+          cx = cross.querySelector(".cx");
+    function at(clientX){
+      if (playing) return;
+      const b = svg.getBoundingClientRect();
+      let i = Math.round(((clientX-b.left)/b.width*W - pad.l)/iw*(n-1));
+      i = Math.max(0, Math.min(n-1, i));
+      cross.style.display="";
+      cx.setAttribute("x1",X(i)); cx.setAttribute("x2",X(i));
+      frame(i);
+    }
+    hit.addEventListener("mousemove", e=>at(e.clientX));
+    hit.addEventListener("mouseleave", ()=>{ if(!playing){ cross.style.display="none"; frame(n-1);} });
+    hit.addEventListener("touchmove", e=>{ at(e.touches[0].clientX); e.preventDefault(); },{passive:false});
+    hit.addEventListener("touchstart", e=>at(e.touches[0].clientX));
+  }
+
+  if (scrub){
+    scrub.max = n-1; scrub.value = n-1;
+    scrub.addEventListener("input", ()=>{ stop(); frame(Number(scrub.value)); });
+  }
+  if (play) play.addEventListener("click", start);
+
+  render();
+  frame(n-1);
+  let t=null;
+  window.addEventListener("resize", ()=>{ clearTimeout(t); t=setTimeout(()=>{ const wasPlaying=playing; stop(); render(); wasPlaying?start():frame(n-1); }, 160); });
+
+  return {play:start, stop, el:root};
+}
+
+
+// ---- wire the two volume jersey races -----------------------------------
+// Nothing is pre-rendered. The animation runs off data/history.js, which the
+// daily workflow rebuilds, so the race is current the moment the data is and
+// there is no weekly step to forget.
+(function(){
+  if (!window.HISTORY || !HISTORY.riders || !HISTORY.riders.length){
+    document.querySelectorAll(".race").forEach(s=>s.style.display="none");
+    return;
+  }
+  const nfm = n => Math.round(n).toLocaleString();
+  const races = {
+    green: drawRace(document.getElementById("race-green"), HISTORY, "miles",
+      {id:"g", fmt:v=>nfm(v)+" mi", aria:"Miles behind the green jersey leader, by day"}),
+    polka: drawRace(document.getElementById("race-polka"), HISTORY, "feet",
+      {id:"p", fmt:v=>nfm(v)+" ft", aria:"Feet of climbing behind the polka dot leader, by day"})
+  };
+
+  function tbl(id, key, unit){
+    const R=HISTORY.riders, n=HISTORY.days.length, marks=[]; let lm=null;
+    HISTORY.days.forEach((d,i)=>{const m=d.slice(0,7); if(m!==lm){lm=m; marks.push(i);}});
+    if(marks[marks.length-1]!==n-1) marks.push(n-1);
+    let h='<table><tr><th>Date</th>'+R.map(r=>'<th>'+r+'</th>').join('')+'</tr>';
+    marks.forEach(i=>{
+      const lab=new Date(HISTORY.days[i]+"T12:00:00").toLocaleDateString("en",{month:"short",day:"numeric"});
+      h+='<tr><td>'+lab+'</td>'+R.map(r=>'<td>'+nfm(HISTORY[key][r][i])+'</td>').join('')+'</tr>';
+    });
+    document.getElementById(id).innerHTML = h+'</table>'+
+      '<p style="font-size:12px;color:var(--muted)">Cumulative '+unit+', first of each month.</p>';
+  }
+  tbl("tGreen","miles","miles"); tbl("tPolka","feet","feet climbed");
+
+  // Clicking a volume jersey card jumps to its race and plays it. Yellow has
+  // no card here because GC has no day by day history: state.json keeps only
+  // each rider's current best per segment, so there is nothing to animate.
+  [["green","race-green"],["polka","race-polka"]].forEach(([cls,id])=>{
+    const card = document.querySelector(".jcard."+cls);
+    if(!card) return;
+    card.classList.add("playable");
+    card.setAttribute("role","button");
+    card.setAttribute("tabindex","0");
+    const hint = document.createElement("div");
+    hint.className = "watch";
+    hint.textContent = "Watch the race \u2192";
+    card.appendChild(hint);
+    const go = () => {
+      const el = document.getElementById(id);
+      el.scrollIntoView({behavior:"smooth", block:"start"});
+      setTimeout(()=>races[cls].play(), 450);
+    };
+    card.addEventListener("click", go);
+    card.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); }});
+  });
 })();
 </script>
 </body>
