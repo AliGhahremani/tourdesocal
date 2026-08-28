@@ -1,5 +1,5 @@
 {
-  "taken_utc": "2026-08-28T16:28:54Z",
+  "taken_utc": "2026-08-23T23:59:59Z",
   "year": "2026",
   "riders": {
     "Ali": {
@@ -50,10 +50,10 @@
         "1800": 234,
         "3600": 220
       },
-      "dist_m": 4025913.7999999993,
-      "elev_m": 51501.1,
-      "rides": 140,
-      "time_s": 669999,
+      "dist_m": 3919979.9999999995,
+      "elev_m": 50830.1,
+      "rides": 137,
+      "time_s": 655594,
       "vtime_s": 105765,
       "vrides": 43
     },
@@ -99,10 +99,10 @@
         "1800": 245,
         "3600": 219
       },
-      "dist_m": 4157838.3999999985,
-      "elev_m": 34167.0,
-      "rides": 101,
-      "time_s": 526309,
+      "dist_m": 4062888.7999999984,
+      "elev_m": 33366.0,
+      "rides": 98,
+      "time_s": 514336,
       "vtime_s": 0,
       "vrides": 0
     },
@@ -162,10 +162,10 @@
         "1800": 214,
         "3600": 201
       },
-      "dist_m": 5422916.900000001,
-      "elev_m": 55182.799999999996,
-      "rides": 186,
-      "time_s": 863916,
+      "dist_m": 5373684.400000001,
+      "elev_m": 54724.799999999996,
+      "rides": 185,
+      "time_s": 858133,
       "vtime_s": 0,
       "vrides": 0
     },
@@ -211,10 +211,10 @@
         "1800": 229,
         "3600": 212
       },
-      "dist_m": 4231109.599999998,
-      "elev_m": 38171.6,
-      "rides": 98,
-      "time_s": 552784,
+      "dist_m": 4105236.5999999978,
+      "elev_m": 37138.6,
+      "rides": 95,
+      "time_s": 536115,
       "vtime_s": 160968,
       "vrides": 45
     },
@@ -270,10 +270,10 @@
         "1800": 248,
         "3600": 220
       },
-      "dist_m": 5393760.5,
-      "elev_m": 51790.0,
-      "rides": 110,
-      "time_s": 685866,
+      "dist_m": 5271712.2,
+      "elev_m": 50802.0,
+      "rides": 106,
+      "time_s": 669421,
       "vtime_s": 0,
       "vrides": 0
     }
@@ -309,5 +309,6 @@
     "yellow": "Jose",
     "polka": "Randee",
     "green": "Randee"
-  }
+  },
+  "seeded": "Riding totals rolled back to the end of 2026-08-23 from Strava activity summaries. Segment bests, attempts, power, GC and jerseys are today's values, because state.json keeps only the current best per segment."
 }
