@@ -77,7 +77,7 @@ def _o(n):
 # facts
 # --------------------------------------------------------------------------
 
-def season_facts(cur, meta, days_left):
+def season_facts(cur, meta, days_left, segs=None):
     """Everything true about each rider's season, computed once."""
     riders = cur["riders"]
     seg_ids = cur["seg_ids"]
@@ -118,6 +118,13 @@ def season_facts(cur, meta, days_left):
         vals.sort(key=lambda kv: -kv[1])
         for i, (n, v) in enumerate(vals):
             pranks.setdefault(n, {})[k] = (i + 1, v, len(vals))
+
+    gone_kom = {}
+    for x in ((segs or {}).get("removed") or []):
+        sid = x["id"]
+        got = {n: r["bests"][sid] for n, r in riders.items() if sid in r["bests"]}
+        if got:
+            gone_kom.setdefault(min(got, key=got.get), set()).add(sid)
 
     order = sorted(cur["gc"], key=lambda n: cur["gc"][n]["pos"])
     lead_sec = cur["gc"][order[0]]["sec"] if order else 0
@@ -177,7 +184,11 @@ def season_facts(cur, meta, days_left):
             "miles_gap": (riders[by_miles[0]]["dist_m"] - r["dist_m"]) / M_PER_MI,
             "feet_gap": (riders[by_feet[0]]["elev_m"] - r["elev_m"]) * FT_PER_M,
             "grade": grade, "length": length, "seg_name": seg_name,
-            "days_left": days_left,
+            "days_left": days_left, "year": cur["year"],
+            "seg_added": (segs or {}).get("added") or [],
+            "seg_removed": (segs or {}).get("removed") or [],
+            "have": dict(r["bests"]),
+            "was_kom": set(koms[name]) | gone_kom.get(name, set()),
         }
 
     field_fpm = sorted(v["fpm"] for v in F.values())
@@ -234,31 +245,39 @@ def _a_lasts(f, s):
 
 
 def _a_never(f, s):
+    """Segments with no time THIS SEASON.
+
+    Everything on this site is scoped to the competition year, and no rider
+    has meaningful history before it, so we do not know and must not claim
+    that anyone has never ridden a road in their life. What the data supports
+    is "not in {year}", and that is what these say.
+    """
     n = len(f["skipped"])
     if n < 1:
         return None
     top = f["seg_name"].get(f["skipped"][0][0], "")
     gain = f["skipped"][0][1]
+    yr = f["year"]
     if n == 1:
         return 78, [
-            f"One segment stands between you and the full set: {top}. "
+            f"One segment stands between you and the full set this year: {top}. "
             f"Riding it once is worth about {_mins(gain)} to your GC.",
-            f"You have ridden everything except {top}. That single omission is "
-            f"costing you roughly {_mins(gain)}.",
+            f"You have ridden everything except {top} in {yr}. That single "
+            f"omission is costing you roughly {_mins(gain)}.",
         ]
     return 76, [
-        f"There are {_w(n)} segments you have never ridden, and the worst of them "
-        f"is {top} at about {_mins(gain)} of free time.",
-        f"{_w(n).capitalize()} segments remain untouched. {top} alone is worth "
-        f"{_mins(gain)} to you, and it is not going to ride itself.",
-        f"Still {_w(n)} on the list you have never been down. Start with {top}: "
-        f"{_mins(gain)}, one afternoon.",
+        f"There are {_w(n)} segments you have not ridden this year, and the worst "
+        f"of them is {top} at about {_mins(gain)} of free time.",
+        f"{_w(n).capitalize()} segments still have no {yr} time against your name. "
+        f"{top} alone is worth {_mins(gain)} to you, and it is not going to ride itself.",
+        f"Still {_w(n)} on the list you have not been down this season. Start with "
+        f"{top}: {_mins(gain)}, one afternoon.",
         f"{top} is the single most expensive thing you are not doing, at roughly "
-        f"{_mins(gain)}, and it is one of {_w(n)} you have never ridden.",
-        f"Your untouched pile is {_w(n)} deep. {top} sits on top of it holding "
+        f"{_mins(gain)}, and it is one of {_w(n)} you have skipped all year.",
+        f"Your {yr} blank list is {_w(n)} deep. {top} sits on top of it holding "
         f"{_mins(gain)} of your time hostage.",
-        f"{_w(n).capitalize()} segments never ridden. Not slowly, not badly. "
-        f"Never. {top} is the one that costs you most, at about {_mins(gain)}.",
+        f"{_w(n).capitalize()} segments with no time on them this year. Not slow "
+        f"times, no times. {top} is the one that costs you most, at about {_mins(gain)}.",
     ]
 
 
@@ -272,7 +291,7 @@ def _a_steep(f, s):
     b = f["seg_name"].get(steeps[1][0], "")
     return 72, [
         f"Look at which ones you are skipping. {a} at {steeps[0][1]:.0f} percent and "
-        f"{b} at {steeps[1][1]:.0f} percent are both on your untouched list. "
+        f"{b} at {steeps[1][1]:.0f} percent are both missing from your year. "
         f"That is not a scheduling accident.",
         f"The gradients tell on you: {a} and {b}, the two steepest things you have "
         f"avoided, at {steeps[0][1]:.0f} and {steeps[1][1]:.0f} percent.",
@@ -287,7 +306,7 @@ def _a_table(f, s):
         f"Add up everything you are giving away by not riding the segments you skip "
         f"and it comes to about {_mins(total)}. That is not training, that is paperwork.",
         f"About {_mins(total)} is sitting on the table for you, and all of it is in "
-        f"segments you have simply never ridden.",
+        f"segments you have simply not ridden this year.",
     ]
 
 
@@ -464,10 +483,98 @@ def _a_complete(f, s):
     if left != 0:
         return None
     return 72, [
-        f"All {_w(f['total_segs'])} segments ridden. Whatever else is true, "
-        f"nobody can say you dodged anything.",
-        f"A complete card: {_w(f['total_segs'])} of {_w(f['total_segs'])}. "
-        f"No penalty time anywhere in your total.",
+        f"All {_w(f['total_segs'])} segments ridden this year. Whatever else is "
+        f"true, nobody can say you dodged anything.",
+        f"A complete {f['year']} card: {_w(f['total_segs'])} of "
+        f"{_w(f['total_segs'])}. No penalty time anywhere in your total.",
+    ]
+
+
+def _a_new_seg(f, s):
+    """A segment joined the list this week and this rider has no time on it.
+
+    This is the only angle that can appear out of nowhere with no riding
+    involved, so it outranks everything: the rider woke up with a penalty
+    they did not earn.
+    """
+    fresh = [x for x in f["seg_added"] if x["id"] not in f["have"]]
+    if not fresh:
+        return None
+    names = ", ".join(x["name"] for x in fresh[:2])
+    if len(fresh) == 1:
+        return 90, [
+            f"{names} joined the list this week and you have no time on it, "
+            f"so you are carrying a DNS there from today. Cheapest fix on your "
+            f"whole card: ride it once.",
+            f"New this week: {names}. You have not been down it this year, "
+            f"which means it is already costing you penalty time.",
+            f"{names} is on the board as of this week and your name is not on "
+            f"it. That is a penalty you acquired by doing nothing at all.",
+            f"The list gained {names} and you have no {f['year']} time there. "
+            f"Ride it once and the penalty goes away.",
+            f"Fresh liability: {names}. Added this week, unridden by you, "
+            f"scored against you until that changes.",
+        ]
+    return 90, [
+        f"{_w(len(fresh)).capitalize()} segments joined the list this week, "
+        f"{names} among them, and you have a time on none of them. That is "
+        f"penalty time you picked up without turning a pedal.",
+    ]
+
+
+def _a_new_seg_done(f, s):
+    """Added this week, and this rider already had a qualifying ride on it."""
+    got = [x for x in f["seg_added"] if x["id"] in f["have"]]
+    if not got:
+        return None
+    x = got[0]
+    mine = f["have"].get(x["id"])
+    return 86, [
+        f"{x['name']} was added to the list this week and you already had a "
+        f"time on it, {_clock(mine)}. Free position on a segment you did not "
+        f"know you were racing.",
+        f"Lucky week: {x['name']} joined the list and your {_clock(mine)} on it "
+        f"counts retroactively. Everyone without one is now behind.",
+        f"Your {_clock(mine)} on {x['name']} was worth nothing last Sunday and "
+        f"is worth something today. The list grew to include it.",
+        f"{x['name']} is new to the board this week. You had already been down "
+        f"it in {_clock(mine)}, so you start that one with a time on the sheet.",
+        f"Nothing you did earned this: {x['name']} joined the list and your "
+        f"existing {_clock(mine)} came with it.",
+    ]
+
+
+def _a_lost_kom(f, s):
+    """A segment this rider was fastest on has left the list."""
+    lost = [x for x in f["seg_removed"] if x["id"] in f["was_kom"]]
+    if not lost:
+        return None
+    x = lost[0]
+    return 88, [
+        f"{x['name']} came off the list this week and you were the fastest man "
+        f"on it. That one is gone and it is not coming back.",
+        f"Bad news aimed squarely at you: {x['name']} has been removed, and it "
+        f"was yours. Everyone else lost a segment. You lost a win.",
+        f"You held {x['name']} outright and this week it stopped counting. "
+        f"Nobody took it off you, which somehow makes it worse.",
+    ]
+
+
+def _a_lost_dns(f, s):
+    """A segment this rider was being penalised on has left the list."""
+    saved = [x for x in f["seg_removed"] if x["id"] not in f["have"]]
+    if not saved:
+        return None
+    x = saved[0]
+    return 84, [
+        f"{x['name']} left the list this week and you had no time on it, "
+        f"so a penalty just quietly came off your total. Do not get used to it.",
+        f"You got away with one: {x['name']} is off the list and you were "
+        f"carrying a DNS on it.",
+        f"{x['name']} has been removed. You were being penalised on it and now "
+        f"you are not, which is the laziest time you will gain all year.",
+        f"One fewer thing to avoid: {x['name']} is off the board and you never "
+        f"did ride it.",
     ]
 
 
@@ -496,14 +603,22 @@ ANGLES = {
     "yellow": _a_yellow, "leader": _a_leader, "green": _a_green,
     "polka": _a_polka, "power": _a_power, "spread": _a_spread,
     "complete": _a_complete, "pace": _a_pace,
+    "new_seg": _a_new_seg, "new_seg_done": _a_new_seg_done,
+    "lost_kom": _a_lost_kom, "lost_dns": _a_lost_dns,
 }
+
+# News angles report a thing that happened this week rather than a standing
+# fact, so they must never be suppressed by the rotation memory.
+NEWS = {"new_seg", "new_seg_done", "lost_kom", "lost_dns"}
 
 # Angles that say much the same thing. Never use two from one set in one
 # paragraph, or it reads like the generator is stuck.
 CLASHES = [{"koms", "no_koms"}, {"never", "steep", "table", "complete"},
            {"ahead", "yellow", "leader"}, {"green", "polka"},
            {"volume", "fpm", "power"}, {"pace", "no_koms"},
-           {"lasts", "no_koms"}, {"grind", "spread"}]
+           {"lasts", "no_koms"}, {"grind", "spread"},
+           {"new_seg", "new_seg_done"}, {"lost_kom", "lost_dns"},
+           {"new_seg", "never", "steep", "table", "complete"}]
 
 
 # --------------------------------------------------------------------------
@@ -582,7 +697,7 @@ def assess(cur, meta, d, week_no, days_left, seen=None, seeded=False, said=None)
     """
     seen = {k: list(v) for k, v in (seen or {}).items()}
     said = {k: list(v) for k, v in (said or {}).items()}
-    F = season_facts(cur, meta, days_left)
+    F = season_facts(cur, meta, days_left, d.get("segs"))
     wk = {w["name"]: w for w in d["week"]}
     order = sorted(cur["gc"], key=lambda n: cur["gc"][n]["pos"])
 
@@ -590,7 +705,7 @@ def assess(cur, meta, d, week_no, days_left, seen=None, seeded=False, said=None)
     # Five paragraphs in one email have to say five different things, so an
     # angle another rider already got this week is heavily discouraged, and a
     # sentence already used this week is never used twice.
-    week_keys, week_text = set(), set()
+    week_keys, week_text, week_shape = set(), set(), set()
 
     for name in order:
         f = F[name]
@@ -613,6 +728,8 @@ def assess(cur, meta, d, week_no, days_left, seen=None, seeded=False, said=None)
         # a rider with few angles still gets a paragraph.
         def rank(item):
             score, key, _ = item
+            if key in NEWS:
+                return -score          # this week's news always leads
             if key in recent:
                 score -= 200 - 20 * recent.index(key)
             if key in week_keys:
@@ -627,14 +744,19 @@ def assess(cur, meta, d, week_no, days_left, seen=None, seeded=False, said=None)
                 break
             if any(key in c and (set(used_keys) & c) for c in CLASHES):
                 continue
-            fresh = [t for t in phrasings if t not in week_text]
+            fresh = [(i, t) for i, t in enumerate(phrasings)
+                     if t not in week_text and (key, i) not in week_shape]
+            if not fresh:
+                fresh = [(i, t) for i, t in enumerate(phrasings)
+                         if t not in week_text]
             if not fresh:
                 continue
             # prefer wording this rider has not had recently
-            unheard = [t for t in fresh if t not in said.get(name, [])]
-            line = rng.choice(unheard or fresh)
+            unheard = [x for x in fresh if x[1] not in said.get(name, [])]
+            idx, line = rng.choice(unheard or fresh)
             picked.append(line)
             week_text.add(line)
+            week_shape.add((key, idx))
             used_keys.append(key)
             week_keys.add(key)
 
@@ -648,7 +770,8 @@ def assess(cur, meta, d, week_no, days_left, seen=None, seeded=False, said=None)
 
         out.append((name, " ".join(x for x in parts if x)))
 
-        recent = used_keys + [k for k in recent if k not in used_keys]
+        rot = [k for k in used_keys if k not in NEWS]
+        recent = rot + [k for k in recent if k not in rot]
         seen[name] = recent[:MEMORY]
         heard = picked + [t for t in said.get(name, []) if t not in picked]
         said[name] = heard[:SAID]

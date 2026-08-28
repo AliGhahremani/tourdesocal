@@ -104,7 +104,8 @@ def build_current(state, meta, year):
 def diff(cur, prev):
     """What changed since last week. prev may be None on the first run."""
     d = {"baseline": prev is None, "movers": [], "week": [], "prs": [],
-         "tried": [], "power": [], "jerseys": []}
+         "tried": [], "power": [], "jerseys": [],
+         "segs": {"added": [], "removed": [], "known": False}}
     names = sorted(cur["riders"], key=lambda n: cur["gc"][n]["pos"])
 
     if prev is None:
@@ -116,6 +117,20 @@ def diff(cur, prev):
 
     pr_r = prev.get("riders", {})
     pr_gc = prev.get("gc", {})
+
+    # The segment list itself can change between weeks, and when it does it
+    # moves everybody's GC. A snapshot taken before this was tracked has no
+    # seg_ids, and "unknown" is reported as no change rather than as a list of
+    # twenty one brand new segments.
+    old_ids = prev.get("seg_ids")
+    if old_ids is not None:
+        old_names = prev.get("seg_names") or {}
+        old_set, new_set = set(old_ids), set(cur["seg_ids"])
+        d["segs"]["known"] = True
+        d["segs"]["added"] = [{"id": sid, "name": cur["seg_name"].get(sid, sid)}
+                              for sid in cur["seg_ids"] if sid not in old_set]
+        d["segs"]["removed"] = [{"id": sid, "name": old_names.get(sid, sid)}
+                                for sid in old_ids if sid not in new_set]
 
     for n in names:
         r = cur["riders"][n]
@@ -414,6 +429,25 @@ def render(cur, d, week_end, note, head=None, cards=None):
         A('<p style="font-size:14px;color:#6d6d78;margin-top:20px">Nobody rode '
           'anything that counted this week. Standings unchanged.</p>')
 
+    # Segment changes. When the list itself moves, every GC total moves with
+    # it, so this goes above the assessments rather than buried at the end.
+    if d["segs"]["added"] or d["segs"]["removed"]:
+        A('<h2 style="font-size:15px;margin:26px 0 8px">Changes to the segment '
+          'list</h2>')
+        A('<div style="background:#eef4fb;border:1px solid #cfdff0;'
+          'border-radius:10px;padding:13px 15px;font-size:14px;line-height:1.6">')
+        for x in d["segs"]["added"]:
+            A(f'<div style="margin:3px 0"><b style="color:#0a7d3c">Added</b> '
+              f'{x["name"]}. Anyone without a time on it is now carrying a DNS '
+              f'there.</div>')
+        for x in d["segs"]["removed"]:
+            A(f'<div style="margin:3px 0"><b style="color:#c8102e">Removed</b> '
+              f'{x["name"]}. Times set on it no longer count towards anything.</div>')
+        A('<div style="margin-top:8px;color:#4a4a55">Every GC total in this '
+          'email has been recalculated over the new list, so gaps will have '
+          'moved for reasons that have nothing to do with this week\'s riding.'
+          '</div></div>')
+
     # Individual assessments. Everyone gets one every week, in GC order, so
     # the man in yellow reads his first and the man in last reads his last.
     if cards:
@@ -514,7 +548,9 @@ def main():
             "riders": {n: {k: v for k, v in r.items() if k != "times"}
                        for n, r in cur["riders"].items()},
             "gc": cur["gc"], "jerseys": cur["jerseys"],
-            "assess_seen": seen, "assess_said": said}
+            "assess_seen": seen, "assess_said": said,
+            "seg_ids": list(cur["seg_ids"]),
+            "seg_names": dict(cur["seg_name"])}
     json.dump(snap, open(SNAP, "w"), indent=2)
 
     print(f"digest for week ending {week_end}: "
