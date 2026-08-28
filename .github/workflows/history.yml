@@ -6,9 +6,13 @@ name: Build season history
 # SUMMARIES, which carry start_date_local, distance and total_elevation_gain
 # and cost about 2 reads per rider. Roughly 10 reads for the entire year.
 #
-# Writes data/history.json:
+# Writes data/history.js as window.HISTORY:
 #   {"year","updated","riders":["..."],"days":["2026-01-01",...],
 #    "miles":{"Ali":[cumulative...]}, "feet":{"Ali":[cumulative...]}}
+#
+# A .js file rather than .json for the same reason data.js is one: index.html
+# loads it with a script tag, which works from a file:// copy and needs no
+# fetch, no CORS and no loading race.
 #
 # One value per DAY from Jan 1 to today, cumulative, so a chart can read it
 # straight off without doing arithmetic in the browser. Days with no riding
@@ -175,9 +179,12 @@ jobs:
 
           out = {"year": str(YEAR), "updated": today.isoformat(),
                  "riders": names, "days": days, "miles": miles, "feet": feet}
-          json.dump(out, open("data/history.json", "w"), separators=(",", ":"))
-          sz = os.path.getsize("data/history.json")
-          print(f"\nwrote data/history.json  {len(days)} days, {len(names)} riders, {sz:,} bytes")
+          with open("data/history.js", "w") as f:
+              f.write("window.HISTORY=" + json.dumps(out, separators=(",", ":")) + ";\n")
+          if os.path.exists("data/history.json"):
+              os.remove("data/history.json")     # one source of truth, not two
+          sz = os.path.getsize("data/history.js")
+          print(f"\nwrote data/history.js  {len(days)} days, {len(names)} riders, {sz:,} bytes")
           print(f"reads used: {reads}   rate limit usage: {usage}")
 
           # cross check against the totals the rest of the site uses
@@ -202,7 +209,7 @@ jobs:
         run: |
           git config user.name "tourdesocal-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/history.json
+          git add -A data/history.js data/history.json
           if git diff --cached --quiet; then
             echo "No history changes."
           else
