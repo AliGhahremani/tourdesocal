@@ -108,11 +108,16 @@ def build_hooks(cur, d, prev):
                 "who": climb["name"], "ft": f"{climb['feet']:,.0f}"}))
 
     # ---- miles but no segments ----
+    # A seeded snapshot carries this week's segment bests already, so segment
+    # efforts before the seed date are invisible. Claiming nobody rode one
+    # would be a lie, so skip the accusation for that one week.
+    seeded = bool((prev or {}).get("seeded"))
     tried_names = {t["name"] for t in d["tried"]} | {p["name"] for p in d["prs"]}
-    for w in active:
-        if w["name"] not in tried_names and w["miles"] > max(60.0, med):
-            hooks.append(("no_segments", 60, {
-                "who": w["name"], "mi": f"{w['miles']:,.0f}"}))
+    if not seeded:
+        for w in active:
+            if w["name"] not in tried_names and w["miles"] > max(60.0, med):
+                hooks.append(("no_segments", 60, {
+                    "who": w["name"], "mi": f"{w['miles']:,.0f}"}))
 
     # ---- PRs ----
     for x in d["prs"]:
