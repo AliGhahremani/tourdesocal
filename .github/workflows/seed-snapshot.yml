@@ -143,7 +143,9 @@ jobs:
 
       - name: Show what Sunday would say
         run: |
+          cp data/weekly_snapshot.json /tmp/seed.json
           python3 scripts/weekly.py
+          cp /tmp/seed.json data/weekly_snapshot.json
           rm -rf weekly/2026-08-28.html
 
       - name: Commit
