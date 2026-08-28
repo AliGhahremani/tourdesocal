@@ -14,9 +14,22 @@ name: Build season history
 # straight off without doing arithmetic in the browser. Days with no riding
 # repeat the previous total, which is what a cumulative race looks like.
 #
-# Same counting rules as scripts/update.py: Ride, VirtualRide, GravelRide and
-# MountainBikeRide all count, bucketed by start_date_local so a late ride
-# belongs to the day it started locally.
+# It counts EXACTLY the activities the standings count, by filtering on the
+# id list state.json already stores under season[year]["ids"]. That list is
+# what update.py actually accepted, so the chart can never disagree with the
+# board it sits under.
+#
+# This matters more than it looks. update.py excludes e-bike and Peloton rides
+# by reading device_name, which exists ONLY on the activity detail, not on the
+# summary. A summary-only rebuild cannot apply that rule and silently counted
+# Peloton miles: Jake came out 224 miles high, and Randee 41 miles high on
+# exactly 0 extra feet, which is what indoor riding looks like. Reusing the id
+# list gets it right for 11 reads instead of the ~800 that fetching every
+# detail would cost.
+#
+# A ride that has happened but has not been through update.py yet is not in
+# ids, so it is not in the chart either. That is correct: it is not in the
+# standings either, and the two must agree.
 #
 # Safe to re-run. It rebuilds from scratch every time rather than appending,
 # so it can never drift from Strava.
@@ -127,18 +140,28 @@ jobs:
                   acts += batch
                   page += 1
 
+              y = (ath.get("season") or {}).get(str(YEAR)) or {}
+              counted = {int(x) for x in (y.get("ids") or [])}
+
               dm = [0.0] * len(days)
               df = [0.0] * len(days)
               n = 0
+              seen = set()
               for a in acts:
-                  if a.get("type") not in COUNTED:
+                  aid = int(a.get("id") or 0)
+                  if aid not in counted or aid in seen:
                       continue
                   d = (a.get("start_date_local") or "")[:10]
                   if d not in idx:
                       continue
+                  seen.add(aid)
                   dm[idx[d]] += float(a.get("distance") or 0) / M
                   df[idx[d]] += float(a.get("total_elevation_gain") or 0) * FT
                   n += 1
+              missing = len(counted) - len(seen)
+              if missing:
+                  print(f"[{name}] WARNING {missing} counted activities were not "
+                        f"returned by the summary pages")
 
               cm, cf, rm, rf = [], [], 0.0, 0.0
               for i in range(len(days)):
@@ -168,7 +191,8 @@ jobs:
               want_f = float(y.get("elev_m") or 0) * FT
               dmi = miles[nm][-1] - want_m
               dfe = feet[nm][-1] - want_f
-              flag = "" if (abs(dmi) < 15 and abs(dfe) < 900) else "   <-- CHECK"
+              # anything but a rounding difference means the two disagree
+              flag = "" if (abs(dmi) < 1.0 and abs(dfe) < 30) else "   <-- CHECK"
               print(f"  {nm:7s} miles {miles[nm][-1]:9,.1f} vs {want_m:9,.1f} "
                     f"({dmi:+7.1f})   feet {feet[nm][-1]:9,.0f} vs {want_f:9,.0f} "
                     f"({dfe:+7.0f}){flag}")
