@@ -358,18 +358,13 @@ BASELINE = [
 
 # When several riders earn the same hook in one week, saying it four times in a
 # row reads like a bug. These collapse the group into one line instead.
+# Every template in here is formatted with {names} and {n} and NOTHING else.
+# A per rider key in this dict raises KeyError the first week three riders
+# qualify, which is a long way from where the mistake was made.
 GROUPED = {
-    "kom_change": [
-        "{who} took {seg} off {from} by {by}, {time}. That one has a new owner.",
-        "{seg} belongs to {who} now. {time}, {by} clear of {from}.",
-        "{from} held {seg} coming into this week and does not hold it now. {who} went {time}.",
-    ],
-    "kom_first": [
-        "{who} is first on {seg} with {time}, the only time anybody has put on it.",
-    ],
     "so_close": [
-        "{who} went at {seg} and finished {gap} behind {owner}. Close enough to hurt.",
-        "{gap} is all that stood between {who} and {owner} on {seg}.",
+        "{names} all went at segments this week and all came up short of the man holding them.",
+        "{n} riders attacked something they do not own and {n} riders failed to take it. {names}.",
     ],
     "grinder": [
         "{names} are all hammering away at segments somebody else owns. {n} riders, plenty of attempts, no records.",
@@ -448,6 +443,33 @@ def headline(cur, d, prev, week_no):
     return None
 
 
+def _selftest():
+    """Every template must be formattable from the ctx its dict is called with.
+
+    A missing key here surfaces as a KeyError inside a Sunday workflow run,
+    long after the edit that caused it, and kills the digest. Checking it at
+    import time costs nothing.
+    """
+    import string
+    def keys(t):
+        return {f for _, f, _, _ in string.Formatter().parse(t) if f}
+    bad = []
+    for kind, tpls in GROUPED.items():
+        for t in tpls:
+            extra = keys(t) - {"names", "n"}
+            if extra:
+                bad.append(f"GROUPED[{kind!r}] uses {sorted(extra)}, "
+                           f"but grouped lines only get names and n")
+    for kind in HEADLINES:
+        if kind not in LINES:
+            bad.append(f"HEADLINES[{kind!r}] has no matching LINES entry")
+    if bad:
+        raise AssertionError("roast.py template mismatch:\n  " + "\n  ".join(bad))
+
+
+_selftest()
+
+
 def blurb(cur, d, prev, week_no):
     """A paragraph about the week. Every rider gets a mention, and nothing is
     said that the numbers do not support."""
@@ -468,7 +490,20 @@ def blurb(cur, d, prev, week_no):
     items = []  # (score, kind, ctx, grouped, covers)
     for kind, entries in by_kind.items():
         if len(entries) >= 3 and kind in GROUPED:
-            names = [e[1]["who"] for e in entries]
+            # One rider can qualify twice for the same kind, for instance two
+            # near misses in a week, and listing them twice reads as a bug
+            # because it is one. Keep first appearance order.
+            names, seen_n = [], set()
+            for e in entries:
+                w = e[1].get("who")
+                if w and w not in seen_n:
+                    seen_n.add(w)
+                    names.append(w)
+            if len(names) < 3:
+                for score, ctx in entries:
+                    who = ctx.get("who")
+                    items.append((score, kind, ctx, False, {who} if who else set()))
+                continue
             items.append((entries[0][0] + 5, kind,
                           {"names": _join(names), "n": len(names)}, True, set(names)))
         else:
