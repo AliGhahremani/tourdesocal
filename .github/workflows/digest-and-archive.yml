@@ -1,0 +1,441 @@
+name: Digest and archive
+
+# A. Digest content, previewed and approved before shipping:
+#      - a headline that leads with the week's biggest story, so a week where a
+#        jersey changes hands does not open like a week nobody rode
+#      - "On the table": what riding a skipped segment is actually worth, using
+#        each rider's own pace rather than a fantasy
+#      - a "grinder" line for riders piling up attempts on segments they do not
+#        own, which is the one collected stat the site had never used
+#
+# B. A public archive of emails ACTUALLY SENT, at /weekly/, seeded with the
+#    kick-off announcement, plus a link to it from the site. weekly.py gains the
+#    helpers so future digests archive themselves.
+#
+# NOTE: weekly.yml still needs one manual edit before Sunday's digest will add
+# itself to the archive. Its commit step lists paths explicitly and does not yet
+# include weekly/. A workflow cannot edit another workflow file.
+#
+# Delete this file once it has run.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Apply
+        run: |
+          python3 - <<'PYEOF'
+          # Two things in one push.
+          #
+          #   A. Digest content: a headline that leads with the week's biggest story, an
+          #      'On the table' section showing what riding a skipped segment is worth,
+          #      and a 'grinder' line for riders piling up attempts on segments they do
+          #      not own. Previewed and approved before shipping.
+          #
+          #   B. A public archive of emails actually SENT, seeded with the kick-off, plus
+          #      a link to it from the site. weekly.py gains the helpers so future
+          #      digests archive themselves.
+          #
+          import datetime, html, json, os, re, importlib.util, sys
+
+          import re
+
+          # ---------------------------------------------------------------- roast.py ---
+          p = "scripts/roast.py"
+          s = open(p, encoding="utf-8").read()
+
+          def sub(old, new, src=None):
+              global s
+              n = s.count(old)
+              assert n == 1, f"expected 1, found {n}: {old[:70]!r}"
+              s = s.replace(old, new)
+
+          # 1. New hook: lots of attempts on a segment they still do not own.
+          OLD = '''    # ---- season long shame: never touched a tracked segment ----'''
+          NEW = '''    # ---- the grinder: hammering a segment they still do not own ----
+              # attempts are counted per segment for the season. Someone with a pile of
+              # them and no KOM is a story, and it is the one bit of collected data the
+              # site has never used.
+              best_by_seg = {}
+              for name, r in riders.items():
+                  for sid, sec in r["bests"].items():
+                      if sid not in best_by_seg or sec < best_by_seg[sid][1]:
+                          best_by_seg[sid] = (name, sec)
+              for name, r in riders.items():
+                  worst = None
+                  for sid, n_att in (r.get("attempts") or {}).items():
+                      if not n_att or n_att < 4:
+                          continue
+                      owner = best_by_seg.get(sid)
+                      if not owner or owner[0] == name:
+                          continue
+                      if worst is None or n_att > worst[1]:
+                          worst = (sid, n_att, owner[0])
+                  if worst:
+                      sid, n_att, owner = worst
+                      hooks.append((
+                          "grinder", 48, {"who": name, "seg": cur["seg_name"].get(sid, "that segment"),
+                                          "n": n_att, "owner": owner}))
+
+              # ---- season long shame: never touched a tracked segment ----'''
+          sub(OLD, NEW)
+
+          # 2. Lines for the new hook.
+          OLD = '''    "no_segments_ever": [
+                  "{who} still has not put a time on a single tracked segment this season. The segments are listed on the site. With maps.",'''
+          NEW = '''    "grinder": [
+                  "{who} has now hit {seg} {n} times this season and {owner} still owns it. At some point that stops being persistence.",
+                  "{n} cracks at {seg} for {who}, and the record is still {owner}'s. Admirable. Ineffective, but admirable.",
+                  "Nobody has attacked {seg} more often than {who} this season, {n} times, and nobody has less to show for it. {owner} thanks you for the traffic.",
+              ],
+              "no_segments_ever": [
+                  "{who} still has not put a time on a single tracked segment this season. The segments are listed on the site. With maps.",'''
+          sub(OLD, NEW)
+
+          # 3. A headline, so each week leads with its own biggest story instead of the
+          #    same section order every time.
+          OLD = '''def blurb(cur, d, prev, week_no):'''
+          NEW = '''HEADLINES = {
+              "jersey_steal":  "{who} takes {jersey} from {from}",
+              "jersey_first":  "{who} takes {jersey}",
+              "moved_up":      "{who} moves up {places} place{s}",
+              "moved_down":    "{who} drops {places} place{s}",
+              "big_pr":        "{who} resets {seg}",
+              "tiny_pr":       "{who} shaves {sec}s off {seg}",
+              "big_week":      "{who} put in {mi} miles",
+              "big_climb":     "{who} went up {ft} feet",
+              "zwift":         "{who} spent the week indoors",
+              "zero":          "{who} did not ride",
+              "power":         "{who} sets a new power best",
+              "grinder":       "{who} attacks {seg} again",
+              "first_time":    "{who} finally rides {seg}",
+              "no_segments":   "A week without a single segment",
+              "failed_soft":   "{who} tried {seg} and came up short",
+          }
+
+
+          def headline(cur, d, prev, week_no):
+              """The single biggest thing that happened, as a short header.
+
+              The blurb already varies its wording. This makes the digest vary its
+              SHAPE too: whatever mattered most leads the email, so a week where a
+              jersey changed hands does not open the same way as a week nobody rode.
+              Returns None when there is nothing worth a headline.
+              """
+              if d["baseline"]:
+                  return None
+              hooks = build_hooks(cur, d, prev)
+              if not hooks:
+                  return None
+              for kind, score, ctx in sorted(hooks, key=lambda h: -h[1]):
+                  tpl = HEADLINES.get(kind)
+                  if not tpl:
+                      continue
+                  try:
+                      return tpl.format(**ctx)   # ctx keys include "from", fine for str.format
+                  except (KeyError, IndexError):
+                      continue
+              return None
+
+
+          def blurb(cur, d, prev, week_no):'''
+          sub(OLD, NEW)
+
+          open(p, "w", encoding="utf-8").write(s)
+          print("roast.py patched")
+
+          # 4. Group repeated grinder lines so three of them do not read like a stuck record.
+          s2 = open("scripts/roast.py", encoding="utf-8").read()
+          OLDG = """GROUPED = {
+              "zero": ["""
+          NEWG = """GROUPED = {
+              "grinder": [
+                  "{names} are all hammering away at segments somebody else owns. {n} riders, plenty of attempts, no records.",
+                  "{names} have each spent the season attacking a segment they still do not hold.",
+              ],
+              "zero": ["""
+          assert s2.count(OLDG) == 1
+          open("scripts/roast.py", "w", encoding="utf-8").write(s2.replace(OLDG, NEWG))
+          print("grinder grouped")
+
+
+          # --------------------------------------------------------------- weekly.py ---
+          p = "scripts/weekly.py"
+          s = open(p, encoding="utf-8").read()
+
+          sub('from roast import blurb', 'from roast import blurb, headline')
+
+          # The strategic table: what riding a skipped segment is actually worth.
+          OLD = '''def render(cur, d, week_end, note):'''
+          NEW = '''def on_the_table(cur):
+              """What each rider would gain by riding segments they have skipped.
+
+              A DNS is scored at the slowest finisher plus ten percent, so a segment you
+              have never ridden is nearly always costing you more than riding it badly
+              would. This works out how much, using each rider's own typical pace
+              relative to whoever holds the segment, not a fantasy.
+
+              Returns [(name, total_seconds_available, best_segment, best_seconds)],
+              biggest first, only for riders with something material to gain.
+              """
+              riders = cur["riders"]
+              # each rider's median ratio to the segment winner, over segments they ride
+              ratios = {n: [] for n in riders}
+              for sid in cur["seg_ids"]:
+                  got = {n: r["bests"][sid] for n, r in riders.items() if sid in r["bests"]}
+                  if len(got) < 2:
+                      continue
+                  best = min(got.values())
+                  for n, sec in got.items():
+                      ratios[n].append(sec / best)
+
+              rows = []
+              for name, r in riders.items():
+                  vals = sorted(ratios[name])
+                  if not vals:
+                      continue
+                  k = vals[len(vals) // 2]
+                  total, pick, pick_gain = 0, None, 0
+                  for sid in cur["seg_ids"]:
+                      if sid in r["bests"]:
+                          continue
+                      got = [x["bests"][sid] for x in riders.values() if sid in x["bests"]]
+                      if not got:
+                          continue
+                      gain = round(max(got) * PENALTY) - round(min(got) * k)
+                      if gain <= 0:
+                          continue
+                      total += gain
+                      if gain > pick_gain:
+                          pick, pick_gain = cur["seg_name"].get(sid, "a segment"), gain
+                  if total >= 60:
+                      rows.append((name, total, pick, pick_gain))
+              rows.sort(key=lambda x: -x[1])
+              return rows
+
+
+          def render(cur, d, week_end, note, head=None):'''
+          sub(OLD, NEW)
+
+          # Headline above the blurb.
+          OLD = '''    A(f'<div style="color:#6d6d78;font-size:13px;margin-bottom:22px">'
+                f'Week ending {week_end}</div>')'''
+          NEW = '''    A(f'<div style="color:#6d6d78;font-size:13px;margin-bottom:'
+                f'{"10px" if head else "22px"}">Week ending {week_end}</div>')
+              if head:
+                  A(f'<div style="font-size:19px;font-weight:700;line-height:1.25;'
+                    f'margin:0 0 16px">{head}</div>')'''
+          sub(OLD, NEW)
+
+          # The section itself, after the GC table.
+          OLD = '''    # the week's riding
+              A('<h2 style="font-size:15px;margin:22px 0 8px">'''
+          NEW = '''    table = on_the_table(cur)
+              if table:
+                  A('<h2 style="font-size:15px;margin:22px 0 8px">On the table</h2>')
+                  A('<p style="font-size:13px;color:#6d6d78;margin:0 0 8px">'
+                    'What you would save by riding segments you have skipped, at your own '
+                    'usual pace. A segment you never ride is scored at the slowest time '
+                    'plus ten percent.</p>')
+                  A('<table style="border-collapse:collapse;font-size:14px;width:100%">')
+                  A('<tr style="color:#6d6d78;font-size:12px"><td>Rider</td>'
+                    '<td style="text-align:right">Available</td>'
+                    '<td style="padding-left:10px">Best single ride</td></tr>')
+                  for name, total, pick, gain in table:
+                      A(f'<tr><td style="padding:4px 0;border-top:1px solid #eee">{name}</td>'
+                        f'<td style="padding:4px 0;border-top:1px solid #eee;text-align:right">'
+                        f'<b>{fmt_clock(total)}</b></td>'
+                        f'<td style="padding:4px 0 4px 10px;border-top:1px solid #eee;color:#6d6d78">'
+                        f'{pick} ({fmt_clock(gain)})</td></tr>')
+                  A("</table>")
+
+              # the week's riding
+              A('<h2 style="font-size:15px;margin:22px 0 8px">'''
+          sub(OLD, NEW)
+
+          # Wire the headline through main().
+          sub('''    body = render(cur, d, week_end, note)''',
+              '''    head = headline(cur, d, prev, week_no)
+              print("headline:", head)
+              body = render(cur, d, week_end, note, head)''')
+
+          open(p, "w", encoding="utf-8").write(s)
+          print("weekly.py patched")
+
+
+          # ---- weekly.py archives each sent digest by date ---------------------------
+          p = "scripts/weekly.py"
+          s = open(p, encoding="utf-8").read()
+
+          def sub(old, new):
+              global s
+              n = s.count(old)
+              assert n == 1, f"expected 1, found {n}: {old[:70]!r}"
+              s = s.replace(old, new)
+
+          sub("import json, os, sys, datetime", "import json, os, re, sys, datetime")
+
+          sub('OUT_HTML = os.path.join(ROOT, "weekly.html")',
+              'OUT_HTML = os.path.join(ROOT, "weekly.html")\n'
+              'ARCHIVE = os.path.join(ROOT, "weekly")   # one file per email actually sent')
+
+          ARCH = '''
+
+          def write_archive(body, week_end, sent_date):
+              """Save this digest as its own dated page and rebuild the index.
+
+              The archive is a record of emails that were actually SENT, so the caller
+              only invokes this on a real send, never on a test run. Existing pages are
+              left alone; the index is rebuilt from whatever is on disk, so it can never
+              drift from the files themselves.
+              """
+              os.makedirs(ARCHIVE, exist_ok=True)
+              page = os.path.join(ARCHIVE, f"{sent_date}.html")
+              open(page, "w", encoding="utf-8").write(shell(body, f"Week ending {week_end}"))
+              rebuild_index()
+              return page
+
+
+          def shell(body, title):
+              return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
+                      '<meta name="viewport" content="width=device-width,initial-scale=1">'
+                      f'<title>{title} - Tour de SoCal</title>'
+                      '<style>body{margin:0;background:#f4f2ee;padding:26px 14px;'
+                      'font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif}'
+                      '.bk{max-width:640px;margin:0 auto 16px;font-size:13px}'
+                      '.bk a{color:#fc5200;text-decoration:none}'
+                      '.pg{max-width:640px;margin:0 auto;background:#fff;border:1px solid #e6e2da;'
+                      'border-radius:12px;padding:26px 24px}</style></head><body>'
+                      '<div class="bk"><a href="./">&larr; All digests</a> &middot; '
+                      '<a href="https://tourdesocal.com">tourdesocal.com</a></div>'
+                      f'<div class="pg">{body}</div></body></html>')
+
+
+          def rebuild_index():
+              """List every archived email, newest first, from what is on disk."""
+              os.makedirs(ARCHIVE, exist_ok=True)
+              rows = []
+              for fn in sorted(os.listdir(ARCHIVE), reverse=True):
+                  if not fn.endswith(".html") or fn == "index.html":
+                      continue
+                  stem = fn[:-5]
+                  m = re.match(r"(\\d{4})-(\\d{2})-(\\d{2})", stem)
+                  if m:
+                      d = datetime.date(*map(int, m.groups()))
+                      label = d.strftime("%b %d, %Y").replace(" 0", " ")
+                      if stem.endswith("-kickoff"):
+                          label = "Kick-off &middot; " + label
+                  else:
+                      label = stem
+                  rows.append(f'<li><a href="{fn}">{label}</a></li>')
+              body = ("".join(rows) if rows
+                      else '<li style="color:#6d6d78;list-style:none">Nothing sent yet.</li>')
+              open(os.path.join(ARCHIVE, "index.html"), "w", encoding="utf-8").write(
+                  '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+                  '<meta name="viewport" content="width=device-width,initial-scale=1">'
+                  '<title>Weekly digests - Tour de SoCal</title>'
+                  '<style>body{margin:0;background:#f4f2ee;padding:34px 14px;'
+                  'font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1c1c20}'
+                  '.w{max-width:640px;margin:0 auto}h1{font-size:24px;margin:0 0 4px}'
+                  '.s{color:#6d6d78;font-size:14px;margin:0 0 22px}'
+                  'ul{list-style:none;padding:0;margin:0}'
+                  'li{border-top:1px solid #e6e2da}'
+                  'li a{display:block;padding:13px 2px;color:#1c1c20;text-decoration:none;font-size:16px}'
+                  'li a:hover{color:#fc5200}'
+                  '.bk{font-size:13px;margin-top:24px}.bk a{color:#fc5200;text-decoration:none}'
+                  '</style></head><body><div class="w">'
+                  '<h1>Weekly digests</h1>'
+                  '<p class="s">Every email sent to the riders, as it was sent.</p>'
+                  f'<ul>{body}</ul>'
+                  '<p class="bk"><a href="https://tourdesocal.com">&larr; tourdesocal.com</a></p>'
+                  '</div></body></html>')
+
+          '''
+          sub("def render(cur, d, week_end, note, head=None):", ARCH.strip() + "\n\n\ndef render(cur, d, week_end, note, head=None):")
+          open(p, "w", encoding="utf-8").write(s)
+          print("weekly.py: archive helpers added")
+
+          # ---- 3. seed the archive with the kick-off email ---------------------------
+          os.makedirs("weekly", exist_ok=True)
+          email = open("data/announce_email.html", encoding="utf-8").read()
+          import importlib.util, sys
+          sys.path.insert(0, "scripts")
+          spec = importlib.util.spec_from_file_location("wk", "scripts/weekly.py")
+          wk = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(wk)
+          open("weekly/2026-08-28-kickoff.html", "w", encoding="utf-8").write(
+              wk.shell(email, "Kick-off, Aug 28 2026"))
+          wk.rebuild_index()
+          print("archive seeded:", sorted(os.listdir("weekly")))
+
+          # ---- 4. a link to it from the site ----------------------------------------
+          p = "index.html"
+          s = open(p, encoding="utf-8").read()
+          OLD = '''<section class="score honours"><div class="wrap">
+            <h2>Roll of Honour</h2>'''
+          NEW = '''<section class="score digests"><div class="wrap">
+            <h2>Weekly Digest</h2>
+            <p class="seasonsub">Every email sent to the riders, kept exactly as it went out.</p>
+            <p><a class="dgl" href="weekly/">Read the digests &rarr;</a></p>
+          </div></section>
+
+          <section class="score honours"><div class="wrap">
+            <h2>Roll of Honour</h2>'''
+          assert s.count(OLD) == 1
+          s = s.replace(OLD, NEW)
+
+          CSS = "  .score .grid{display:grid;"
+          NEWCSS = ("  .digests .dgl{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--orange);"
+                    "text-decoration:none;border-bottom:2px solid rgba(252,82,0,.35);padding-bottom:2px}\n"
+                    "  .digests .dgl:hover{border-bottom-color:var(--orange)}\n" + CSS)
+          assert s.count(CSS) == 1
+          s = s.replace(CSS, NEWCSS)
+          open(p, "w", encoding="utf-8").write(s)
+          print("index.html: digest link added")
+
+          PYEOF
+
+      - name: Prove it all still runs
+        run: |
+          python3 -c "import py_compile; py_compile.compile('scripts/roast.py', doraise=True); py_compile.compile('scripts/weekly.py', doraise=True); print('compile ok')"
+          python3 scripts/weekly.py > /dev/null
+          test -s weekly/index.html
+          test -s weekly/2026-08-28-kickoff.html
+          grep -q "Kick-off" weekly/index.html
+          grep -q "On the table" scripts/weekly.py
+          grep -q "Read the digests" index.html
+          echo "all checks passed"
+
+      - name: Commit
+        run: |
+          rm -rf scripts/__pycache__
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          # weekly_snapshot.json is deliberately NOT added. weekly.py rewrote it
+          # above as a side effect of the smoke test, and committing that would
+          # make Sunday's real digest report an empty week.
+          git checkout -- data/weekly_snapshot.json 2>/dev/null || true
+          git add index.html scripts/roast.py scripts/weekly.py weekly/
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Digest headline, on-the-table section, grinder line, and the sent-email archive"
+            git pull --rebase --autostash origin main
+            git push
+          fi
