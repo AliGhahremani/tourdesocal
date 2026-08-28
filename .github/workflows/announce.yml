@@ -1,0 +1,118 @@
+name: One-off announcement
+
+# Sends the "everything is current" announcement to the riders, once, by hand.
+#
+# Deliberately NOT the weekly digest: that workflow rewrites
+# data/weekly_snapshot.json, which is the baseline Sunday's first real digest
+# diffs against. Running it now to send a different email would silently make
+# the first proper digest report an empty week.
+#
+# Reads nothing from Strava and commits nothing. The body is a static file,
+# data/announce_email.html, staged by patch-michael.yml.
+#
+# Delete this file once it has sent.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Work out the recipients and print the counts, but send nothing."
+        required: false
+        type: boolean
+        default: true
+      test_to:
+        description: "Send only to this address. Leave blank to use the real list."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: announce
+  cancel-in-progress: false
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Work out who gets this
+        id: to
+        env:
+          ALL: ${{ secrets.MAIL_TO }}
+          FALLBACK: ${{ secrets.MAIL_USERNAME }}
+          EXCLUDE: ${{ secrets.MAIL_EXCLUDE }}
+        run: |
+          # Michael withdrew on 2026-08-28 and must not receive this. His address
+          # is still in MAIL_TO, and a secret cannot be read back to be edited by
+          # anything but a human retyping the whole list from memory.
+          #
+          # So subtract instead. MAIL_EXCLUDE holds the addresses of former
+          # riders. If it is not set we fall back to matching on his name, which
+          # is a guess, so either way the counts below are printed and the send
+          # is gated on exactly one address having been dropped.
+          #
+          # Only counts are ever printed. The addresses themselves are never
+          # echoed, to the log or anywhere else.
+          python3 - <<'PYEOF' >> "$GITHUB_OUTPUT"
+          import os, re
+          split = lambda s: [a.strip().lower() for a in re.split(r"[,;\s]+", s or "") if a.strip()]
+          addrs = split(os.environ.get("ALL") or os.environ.get("FALLBACK"))
+          seen, uniq = set(), []
+          for a in addrs:
+              if a not in seen:
+                  seen.add(a); uniq.append(a)
+          drop = set(split(os.environ.get("EXCLUDE")))
+          if drop:
+              how = "MAIL_EXCLUDE"
+              keep = [a for a in uniq if a not in drop]
+          else:
+              how = "name guess (MAIL_EXCLUDE is not set)"
+              keep = [a for a in uniq if not re.search(r"michael|mike|parker", a, re.I)]
+          print(f"before={len(uniq)}")
+          print(f"after={len(keep)}")
+          print(f"dropped={len(uniq) - len(keep)}")
+          print(f"how={how}")
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write("RECIPIENTS=" + ",".join(keep) + "\n")
+          PYEOF
+
+      - name: Report
+        run: |
+          echo "recipients before: ${{ steps.to.outputs.before }}"
+          echo "recipients after:  ${{ steps.to.outputs.after }}"
+          echo "dropped:           ${{ steps.to.outputs.dropped }}  via ${{ steps.to.outputs.how }}"
+
+      - name: Refuse to send to the wrong list
+        # Five riders remain, and exactly one address must have been removed. If
+        # either number is off, the exclusion did not match and Michael would be
+        # about to receive an email about how he quit. Fail instead.
+        if: inputs.dry_run != true && inputs.test_to == ''
+        run: |
+          test "${{ steps.to.outputs.dropped }}" = "1" || {
+            echo "::error::Expected to drop exactly 1 address, dropped ${{ steps.to.outputs.dropped }}. Set the MAIL_EXCLUDE secret to Michael's address and run again."
+            exit 1
+          }
+          test "${{ steps.to.outputs.after }}" = "5" || {
+            echo "::error::Expected 5 recipients, got ${{ steps.to.outputs.after }}."
+            exit 1
+          }
+          test -s data/announce_email.html || { echo "::error::data/announce_email.html is missing. Run patch-michael.yml first."; exit 1; }
+
+      - name: Send
+        if: inputs.dry_run != true
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Tour de SoCal
+          to: ${{ inputs.test_to != '' && inputs.test_to || env.RECIPIENTS }}
+          subject: "${{ inputs.test_to != '' && '[TEST] ' || '' }}Tour de SoCal is fully current. 125 days left, and the standings so far."
+          html_body: file://data/announce_email.html
+          convert_markdown: false
