@@ -14,10 +14,10 @@ It runs after the daily update, on whatever state that update left behind.
 The first run has no snapshot to compare against, so it writes a baseline and
 says so rather than inventing a week of progress.
 """
-import json, os, sys, datetime
+import json, os, re, sys, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from roast import blurb
+from roast import blurb, headline
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "data", "state.json")
@@ -25,6 +25,7 @@ META = os.path.join(ROOT, "data", "meta.json")
 SNAP = os.path.join(ROOT, "data", "weekly_snapshot.json")
 OUT_JSON = os.path.join(ROOT, "data", "weekly_latest.json")
 OUT_HTML = os.path.join(ROOT, "weekly.html")
+ARCHIVE = os.path.join(ROOT, "weekly")   # one file per email actually sent
 EMAIL_HTML = "/tmp/weekly_email.html"
 
 PENALTY = 1.10
@@ -168,7 +169,124 @@ def diff(cur, prev):
     return d
 
 
-def render(cur, d, week_end, note):
+def on_the_table(cur):
+    """What each rider would gain by riding segments they have skipped.
+
+    A DNS is scored at the slowest finisher plus ten percent, so a segment you
+    have never ridden is nearly always costing you more than riding it badly
+    would. This works out how much, using each rider's own typical pace
+    relative to whoever holds the segment, not a fantasy.
+
+    Returns [(name, total_seconds_available, best_segment, best_seconds)],
+    biggest first, only for riders with something material to gain.
+    """
+    riders = cur["riders"]
+    # each rider's median ratio to the segment winner, over segments they ride
+    ratios = {n: [] for n in riders}
+    for sid in cur["seg_ids"]:
+        got = {n: r["bests"][sid] for n, r in riders.items() if sid in r["bests"]}
+        if len(got) < 2:
+            continue
+        best = min(got.values())
+        for n, sec in got.items():
+            ratios[n].append(sec / best)
+
+    rows = []
+    for name, r in riders.items():
+        vals = sorted(ratios[name])
+        if not vals:
+            continue
+        k = vals[len(vals) // 2]
+        total, pick, pick_gain = 0, None, 0
+        for sid in cur["seg_ids"]:
+            if sid in r["bests"]:
+                continue
+            got = [x["bests"][sid] for x in riders.values() if sid in x["bests"]]
+            if not got:
+                continue
+            gain = round(max(got) * PENALTY) - round(min(got) * k)
+            if gain <= 0:
+                continue
+            total += gain
+            if gain > pick_gain:
+                pick, pick_gain = cur["seg_name"].get(sid, "a segment"), gain
+        if total >= 60:
+            rows.append((name, total, pick, pick_gain))
+    rows.sort(key=lambda x: -x[1])
+    return rows
+
+
+def write_archive(body, week_end, sent_date):
+    """Save this digest as its own dated page and rebuild the index.
+
+    The archive is a record of emails that were actually SENT, so the caller
+    only invokes this on a real send, never on a test run. Existing pages are
+    left alone; the index is rebuilt from whatever is on disk, so it can never
+    drift from the files themselves.
+    """
+    os.makedirs(ARCHIVE, exist_ok=True)
+    page = os.path.join(ARCHIVE, f"{sent_date}.html")
+    open(page, "w", encoding="utf-8").write(shell(body, f"Week ending {week_end}"))
+    rebuild_index()
+    return page
+
+
+def shell(body, title):
+    return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            f'<title>{title} - Tour de SoCal</title>'
+            '<style>body{margin:0;background:#f4f2ee;padding:26px 14px;'
+            'font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif}'
+            '.bk{max-width:640px;margin:0 auto 16px;font-size:13px}'
+            '.bk a{color:#fc5200;text-decoration:none}'
+            '.pg{max-width:640px;margin:0 auto;background:#fff;border:1px solid #e6e2da;'
+            'border-radius:12px;padding:26px 24px}</style></head><body>'
+            '<div class="bk"><a href="./">&larr; All digests</a> &middot; '
+            '<a href="https://tourdesocal.com">tourdesocal.com</a></div>'
+            f'<div class="pg">{body}</div></body></html>')
+
+
+def rebuild_index():
+    """List every archived email, newest first, from what is on disk."""
+    os.makedirs(ARCHIVE, exist_ok=True)
+    rows = []
+    for fn in sorted(os.listdir(ARCHIVE), reverse=True):
+        if not fn.endswith(".html") or fn == "index.html":
+            continue
+        stem = fn[:-5]
+        m = re.match(r"(\d{4})-(\d{2})-(\d{2})", stem)
+        if m:
+            d = datetime.date(*map(int, m.groups()))
+            label = d.strftime("%b %d, %Y").replace(" 0", " ")
+            if stem.endswith("-kickoff"):
+                label = "Kick-off &middot; " + label
+        else:
+            label = stem
+        rows.append(f'<li><a href="{fn}">{label}</a></li>')
+    body = ("".join(rows) if rows
+            else '<li style="color:#6d6d78;list-style:none">Nothing sent yet.</li>')
+    open(os.path.join(ARCHIVE, "index.html"), "w", encoding="utf-8").write(
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<title>Weekly digests - Tour de SoCal</title>'
+        '<style>body{margin:0;background:#f4f2ee;padding:34px 14px;'
+        'font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1c1c20}'
+        '.w{max-width:640px;margin:0 auto}h1{font-size:24px;margin:0 0 4px}'
+        '.s{color:#6d6d78;font-size:14px;margin:0 0 22px}'
+        'ul{list-style:none;padding:0;margin:0}'
+        'li{border-top:1px solid #e6e2da}'
+        'li a{display:block;padding:13px 2px;color:#1c1c20;text-decoration:none;font-size:16px}'
+        'li a:hover{color:#fc5200}'
+        '.bk{font-size:13px;margin-top:24px}.bk a{color:#fc5200;text-decoration:none}'
+        '</style></head><body><div class="w">'
+        '<h1>Weekly digests</h1>'
+        '<p class="s">Every email sent to the riders, as it was sent.</p>'
+        f'<ul>{body}</ul>'
+        '<p class="bk"><a href="https://tourdesocal.com">&larr; tourdesocal.com</a></p>'
+        '</div></body></html>')
+
+
+def render(cur, d, week_end, note, head=None):
     """One HTML body used for both the email and the archive page."""
     C = {"yellow": "#d9a400", "polka": "#c8102e", "green": "#0a7d3c"}
     JN = {"yellow": "Yellow", "polka": "Polka Dot", "green": "Green"}
@@ -179,8 +297,11 @@ def render(cur, d, week_end, note):
     A('<div style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;'
       'max-width:640px;margin:0 auto;color:#16161d;line-height:1.5">')
     A(f'<h1 style="font-size:22px;margin:0 0 2px">Tour de SoCal</h1>')
-    A(f'<div style="color:#6d6d78;font-size:13px;margin-bottom:22px">'
-      f'Week ending {week_end}</div>')
+    A(f'<div style="color:#6d6d78;font-size:13px;margin-bottom:'
+      f'{"10px" if head else "22px"}">Week ending {week_end}</div>')
+    if head:
+        A(f'<div style="font-size:19px;font-weight:700;line-height:1.25;'
+          f'margin:0 0 16px">{head}</div>')
 
     # The blurb. Everything in it is earned by something in the numbers below.
     A('<div style="background:#fff6e5;border:1px solid #f0d9a8;padding:14px 16px;'
@@ -218,6 +339,25 @@ def render(cur, d, week_end, note):
           f'<td style="padding:4px 0"><b>{n}</b>{move}</td>'
           f'<td style="padding:4px 0;text-align:right">{fmt_clock(g["sec"])}{gap}</td></tr>')
     A("</table>")
+
+    table = on_the_table(cur)
+    if table:
+        A('<h2 style="font-size:15px;margin:22px 0 8px">On the table</h2>')
+        A('<p style="font-size:13px;color:#6d6d78;margin:0 0 8px">'
+          'What you would save by riding segments you have skipped, at your own '
+          'usual pace. A segment you never ride is scored at the slowest time '
+          'plus ten percent.</p>')
+        A('<table style="border-collapse:collapse;font-size:14px;width:100%">')
+        A('<tr style="color:#6d6d78;font-size:12px"><td>Rider</td>'
+          '<td style="text-align:right">Available</td>'
+          '<td style="padding-left:10px">Best single ride</td></tr>')
+        for name, total, pick, gain in table:
+            A(f'<tr><td style="padding:4px 0;border-top:1px solid #eee">{name}</td>'
+              f'<td style="padding:4px 0;border-top:1px solid #eee;text-align:right">'
+              f'<b>{fmt_clock(total)}</b></td>'
+              f'<td style="padding:4px 0 4px 10px;border-top:1px solid #eee;color:#6d6d78">'
+              f'{pick} ({fmt_clock(gain)})</td></tr>')
+        A("</table>")
 
     # the week's riding
     A('<h2 style="font-size:15px;margin:22px 0 8px">'
@@ -321,7 +461,9 @@ def main():
     week_no = today.isocalendar()[1] + today.isocalendar()[0] * 100
     note = blurb(cur, d, prev, week_no)
     print("blurb:", note)
-    body = render(cur, d, week_end, note)
+    head = headline(cur, d, prev, week_no)
+    print("headline:", head)
+    body = render(cur, d, week_end, note, head)
 
     open(EMAIL_HTML, "w").write(body)
     json.dump({"generated": week_end, "baseline": d["baseline"],

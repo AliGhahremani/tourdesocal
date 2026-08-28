@@ -127,6 +127,31 @@ def build_hooks(cur, d, prev):
                 "who": x["name"], "seg": x["seg"], "sec": int(x["gain"]),
                 "s": "" if x["gain"] == 1 else "s"}))
 
+    # ---- the grinder: hammering a segment they still do not own ----
+    # attempts are counted per segment for the season. Someone with a pile of
+    # them and no KOM is a story, and it is the one bit of collected data the
+    # site has never used.
+    best_by_seg = {}
+    for name, r in riders.items():
+        for sid, sec in r["bests"].items():
+            if sid not in best_by_seg or sec < best_by_seg[sid][1]:
+                best_by_seg[sid] = (name, sec)
+    for name, r in riders.items():
+        worst = None
+        for sid, n_att in (r.get("attempts") or {}).items():
+            if not n_att or n_att < 4:
+                continue
+            owner = best_by_seg.get(sid)
+            if not owner or owner[0] == name:
+                continue
+            if worst is None or n_att > worst[1]:
+                worst = (sid, n_att, owner[0])
+        if worst:
+            sid, n_att, owner = worst
+            hooks.append((
+                "grinder", 48, {"who": name, "seg": cur["seg_name"].get(sid, "that segment"),
+                                "n": n_att, "owner": owner}))
+
     # ---- season long shame: never touched a tracked segment ----
     for name, r in riders.items():
         if not r["bests"] and not d["baseline"]:
@@ -233,6 +258,11 @@ LINES = {
         "{who} improved {seg} by {sec} second{s}. We are contractually obliged to call that a PR.",
         "A whole {sec} second{s} off {seg} for {who}. Frame it.",
     ],
+    "grinder": [
+        "{who} has now hit {seg} {n} times this season and {owner} still owns it. At some point that stops being persistence.",
+        "{n} cracks at {seg} for {who}, and the record is still {owner}'s. Admirable. Ineffective, but admirable.",
+        "Nobody has attacked {seg} more often than {who} this season, {n} times, and nobody has less to show for it. {owner} thanks you for the traffic.",
+    ],
     "no_segments_ever": [
         "{who} still has not put a time on a single tracked segment this season. The segments are listed on the site. With maps.",
         "Season to date, {who} has attempted zero of the tracked segments. Genuinely impressive avoidance.",
@@ -281,6 +311,10 @@ BASELINE = [
 # When several riders earn the same hook in one week, saying it four times in a
 # row reads like a bug. These collapse the group into one line instead.
 GROUPED = {
+    "grinder": [
+        "{names} are all hammering away at segments somebody else owns. {n} riders, plenty of attempts, no records.",
+        "{names} have each spent the season attacking a segment they still do not hold.",
+    ],
     "zero": [
         "{names} put in nothing at all this week. Between them, {n} riders and zero miles.",
         "{names} all recorded zero. That is {n} bikes gathering dust simultaneously.",
@@ -306,6 +340,49 @@ def _join(names):
     if len(names) == 2:
         return f"{names[0]} and {names[1]}"
     return ", ".join(names[:-1]) + f" and {names[-1]}"
+
+
+HEADLINES = {
+    "jersey_steal":  "{who} takes {jersey} from {from}",
+    "jersey_first":  "{who} takes {jersey}",
+    "moved_up":      "{who} moves up {places} place{s}",
+    "moved_down":    "{who} drops {places} place{s}",
+    "big_pr":        "{who} resets {seg}",
+    "tiny_pr":       "{who} shaves {sec}s off {seg}",
+    "big_week":      "{who} put in {mi} miles",
+    "big_climb":     "{who} went up {ft} feet",
+    "zwift":         "{who} spent the week indoors",
+    "zero":          "{who} did not ride",
+    "power":         "{who} sets a new power best",
+    "grinder":       "{who} attacks {seg} again",
+    "first_time":    "{who} finally rides {seg}",
+    "no_segments":   "A week without a single segment",
+    "failed_soft":   "{who} tried {seg} and came up short",
+}
+
+
+def headline(cur, d, prev, week_no):
+    """The single biggest thing that happened, as a short header.
+
+    The blurb already varies its wording. This makes the digest vary its
+    SHAPE too: whatever mattered most leads the email, so a week where a
+    jersey changed hands does not open the same way as a week nobody rode.
+    Returns None when there is nothing worth a headline.
+    """
+    if d["baseline"]:
+        return None
+    hooks = build_hooks(cur, d, prev)
+    if not hooks:
+        return None
+    for kind, score, ctx in sorted(hooks, key=lambda h: -h[1]):
+        tpl = HEADLINES.get(kind)
+        if not tpl:
+            continue
+        try:
+            return tpl.format(**ctx)   # ctx keys include "from", fine for str.format
+        except (KeyError, IndexError):
+            continue
+    return None
 
 
 def blurb(cur, d, prev, week_no):

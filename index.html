@@ -45,6 +45,8 @@
     font-size:13px;letter-spacing:.04em;color:#1c1c20;background:rgba(232,180,0,.18);
     border:1px solid rgba(232,180,0,.55);border-radius:999px;padding:9px 18px}
   .hero .cdown b{font-weight:700;font-size:15px}
+  .digests .dgl{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--orange);text-decoration:none;border-bottom:2px solid rgba(252,82,0,.35);padding-bottom:2px}
+  .digests .dgl:hover{border-bottom-color:var(--orange)}
   .score .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
   .pcard{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;position:relative;box-shadow:0 1px 6px rgba(20,20,30,.05)}
   .pcard .photo{width:100%;aspect-ratio:3/4;height:auto;object-fit:contain;display:block;background:var(--card2)}
@@ -260,6 +262,12 @@
 <section class="segs"><div class="wrap">
   <h2>The <span id="nsegD">…</span> Segments</h2>
   <div id="seglist"></div>
+</div></section>
+
+<section class="score digests"><div class="wrap">
+  <h2>Weekly Digest</h2>
+  <p class="seasonsub">Every email sent to the riders, kept exactly as it went out.</p>
+  <p><a class="dgl" href="weekly/">Read the digests &rarr;</a></p>
 </div></section>
 
 <section class="score honours"><div class="wrap">
