@@ -17,6 +17,7 @@ Nothing in here is invented. Every sentence is formatted from a number that
 came out of state.json, and any angle whose data is missing is simply not
 offered that week.
 """
+import datetime
 import random
 
 M_PER_MI = 1609.344
@@ -81,7 +82,7 @@ def _o(n):
 # facts
 # --------------------------------------------------------------------------
 
-def season_facts(cur, meta, days_left, segs=None, d=None):
+def season_facts(cur, meta, days_left, segs=None, d=None, elapsed_days=1):
     """Everything true about each rider's season, computed once."""
     riders = cur["riders"]
     seg_ids = cur["seg_ids"]
@@ -189,6 +190,12 @@ def season_facts(cur, meta, days_left, segs=None, d=None):
             "feet_gap": (riders[by_feet[0]]["elev_m"] - r["elev_m"]) * FT_PER_M,
             "grade": grade, "length": length, "seg_name": seg_name,
             "days_left": days_left, "year": cur["year"],
+            # This week measured against the rider's own average week, which is
+            # the fairest yardstick: 30 miles is a normal week for one man and a
+            # week off for another. Ali's note, 2026-08-28: the roasting had gone
+            # soft and the biggest sitting target of the week went unmentioned.
+            "wk_miles": 0.0, "wk_feet": 0.0, "wk_rides": 0,
+            "avg_week": (miles / max(1.0, elapsed_days / 7.0)) if miles else 0.0,
             "seg_added": (segs or {}).get("added") or [],
             "seg_removed": (segs or {}).get("removed") or [],
             # this week's segment news, already computed by weekly.diff
@@ -677,10 +684,63 @@ def _a_dead_level(f, s):
     ]
 
 
+def _a_slacked(f, s):
+    """A week well down on the rider's own normal. The best roast material
+    there is, and it was going unused: Randee rode 31 percent of his average
+    week while holding two jerseys and the digest said nothing."""
+    if not f["avg_week"] or f["wk_rides"] == 0:
+        return None
+    r = f["wk_miles"] / f["avg_week"]
+    if r > 0.55:
+        return None
+    mi, avg = f["wk_miles"], f["avg_week"]
+    pct = max(1, round(r * 100))
+    return 89, [
+        f"Let us talk about the {mi:,.0f} miles. You average {avg:,.0f} a week. "
+        f"This was {pct} percent of a normal you, and nobody made you do that.",
+        f"{mi:,.0f} miles. Your own average week is {avg:,.0f}. Whatever that was, "
+        f"it was not a week of riding.",
+        f"You did {pct} percent of your usual mileage this week and the standings "
+        f"noticed even if nobody else did.",
+        f"A {mi:,.0f} mile week from a man who normally turns in {avg:,.0f}. "
+        f"The bike was right there.",
+    ]
+
+
+def _a_nothing(f, s):
+    """Did not ride at all."""
+    if f["wk_rides"] != 0:
+        return None
+    return 91, [
+        "Zero rides. Not a slow week, not a short week. Zero.",
+        "You did not get on the bike once. Everyone else did, and the gaps in "
+        "this email are the receipt.",
+        "Nothing at all this week. The season has a deadline and it does not "
+        "care what came up.",
+    ]
+
+
+def _a_big_week(f, s):
+    """Well above their own normal."""
+    if not f["avg_week"] or f["wk_rides"] == 0:
+        return None
+    r = f["wk_miles"] / f["avg_week"]
+    if r < 1.5:
+        return None
+    return 82, [
+        f"{f['wk_miles']:,.0f} miles against your own {f['avg_week']:,.0f} average. "
+        f"Something has got into you and the rest of them should hope it wears off.",
+        f"That is {round(r*100)} percent of a normal week for you. Credit where it "
+        f"is due, and a warning to everybody above you.",
+    ]
+
+
 def _a_pace(f, s):
     if not f["ratio"] or f["ridden"] < 6:
         return None
     pct = round((f["ratio"] - 1) * 100)
+    if pct < 2:
+        return None            # "within 0 percent" is not a thing to say
     if pct < 8:
         return 59, [
             f"On a typical segment you finish within {pct} percent of the fastest "
@@ -706,13 +766,15 @@ ANGLES = {
     "lost_kom": _a_lost_kom, "lost_dns": _a_lost_dns,
     "took_kom": _a_took_kom, "kom_taken": _a_kom_taken,
     "dead_level": _a_dead_level,
+    "slacked": _a_slacked, "nothing": _a_nothing, "big_week": _a_big_week,
     "near_miss": _a_near_miss,
 }
 
 # News angles report a thing that happened this week rather than a standing
 # fact, so they must never be suppressed by the rotation memory.
 NEWS = {"new_seg", "new_seg_done", "lost_kom", "lost_dns",
-        "took_kom", "kom_taken", "near_miss"}
+        "took_kom", "kom_taken", "near_miss",
+        "slacked", "nothing", "big_week"}
 
 # Angles that say much the same thing. Never use two from one set in one
 # paragraph, or it reads like the generator is stuck.
@@ -724,7 +786,8 @@ CLASHES = [{"koms", "no_koms"}, {"never", "steep", "table", "complete"},
            {"new_seg", "new_seg_done"}, {"lost_kom", "lost_dns"},
            {"new_seg", "never", "steep", "table", "complete"},
            {"took_kom", "koms"}, {"kom_taken", "no_koms", "lasts"},
-           {"near_miss", "grind"}]
+           {"near_miss", "grind"},
+           {"slacked", "nothing", "big_week", "volume"}]
 
 
 # --------------------------------------------------------------------------
@@ -754,7 +817,7 @@ def _week_opener(rng, name, wk, d, seeded):
                    f"was yours seven days ago.")
 
     if rides <= 0:
-        out.append("You did not ride at all this week.")
+        pass                   # the "nothing" angle says this, and says it better
     else:
         out.append(f"{_w(rides).capitalize() if rides < 11 else _n(rides)} "
                    f"{_plural(rides, 'ride')}, {mi:,.0f} miles and {_n(ft)} feet.")
@@ -815,7 +878,14 @@ def assess(cur, meta, d, week_no, days_left, seen=None, seeded=False, said=None)
     """
     seen = {k: list(v) for k, v in (seen or {}).items()}
     said = {k: list(v) for k, v in (said or {}).items()}
-    F = season_facts(cur, meta, days_left, d.get("segs"), d)
+    yr = int(cur.get("year") or 0) or datetime.date.today().year
+    in_year = (datetime.date(yr, 12, 31) - datetime.date(yr, 1, 1)).days + 1
+    elapsed_days = max(1, in_year - days_left + 1)
+    F = season_facts(cur, meta, days_left, d.get("segs"), d, elapsed_days)
+    for name, f in F.items():
+        w = next((x for x in d["week"] if x["name"] == name), None)
+        if w:
+            f["wk_miles"], f["wk_feet"], f["wk_rides"] = w["miles"], w["feet"], w["rides"]
     wk = {w["name"]: w for w in d["week"]}
     order = sorted(cur["gc"], key=lambda n: cur["gc"][n]["pos"])
 
