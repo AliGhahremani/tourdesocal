@@ -1,0 +1,162 @@
+name: Seed last week's snapshot
+
+# Sunday's digest diffs against data/weekly_snapshot.json. No snapshot has ever
+# been committed (the only prior run was a test send, and test sends do not
+# commit), so Sunday would fall back to a flat baseline with no roasting.
+#
+# This builds a HONEST snapshot of the state as of the end of Sat 23 Aug 2026,
+# so "this week" means Aug 24-30 and the numbers are real.
+#
+# What is exact:  miles, climbing, ride count and saddle time. Anchored on the
+#                 season totals already in state.json, with only the Aug 24
+#                 onward delta subtracted, so any difference between the
+#                 updater's filters and these summary reads cancels out.
+#
+# What is left at today's values, deliberately: segment bests, attempt counts,
+#                 power, GC and jerseys. state.json keeps only each rider's
+#                 CURRENT best per segment, so a time improved this week cannot
+#                 be rolled back without inventing the number it replaced.
+#                 Leaving them means Sunday reports segment activity only from
+#                 Aug 29-30. Narrow, but never wrong.
+#
+# Cost: about 2 reads per rider, ~10 total, summaries only.
+#
+# Delete this file once it has run.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the snapshot
+        env:
+          CID: "274192"
+          CSEC: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          RT_ALI: ${{ secrets.STRAVA_REFRESH_ALI }}
+          RT_JAKE: ${{ secrets.STRAVA_REFRESH_JAKE }}
+          RT_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
+          RT_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
+          RT_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+        run: |
+          python3 - <<'PYEOF'
+          import datetime, json, os, sys, urllib.parse, urllib.request
+
+          sys.path.insert(0, "scripts")
+          import weekly
+
+          YEAR = 2026
+          CUTOFF = "2026-08-24"          # anything on or after this is "this week"
+          COUNTED = ("Ride", "VirtualRide", "GravelRide", "MountainBikeRide")
+          M, FT = 1609.344, 3.280839895
+
+          def post(url, data):
+              r = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(),
+                                         method="POST")
+              with urllib.request.urlopen(r) as f:
+                  return json.load(f)
+
+          def get(url, token):
+              r = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+              with urllib.request.urlopen(r) as f:
+                  return json.load(f), f.headers.get("X-RateLimit-Usage")
+
+          state = json.load(open("data/state.json"))
+          meta = json.load(open("data/meta.json"))
+          cur = weekly.build_current(state, meta, str(YEAR))
+
+          usage = None
+          for key, ath in sorted(state["athletes"].items()):
+              rt = os.environ.get("RT_" + key.upper())
+              name = ath["display"]
+              if not rt or name not in cur["riders"]:
+                  print(f"[{name}] no token, left at current values")
+                  continue
+              tok = post("https://www.strava.com/oauth/token", {
+                  "client_id": os.environ["CID"], "client_secret": os.environ["CSEC"],
+                  "grant_type": "refresh_token", "refresh_token": rt})["access_token"]
+
+              after = int(datetime.datetime(2026, 8, 20, tzinfo=datetime.timezone.utc).timestamp())
+              acts, page = [], 1
+              while page <= 4:
+                  batch, usage = get(
+                      "https://www.strava.com/api/v3/athlete/activities"
+                      f"?after={after}&per_page=200&page={page}", tok)
+                  if not batch:
+                      break
+                  acts += batch
+                  page += 1
+
+              dm = de = 0.0
+              dr = dt = dvt = dvr = 0
+              for a in acts:
+                  if a.get("type") not in COUNTED:
+                      continue
+                  if (a.get("start_date_local") or "")[:10] < CUTOFF:
+                      continue
+                  dm += float(a.get("distance") or 0)
+                  de += float(a.get("total_elevation_gain") or 0)
+                  dr += 1
+                  mt = int(a.get("moving_time") or 0)
+                  dt += mt
+                  if a.get("type") == "VirtualRide" or a.get("trainer"):
+                      dvt += mt
+                      dvr += 1
+
+              r = cur["riders"][name]
+              r["dist_m"] = max(0.0, r["dist_m"] - dm)
+              r["elev_m"] = max(0.0, r["elev_m"] - de)
+              r["rides"]  = max(0, r["rides"] - dr)
+              r["time_s"] = max(0, r["time_s"] - dt)
+              r["vtime_s"] = max(0, r["vtime_s"] - dvt)
+              r["vrides"]  = max(0, r["vrides"] - dvr)
+              print(f"[{name}] since {CUTOFF}: {dm/M:6.1f} mi, {de*FT:7.0f} ft, {dr} rides"
+                    f"   -> snapshot {r['dist_m']/M:,.1f} mi")
+
+          snap = {"taken_utc": "2026-08-23T23:59:59Z",
+                  "year": str(YEAR),
+                  "riders": {n: {k: v for k, v in r.items() if k != "times"}
+                             for n, r in cur["riders"].items()},
+                  "gc": cur["gc"], "jerseys": cur["jerseys"],
+                  "seeded": "Riding totals rolled back to the end of 2026-08-23 from "
+                            "Strava activity summaries. Segment bests, attempts, power, "
+                            "GC and jerseys are today's values, because state.json keeps "
+                            "only the current best per segment."}
+          json.dump(snap, open("data/weekly_snapshot.json", "w"), indent=2)
+          print(f"\nwrote data/weekly_snapshot.json for {len(snap['riders'])} riders")
+          print(f"rate limit usage: {usage}")
+          PYEOF
+
+      - name: Show what Sunday would say
+        run: |
+          python3 scripts/weekly.py
+          rm -rf weekly/2026-08-28.html
+
+      - name: Commit
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -- weekly.html data/weekly_latest.json 2>/dev/null || true
+          git clean -fd weekly/ 2>/dev/null || true
+          git add data/weekly_snapshot.json
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Seed last week's snapshot so Sunday's digest is a real week"
+            git pull --rebase --autostash origin main
+            git push
+          fi
