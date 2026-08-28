@@ -7,25 +7,24 @@
       "activities_seen": 1
     },
     "randee": {
-      "activities_seen": 33
+      "activities_seen": 2
     },
     "michael": {
-      "activities_seen": 124
+      "activities_seen": 4
     },
     "abe": {
-      "activities_seen": 128
+      "activities_seen": 2
     },
     "jose": {
-      "activities_seen": 111,
-      "stopped_early": "out of window waits for this run"
+      "activities_seen": 97
     }
   },
   "notes": [],
-  "finished_utc": "2026-08-28T02:35:03Z",
-  "reads_this_run": 371,
+  "finished_utc": "2026-08-28T02:48:16Z",
+  "reads_this_run": 214,
   "window_waits": 1,
-  "rate_limit_window": "201/200",
-  "rate_limit_daily": "1454/2000",
+  "rate_limit_window": "110/200",
+  "rate_limit_daily": "1565/2000",
   "tokens_present": [
     "abe",
     "ali",
@@ -36,17 +35,8 @@
   ],
   "tokens_missing": [],
   "changes": [
-    "Michael new 2026 best on segment 3256589: 1:34",
-    "Abe new 2026 best on segment 3256589: 1:40",
-    "Jose new 2025 best on segment 8410981: 18:23",
-    "Jose new 2025 best on segment 757408: 4:59",
-    "Jose new 2025 5 min power: 264 W",
-    "Jose new 2025 10 min power: 252 W",
-    "Jose new 2025 20 min power: 222 W",
-    "Jose new 2025 30 min power: 205 W",
-    "Jose new 2025 60 min power: 190 W",
-    "Jose new 2026 best on segment 3256589: 1:53"
+    "Jose new 2026 best on segment 3256589: 1:35"
   ],
-  "backfill_complete": false,
+  "backfill_complete": true,
   "daily_spent_on": null
 }
