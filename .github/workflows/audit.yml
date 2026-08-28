@@ -1,0 +1,160 @@
+name: Audit rider mileage
+
+# Diagnostic, 2026-08-28. Ali thinks Jose's season mileage is roughly 735 miles
+# too high. The aggregates in data/state.json are internally consistent (no
+# duplicate ids, a coherent average speed), so the question can only be answered
+# from the activity list itself.
+#
+# Cheap on purpose: it reads only the activity SUMMARY pages, about 3 reads per
+# rider, not the per activity detail that the daily updater needs. Nothing is
+# written and nothing is committed.
+#
+# Delete this file once the question is settled.
+
+on:
+  workflow_dispatch:
+    inputs:
+      rider:
+        description: "Which rider to audit"
+        required: true
+        type: choice
+        default: JOSE
+        options: [JOSE, ALI, JAKE, RANDEE, ABE]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Audit
+        env:
+          CID: "274192"
+          CSEC: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          RT_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+          RT_ALI: ${{ secrets.STRAVA_REFRESH_ALI }}
+          RT_JAKE: ${{ secrets.STRAVA_REFRESH_JAKE }}
+          RT_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
+          RT_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
+          WHO: ${{ inputs.rider }}
+        run: |
+          python3 - <<'PYEOF'
+          import collections, datetime, json, os, urllib.parse, urllib.request
+
+          who = os.environ["WHO"]
+          rt  = os.environ.get("RT_" + who)
+          if not rt:
+              raise SystemExit(f"no refresh token for {who}")
+
+          def post(url, data):
+              r = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(),
+                                         method="POST")
+              with urllib.request.urlopen(r) as f:
+                  return json.load(f)
+
+          def get(url, token):
+              r = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+              with urllib.request.urlopen(r) as f:
+                  return json.load(f), f.headers.get("X-RateLimit-Usage")
+
+          tok = post("https://www.strava.com/oauth/token", {
+              "client_id": os.environ["CID"], "client_secret": os.environ["CSEC"],
+              "grant_type": "refresh_token", "refresh_token": rt})["access_token"]
+
+          after = int(datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc).timestamp())
+          acts, page, usage = [], 1, None
+          while True:
+              batch, usage = get(
+                  f"https://www.strava.com/api/v3/athlete/activities?after={after}&per_page=200&page={page}",
+                  tok)
+              if not batch:
+                  break
+              acts += batch
+              page += 1
+              if page > 6:
+                  break
+
+          M = 1609.344
+          COUNTED = ("Ride", "VirtualRide", "GravelRide", "MountainBikeRide")
+          print(f"=== {who}: {len(acts)} activities since 1 Jan 2026 (reads used: {usage}) ===\n")
+
+          # Group by BOTH type and sport_type. Strava's legacy `type` field
+          # collapses several sports onto "Ride", and its mobile Statistics row
+          # is filtered to one sport, which is how the same account shows a user
+          # two different year totals. sport_type is the truthful one.
+          by_type = collections.Counter()
+          dist_by_type = collections.Counter()
+          for a in acts:
+              t = (a.get("type"), a.get("sport_type"))
+              by_type[t] += 1
+              dist_by_type[t] += (a.get("distance") or 0) / M
+          print("ALL ACTIVITY TYPES ON THE ACCOUNT   (type / sport_type)")
+          for t, n in by_type.most_common():
+              mark = "  <- counted" if t[0] in COUNTED else "  (ignored)"
+              print(f"  {str(t[0]):18} {str(t[1]):20} {n:4}  {dist_by_type[t]:9.1f} mi{mark}")
+
+          print("\nWHAT STRAVA'S MOBILE 'This year' ROW WOULD SHOW PER SPORT")
+          per_sport = collections.Counter()
+          for a in acts:
+              per_sport[str(a.get("sport_type") or a.get("type"))] += (a.get("distance") or 0) / M
+          for sp, d in per_sport.most_common():
+              print(f"  {sp:24} {d:9.1f} mi")
+
+          counted = [a for a in acts if a.get("type") in COUNTED]
+          total = sum((a.get("distance") or 0) for a in counted) / M
+          print(f"\nCOUNTED TOTAL: {len(counted)} rides, {total:,.1f} mi")
+
+          priv = [a for a in counted if a.get("private")]
+          vis  = collections.Counter(str(a.get("visibility")) for a in counted)
+          print(f"  of which private=True: {len(priv)} rides, "
+                f"{sum((a.get('distance') or 0) for a in priv)/M:,.1f} mi")
+          print(f"  visibility breakdown: {dict(vis)}")
+          pub = [a for a in counted if str(a.get("visibility")) == "everyone" and not a.get("private")]
+          print(f"  PUBLIC ONLY total: {len(pub)} rides, "
+                f"{sum((a.get('distance') or 0) for a in pub)/M:,.1f} mi")
+          print("  ^ if this matches the figure you expected, the difference is private rides.")
+
+          print("\nBY MONTH (counted rides only)")
+          mon = collections.defaultdict(lambda: [0, 0.0])
+          for a in counted:
+              k = (a.get("start_date_local") or "")[:7]
+              mon[k][0] += 1
+              mon[k][1] += (a.get("distance") or 0) / M
+          for k in sorted(mon):
+              n, d = mon[k]
+              print(f"  {k}  {n:3} rides  {d:8.1f} mi")
+
+          print("\nDEVICE / GEAR (counted rides only)")
+          gear = collections.Counter(str(a.get("gear_id")) for a in counted)
+          for g, n in gear.most_common(10):
+              print(f"  gear {g:12} {n:4} rides")
+          trainer = [a for a in counted if a.get("trainer")]
+          print(f"  flagged trainer=True: {len(trainer)}")
+
+          print("\nTEN LONGEST COUNTED RIDES")
+          for a in sorted(counted, key=lambda x: -(x.get("distance") or 0))[:10]:
+              print(f"  {(a.get('start_date_local') or '')[:10]}  "
+                    f"{(a.get('distance') or 0)/M:6.1f} mi  "
+                    f"{(a.get('moving_time') or 0)/3600:4.1f} h  "
+                    f"{(a.get('distance') or 0)/M/max((a.get('moving_time') or 1)/3600, .01):5.1f} mph  "
+                    f"{a.get('type'):14} {str(a.get('name'))[:44]}")
+
+          print("\nSUSPICIOUS: over 25 mph average, which is not a normal road ride")
+          odd = [a for a in counted
+                 if (a.get("moving_time") or 0) > 600
+                 and (a.get("distance") or 0)/M / ((a.get("moving_time") or 1)/3600) > 25]
+          if not odd:
+              print("  none")
+          for a in odd:
+              print(f"  {(a.get('start_date_local') or '')[:10]}  "
+                    f"{(a.get('distance') or 0)/M:6.1f} mi  "
+                    f"{(a.get('distance') or 0)/M/max((a.get('moving_time') or 1)/3600, .01):5.1f} mph  "
+                    f"{a.get('type'):14} {str(a.get('name'))[:44]}")
+          PYEOF
