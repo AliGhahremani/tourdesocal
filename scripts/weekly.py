@@ -34,6 +34,23 @@ M_PER_MI = 1609.344
 FT_PER_M = 3.280839895
 
 
+def local_today():
+    """Today in Pacific, not on the runner.
+
+    weekly.yml fires at 03:30 UTC, which is 8:30 PM Pacific on SUNDAY but
+    already MONDAY in UTC. Using the runner's date labelled every digest and
+    every archive file with the day after the week it covers.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.datetime.now(ZoneInfo("America/Los_Angeles")).date()
+    except Exception:
+        # no tzdata: Pacific is never more than 8 hours behind UTC, and the
+        # send is at 20:30 local, so this lands on the right day either way.
+        return (datetime.datetime.now(datetime.timezone.utc)
+                - datetime.timedelta(hours=8)).date()
+
+
 def fmt_gap(sec):
     """A margin. Under a minute reads as seconds, because "0:08" does not."""
     sec = int(round(sec))
@@ -580,7 +597,7 @@ def main():
             print(f"snapshot unreadable, treating as baseline: {e}")
 
     d = diff(cur, prev)
-    today = datetime.date.today()
+    today = local_today()
     week_end = today.strftime("%b %d, %Y").replace(" 0", " ")
     week_no = today.isocalendar()[1] + today.isocalendar()[0] * 100
     note = blurb(cur, d, prev, week_no)
@@ -615,7 +632,7 @@ def main():
     # Archive this digest as its own dated page and rebuild the index. A test
     # run writes it too, but weekly.yml only commits on a real send, so what
     # ends up in the repo stays a record of emails that actually went out.
-    write_archive(body, week_end, datetime.date.today().isoformat())
+    write_archive(body, week_end, today.isoformat())
 
     # snapshot for next week: drop the display-only fields
     snap = {"taken_utc": datetime.datetime.utcnow().isoformat(timespec="seconds") + "Z",
