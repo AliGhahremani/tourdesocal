@@ -788,7 +788,10 @@ const SEG_POS = new Map(SEGS_AZ.map((sg,i)=>[sg.id, String(i+1).padStart(2,"0")]
    Two measures, two charts. Never one chart with two y scales.
 --------------------------------------------------------------------------- */
 const SERIES = ["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4"];
-const RACE_MS = 11000;              // full season sweep
+// Pace, not duration. A fixed duration silently speeds up as the season grows,
+// because the same sweep that covers 240 days in August has to cover 365 by
+// December. This holds roughly 16 days per second and clamps both ends.
+const raceMs = days => Math.max(9000, Math.min(21000, 62 * days));
 // prefers-reduced-motion is about motion a viewer did not ask for. Nothing
 // here ever autoplays: the race only starts when somebody presses Play or
 // clicks a jersey card, and refusing to animate what they just asked to watch
@@ -872,7 +875,7 @@ function drawRace(root, H, key, opts){
     frame(0);
     const t0 = performance.now();
     (function step(t){
-      const p = Math.min(1, (t-t0)/RACE_MS);
+      const p = Math.min(1, (t-t0)/raceMs(n));
       // Linear: a race is constant time, and an eased clock makes August look
       // slower than March for no reason. The last frame is forced rather than
       // computed, so the season always finishes ON the last day.
