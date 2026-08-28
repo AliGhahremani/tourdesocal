@@ -35,16 +35,21 @@
   h1{font-family:'Archivo Black','Archivo',sans-serif;font-size:clamp(38px,7vw,76px);line-height:.98;text-transform:uppercase;letter-spacing:-.01em;color:#1c1c20}
   h1 .q{color:var(--orange)}
   .hero p.sub{margin-top:20px;max-width:560px;color:var(--muted);font-size:17px}
-  .hero .mp{margin-top:26px;display:inline-flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 20px 9px 12px;font-size:14px;box-shadow:0 1px 4px rgba(20,20,30,.06)}
+  .hero .mp{display:inline-flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 20px 9px 12px;font-size:14px;box-shadow:0 1px 4px rgba(20,20,30,.06)}
   .hero .mp .dot{width:34px;height:34px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-family:'Archivo Black';font-size:13px;color:#fff;overflow:hidden}
   .hero .mp .dot img{width:100%;height:100%;object-fit:contain}
   .hero .mp b{color:var(--orange-soft)}
   .score{padding:46px 0 8px}
   .score h2,.arena h2,.segs h2,.rules h2{font-family:'Archivo Black';font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
-  .hero .cdown{margin-top:16px;display:inline-block;font-family:'JetBrains Mono',monospace;
-    font-size:13px;letter-spacing:.04em;color:#1c1c20;background:rgba(232,180,0,.18);
-    border:1px solid rgba(232,180,0,.55);border-radius:999px;padding:9px 18px}
-  .hero .cdown b{font-weight:700;font-size:15px}
+  /* The countdown and the leader chip sit on the same line, so they are the
+     same object: white pill, hairline border, one soft shadow. The yellow
+     wash made the countdown shout over the thing it sits next to. */
+  .hero .pills{margin-top:26px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+  .hero .cdown{display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;
+    font-size:13px;letter-spacing:.04em;color:var(--muted);background:#fff;
+    border:1px solid var(--line);border-radius:999px;padding:9px 20px;
+    box-shadow:0 1px 4px rgba(20,20,30,.06)}
+  .hero .cdown b{font-weight:700;font-size:15px;color:#1c1c20;margin-right:6px}
   .digests .dgl{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--orange);text-decoration:none;border-bottom:2px solid rgba(252,82,0,.35);padding-bottom:2px}
   .digests .dgl:hover{border-bottom-color:var(--orange)}
   .score .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
@@ -221,15 +226,17 @@
   <div class="eyebrow">Tour de SoCal · Southern California</div>
   <h1>Tour de <span class="q">SoCal</span></h1>
   <p class="sub"><span id="nsegA">…</span> segments, five riders, three jerseys. Yellow for the fastest total time, polka dot for the most climbing, green for the most miles. Everything pulled from Strava, every morning, whether you like it or not.</p>
-  <div class="cdown" id="cdown"></div>
-  <div class="mp"><span class="dot" id="mpdot"><img src="logo.png" alt=""></span><span id="mpline"></span></div>
+  <div class="pills">
+    <div class="cdown" id="cdown"></div>
+    <div class="mp"><span class="dot" id="mpdot"><img src="logo.png" alt=""></span><span id="mpline"></span></div>
+  </div>
 </div></section>
 
 <section class="rules"><div class="wrap">
   <h2>The Rules</h2>
   <div class="box">
     Scored like the Tour de France: your times on all <span id="nsegB">…</span> segments add up, and the <b>lowest total time</b> wins the General Classification.
-    Never attempted a segment? You are assessed the <span class="pt">last place time + 10%</span> for it. And everyone gets to know about it.
+    No time on a segment this year? You are assessed the <span class="pt">last place time + 10%</span> for it. And everyone gets to know about it.
   </div>
 </div></section>
 
@@ -321,8 +328,8 @@ document.getElementById("updated").textContent = D.updated || "not yet, first ru
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const days = Math.round((new Date(yr,11,31) - today)/86400000) + 1;
-  el.innerHTML = days > 1   ? '<b>'+days+'</b> days left in the '+yr+' season'
-               : days === 1 ? '<b>Final day</b> of the '+yr+' season'
+  el.innerHTML = days > 1   ? '<b>'+days+'</b>days left in the '+yr+' season'
+               : days === 1 ? '<b>Final day</b>of the '+yr+' season'
                : 'The '+yr+' season is over';
 })();
 const NWORD = ["zero","one","two","three","four","five","six","seven","eight","nine",
@@ -605,9 +612,14 @@ function routeMap(divId, pl, interactive, gr){
 }
 
 // ---- segment cards ----
+// Alphabetical by name. The badge shows the position in THIS list, not the
+// num in data/meta.json, which is only the order segments were added.
+const SEGS_AZ = D.segs.slice().sort((a,b)=>
+  a.name.localeCompare(b.name, "en", {numeric:true, sensitivity:"base"}));
+const SEG_POS = new Map(SEGS_AZ.map((sg,i)=>[sg.id, String(i+1).padStart(2,"0")]));
 (function(){
   const list = document.getElementById("seglist");
-  D.segs.forEach(sg=>{
+  SEGS_AZ.forEach(sg=>{
     const finishers = sg.riders.filter(r=>r.sec!=null);
     const bestSec = finishers.length ? Math.min(...finishers.map(r=>r.sec)) : null;
     // Seven columns on purpose, Ali's list: face, time, speed, power, date,
@@ -630,7 +642,7 @@ function routeMap(divId, pl, interactive, gr){
     const el = document.createElement("div");
     el.className="seg";
     el.innerHTML =
-     '<div class="seg-head"><span class="num">'+sg.num+'</span><h3>'+sg.name+'</h3>'+
+     '<div class="seg-head"><span class="num">'+SEG_POS.get(sg.id)+'</span><h3>'+sg.name+'</h3>'+
      '<span class="loc">'+sg.loc+'</span><a href="https://www.strava.com/segments/'+sg.id+'" target="_blank" rel="noopener">View on Strava ↗</a></div>'+
      '<div class="stats">'+
        '<div class="stat"><div class="k">Distance</div><div class="v">'+sg.dist+'</div></div>'+
@@ -665,9 +677,9 @@ function routeMap(divId, pl, interactive, gr){
   L.tileLayer(TILES_LABELS, {maxZoom:18, maxNativeZoom:16}).addTo(map);
   map.setView(D.segs[0].pl[0], 10);   // see the note in routeMap
   let bounds = null;
-  D.segs.forEach(sg=>{
+  SEGS_AZ.forEach(sg=>{
     const line = drawRoute(map, sg.pl, sg.gr, 4);
-    line.bindTooltip(sg.num+' · '+sg.name, {sticky:true});
+    line.bindTooltip(SEG_POS.get(sg.id)+' · '+sg.name, {sticky:true});
     line.on('click', ()=>{ document.getElementById('map'+sg.id).closest('.seg').scrollIntoView({behavior:'smooth'}); });
     L.circleMarker(sg.pl[0], {radius:5, color:"#ffffff", weight:2, fillColor:"#12813f", fillOpacity:1}).addTo(map);
     bounds = bounds ? bounds.extend(line.getBounds()) : line.getBounds();
