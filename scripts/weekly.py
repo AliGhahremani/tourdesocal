@@ -273,6 +273,24 @@ def render(cur, d, week_end, note):
         A('<p style="font-size:14px;color:#6d6d78;margin-top:20px">Nobody rode '
           'anything that counted this week. Standings unchanged.</p>')
 
+    # Ali's standing request. A good share of the DNS penalties on this site
+    # are people riding straight past a tracked segment unaware it was there.
+    A('<div style="margin-top:26px;padding:14px 16px;background:#fdf6e0;'
+      'border-left:4px solid #e8b400;border-radius:0 8px 8px 0;'
+      'font-size:13.5px;line-height:1.6;color:#2a2a2e">'
+      '<strong>Stop missing segments by accident.</strong> Two minutes, once:'
+      '<br><br>'
+      f'<strong>1.</strong> Star all {len(cur["seg_ids"])} segments on Strava. '
+      'They are all linked from the site. Starred segments sync to your head unit.'
+      '<br>'
+      '<strong>2.</strong> Turn on Live Segments on your Garmin or Wahoo. '
+      'It warns you before one starts and counts you down through it, so you '
+      'know you are on the clock instead of finding out on Sunday.'
+      '<br><br>'
+      'A segment you never knew you were riding is scored as a DNS, and a DNS '
+      'costs the slowest time plus ten percent.'
+      '</div>')
+
     A('<p style="margin-top:26px;font-size:13px;color:#6d6d78">'
       'Everything is scoped to the '
       f'{cur["year"]} season. '

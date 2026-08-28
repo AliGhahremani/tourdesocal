@@ -586,7 +586,7 @@ function routeMap(divId, pl, interactive, gr){
         '<td class="time">'+(dns?dash:r.time)+'</td>'+
         '<td class="spd">'+(dns?dash:fmtSpeed(r.sec, sg.dist))+'</td>'+
         '<td class="pw">'+(r.watts?r.watts+" W":dash)+'</td>'+
-        '<td class="date">'+(dns?'not ridden':shortDate(r.date))+'</td>'+
+        '<td class="date">'+(dns?'not this year':shortDate(r.date))+'</td>'+
         '<td class="att">'+(r.attempts!=null?r.attempts:dash)+'</td>'+
         '<td class="lead'+(!dns && r.sec===bestSec ? ' kom' : '')+'">'+fmtLead(r.sec, bestSec)+'</td>'+
         '</tr>';

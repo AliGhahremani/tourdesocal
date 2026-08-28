@@ -418,7 +418,7 @@ def main():
                                "date": b["date"], "watts": b["watts"], "attempts": att})
             else:
                 riders.append({"name": ath["display"], "sec": None, "time": "—",
-                               "date": "never attempted", "watts": None, "attempts": att})
+                               "date": f"not in {year}", "watts": None, "attempts": att})
         riders.sort(key=lambda r: (r["sec"] is None, r["sec"] if r["sec"] is not None else 0))
         seg_out = dict(seg)
         seg_out["riders"] = riders
