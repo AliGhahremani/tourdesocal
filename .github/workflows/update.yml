@@ -1,0 +1,60 @@
+name: Update standings
+
+on:
+  schedule:
+    # 12:01 AM local, so the run closes out the day that just ended and the site is
+    # already current when anyone looks at it in the morning. Cron is UTC and cannot
+    # follow daylight saving, so run one or the other by month. Neither crosses a
+    # date boundary: 00:01 local is 07:01 or 08:01 UTC on the same day.
+    #
+    # This also vacates the 8:00-8:30 slot entirely. Strava rate limits are per
+    # application and 2024michael runs at 8:00, so the two must never share a
+    # 15-minute window.
+    - cron: "1 7 * 3-10 *"      # 07:01 UTC = 12:01 AM PDT (Mar-Oct)
+    - cron: "1 8 * 1,2,11,12 *" # 08:01 UTC = 12:01 AM PST (Nov-Feb)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pull latest efforts from Strava
+        env:
+          STRAVA_CLIENT_ID: "274192"   # public value, same app as 2024michael
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_ALI: ${{ secrets.STRAVA_REFRESH_ALI }}
+          STRAVA_REFRESH_JAKE: ${{ secrets.STRAVA_REFRESH_JAKE }}
+          STRAVA_REFRESH_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
+          STRAVA_REFRESH_MICHAEL: ${{ secrets.STRAVA_REFRESH_MICHAEL }}
+          STRAVA_REFRESH_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
+          STRAVA_REFRESH_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+        run: python scripts/update.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/state.json data.js data/last_run.json data/honours.json
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "Auto-update standings $(date -u +%F)"
+            # Another run, or a hand edit, may have pushed while this one was
+            # waiting out a rate limit window. Without this the push is rejected
+            # and a whole pass of Strava reads is thrown away. That has happened.
+            git pull --rebase --autostash origin main
+            git push
+          fi
