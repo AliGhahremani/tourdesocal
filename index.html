@@ -41,10 +41,23 @@
   .hero .mp b{color:var(--orange-soft)}
   .score{padding:46px 0 8px}
   .score h2,.arena h2,.segs h2,.rules h2{font-family:'Archivo Black';font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+  .hero .cdown{margin-top:16px;display:inline-block;font-family:'JetBrains Mono',monospace;
+    font-size:13px;letter-spacing:.04em;color:#1c1c20;background:rgba(232,180,0,.18);
+    border:1px solid rgba(232,180,0,.55);border-radius:999px;padding:9px 18px}
+  .hero .cdown b{font-weight:700;font-size:15px}
   .score .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
   .pcard{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;position:relative;box-shadow:0 1px 6px rgba(20,20,30,.05)}
   .pcard .photo{width:100%;aspect-ratio:3/4;height:auto;object-fit:contain;display:block;background:var(--card2)}
   .pcard.leader{border-color:var(--orange);box-shadow:0 2px 10px rgba(252,82,0,.16)}
+  /* Podium edges. Declared after .leader so first place reads gold rather
+     than orange, matching the yellow jersey badge on the same card. */
+  .pcard.pod{border-width:2px}
+  .pcard.p1{border-color:var(--yellow-j);box-shadow:0 3px 16px rgba(232,180,0,.26)}
+  .pcard.p2{border-color:#9aa3ab;box-shadow:0 3px 16px rgba(154,163,171,.24)}
+  .pcard.p3{border-color:#b3722e;box-shadow:0 3px 16px rgba(179,114,46,.24)}
+  .pcard.p1 .medal{background:var(--yellow-j);border-color:var(--yellow-j);color:#3a2c00}
+  .pcard.p2 .medal{background:#9aa3ab;border-color:#9aa3ab;color:#fff}
+  .pcard.p3 .medal{background:#b3722e;border-color:#b3722e;color:#fff}
   .pcard .medal{position:absolute;top:10px;left:10px;font-family:'Archivo Black';font-size:13px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:8px;padding:4px 10px}
   .pcard .jersey{position:absolute;top:10px;right:10px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.1em;background:var(--orange);color:#fff;border-radius:6px;padding:4px 8px;text-transform:uppercase}
   .pcard .nm{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:18px;letter-spacing:.02em}
@@ -206,6 +219,7 @@
   <div class="eyebrow">Tour de SoCal · Southern California</div>
   <h1>Tour de <span class="q">SoCal</span></h1>
   <p class="sub"><span id="nsegA">…</span> segments, five riders, three jerseys. Yellow for the fastest total time, polka dot for the most climbing, green for the most miles. Everything pulled from Strava, every morning, whether you like it or not.</p>
+  <div class="cdown" id="cdown"></div>
   <div class="mp"><span class="dot" id="mpdot"><img src="logo.png" alt=""></span><span id="mpline"></span></div>
 </div></section>
 
@@ -290,6 +304,19 @@ const KG = {}; for (const k in WEIGHT_LBS) KG[k] = WEIGHT_LBS[k]/2.20462;
 // Unknown weight means no W/kg figure rather than a wrong one.
 const wkg = (w, name) => (KG[name] ? (w/KG[name]).toFixed(2) : null);
 document.getElementById("updated").textContent = D.updated || "not yet, first run pending";
+// Days left in the season, counting today, because today is still a day you
+// can ride. The season closes at the end of December 31, so New Year's Eve
+// counts. Recomputed on every page load, so it never goes stale.
+(function(){
+  const el = document.getElementById("cdown"); if (!el) return;
+  const yr = Number(D.year) || new Date().getFullYear();
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const days = Math.round((new Date(yr,11,31) - today)/86400000) + 1;
+  el.innerHTML = days > 1   ? '<b>'+days+'</b> days left in the '+yr+' season'
+               : days === 1 ? '<b>Final day</b> of the '+yr+' season'
+               : 'The '+yr+' season is over';
+})();
 const NWORD = ["zero","one","two","three","four","five","six","seven","eight","nine",
   "ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen",
   "eighteen","nineteen","twenty","twenty one","twenty two","twenty three",
@@ -410,7 +437,7 @@ const powerRows = {};
 (function(){
   const order = Object.entries(totals).sort((a,b)=>a[1]-b[1]);
   const leadTime = order.length ? order[0][1] : 0;
-  const medals = ["🥇","🥈","🥉","4th","5th","6th","7th","8th"];
+  const medals = ["1st","2nd","3rd","4th","5th","6th","7th","8th"];
   const box = document.getElementById("standings");
   let html = "";
   order.forEach(([name,t],i)=>{
@@ -419,7 +446,8 @@ const powerRows = {};
     const gapline = NO_DATA ? 'not started yet'
       : (i===0 ? 'race leader' : '+'+fmtClock(t-leadTime));
     const penTxt = penalties[name] ? ' · '+penalties[name]+' DNS penalt'+(penalties[name]>1?'ies':'y') : '';
-    html += '<div class="pcard'+(!NO_DATA && i===0?' leader':'')+'">'+photo+
+    html += '<div class="pcard'+(!NO_DATA && i===0?' leader':'')+
+      (!NO_DATA && i<3?' pod p'+(i+1):'')+'">'+photo+
       (NO_DATA ? '' : '<span class="medal">'+medals[i]+'</span>')+
       (!NO_DATA && i===0?'<span class="jersey">Yellow Jersey</span>':'')+
       '<div class="body"><div class="nm">'+nameLink(name,name)+'</div><div class="rl">'+(SURNAMES[name]||'')+'</div>'+
