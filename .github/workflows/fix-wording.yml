@@ -1,0 +1,122 @@
+name: Wording fixes
+
+# Two things Ali asked for.
+#
+# 1. The site said a rider had "never" ridden a segment when all it knows is
+#    that they have not ridden it THIS YEAR. Most of them have ridden most of
+#    these segments for years; the competition only started in January.
+#
+# 2. The weekly digest now tells everyone to star the segments on Strava and
+#    turn on Live Segments, so they stop riding past tracked segments unaware.
+#    A good share of the DNS penalties on this site are exactly that.
+#
+# Written as plain text rather than a base64 payload on purpose: a typo in
+# base64 is invisible, a typo here is not, and every replacement asserts it
+# matched exactly once.
+#
+# Delete this file once it has run.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Patch
+        run: |
+          python3 - <<'PYEOF'
+          import py_compile
+
+          def sub(path, old, new):
+              s = open(path, encoding="utf-8").read()
+              n = s.count(old)
+              assert n == 1, f"{path}: expected 1 match, found {n}"
+              open(path, "w", encoding="utf-8").write(s.replace(old, new))
+              print(f"patched {path}")
+
+          sub("index.html",
+              """'<td class="date">'+(dns?'not ridden':shortDate(r.date))+'</td>'+""",
+              """'<td class="date">'+(dns?'not this year':shortDate(r.date))+'</td>'+""")
+
+          sub("scripts/update.py",
+              '''                               "date": "never attempted", "watts": None, "attempts": att})''',
+              '''                               "date": f"not in {year}", "watts": None, "attempts": att})''')
+
+          FOOTER = """    A('<p style="margin-top:26px;font-size:13px;color:#6d6d78">'
+                'Everything is scoped to the '
+                f'{cur["year"]} season. '
+                '<a href="https://tourdesocal.com" style="color:#fc5200">tourdesocal.com</a></p>')"""
+          FOOTER = FOOTER.replace("\n                ", "\n      ")
+
+          BLOCK = """    # Ali's standing request. A good share of the DNS penalties on this site
+              # are people riding straight past a tracked segment unaware it was there.
+              A('<div style="margin-top:26px;padding:14px 16px;background:#fdf6e0;'
+                'border-left:4px solid #e8b400;border-radius:0 8px 8px 0;'
+                'font-size:13.5px;line-height:1.6;color:#2a2a2e">'
+                '<strong>Stop missing segments by accident.</strong> Two minutes, once:'
+                '<br><br>'
+                f'<strong>1.</strong> Star all {len(cur["seg_ids"])} segments on Strava. '
+                'They are all linked from the site. Starred segments sync to your head unit.'
+                '<br>'
+                '<strong>2.</strong> Turn on Live Segments on your Garmin or Wahoo. '
+                'It warns you before one starts and counts you down through it, so you '
+                'know you are on the clock instead of finding out on Sunday.'
+                '<br><br>'
+                'A segment you never knew you were riding is scored as a DNS, and a DNS '
+                'costs the slowest time plus ten percent.'
+                '</div>')
+
+          """
+          BLOCK = BLOCK.replace("\n              ", "\n      ").replace("\n          ", "\n")
+
+          sub("scripts/weekly.py", FOOTER, BLOCK + FOOTER)
+
+          for p in ("scripts/update.py", "scripts/weekly.py"):
+              py_compile.compile(p, doraise=True)
+              print(f"{p} compiles")
+          assert "not this year" in open("index.html", encoding="utf-8").read()
+          assert "never attempted" not in open("scripts/update.py", encoding="utf-8").read()
+          assert "Live Segments" in open("scripts/weekly.py", encoding="utf-8").read()
+          print("checks passed")
+          PYEOF
+
+      - name: Prove the digest renders the new block
+        run: |
+          python3 scripts/weekly.py
+          grep -c "Live Segments" /tmp/weekly_email.html
+
+      - name: Regenerate data.js
+        env:
+          STRAVA_CLIENT_ID: "274192"
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+        run: python3 scripts/update.py
+
+      - name: Commit
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          # weekly.html and weekly_snapshot.json are deliberately NOT added: the
+          # digest must keep its real baseline or Sunday reports an empty week.
+          git add index.html scripts/update.py scripts/weekly.py data.js \
+                  data/state.json data/last_run.json
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Say 'not this year' not 'never'; tell riders to star the segments"
+            git pull --rebase --autostash origin main
+            git push
+          fi
