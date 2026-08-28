@@ -18,6 +18,7 @@ import json, os, re, sys, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from roast import blurb, headline
+from assess import assess
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "data", "state.json")
@@ -286,7 +287,7 @@ def rebuild_index():
         '</div></body></html>')
 
 
-def render(cur, d, week_end, note, head=None):
+def render(cur, d, week_end, note, head=None, cards=None):
     """One HTML body used for both the email and the archive page."""
     C = {"yellow": "#d9a400", "polka": "#c8102e", "green": "#0a7d3c"}
     JN = {"yellow": "Yellow", "polka": "Polka Dot", "green": "Green"}
@@ -413,6 +414,20 @@ def render(cur, d, week_end, note, head=None):
         A('<p style="font-size:14px;color:#6d6d78;margin-top:20px">Nobody rode '
           'anything that counted this week. Standings unchanged.</p>')
 
+    # Individual assessments. Everyone gets one every week, in GC order, so
+    # the man in yellow reads his first and the man in last reads his last.
+    if cards:
+        A('<h2 style="font-size:15px;margin:26px 0 8px">Individual assessments, '
+          'delivered without affection</h2>')
+        for i, (nm, txt) in enumerate(cards):
+            bg = "#faf8f4" if i % 2 == 0 else "#ffffff"
+            A(f'<div style="background:{bg};border:1px solid #e6e2da;'
+              f'border-radius:10px;padding:13px 15px;margin:0 0 8px;'
+              f'font-size:14px;line-height:1.62">'
+              f'<div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;'
+              f'font-size:12px;letter-spacing:.08em;color:#fc5200;margin-bottom:5px">'
+              f'{nm.upper()}</div>{txt}</div>')
+
     # Ali's standing request. A good share of the DNS penalties on this site
     # are people riding straight past a tracked segment unaware it was there.
     A('<div style="margin-top:26px;padding:14px 16px;background:#fdf6e0;'
@@ -463,7 +478,17 @@ def main():
     print("blurb:", note)
     head = headline(cur, d, prev, week_no)
     print("headline:", head)
-    body = render(cur, d, week_end, note, head)
+
+    # Season closes at the end of December 31, so that day counts.
+    days_left = (datetime.date(today.year, 12, 31) - today).days + 1
+    seen = (prev or {}).get("assess_seen") or {}
+    said = (prev or {}).get("assess_said") or {}
+    cards, seen, said = assess(cur, meta, d, week_no, days_left, seen,
+                               seeded=bool((prev or {}).get("seeded")), said=said)
+    for nm, txt in cards:
+        print(f"  [{nm}] {txt}")
+
+    body = render(cur, d, week_end, note, head, cards)
 
     open(EMAIL_HTML, "w").write(body)
     json.dump({"generated": week_end, "baseline": d["baseline"],
@@ -488,7 +513,8 @@ def main():
             "year": year,
             "riders": {n: {k: v for k, v in r.items() if k != "times"}
                        for n, r in cur["riders"].items()},
-            "gc": cur["gc"], "jerseys": cur["jerseys"]}
+            "gc": cur["gc"], "jerseys": cur["jerseys"],
+            "assess_seen": seen, "assess_said": said}
     json.dump(snap, open(SNAP, "w"), indent=2)
 
     print(f"digest for week ending {week_end}: "
