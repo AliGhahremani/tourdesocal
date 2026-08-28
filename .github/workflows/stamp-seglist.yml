@@ -1,0 +1,62 @@
+name: Stamp the segment list into the snapshot
+
+# The seeded snapshot predates segment-list tracking, so it carries no seg_ids
+# and Sunday would report "list change unknown" rather than comparing.
+#
+# The list has not changed since Aug 23, so stamping today's list in is exactly
+# right for a snapshot dated Aug 23. Costs nothing: no Strava calls.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  stamp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Stamp
+        run: |
+          python3 - <<'PYEOF'
+          import json
+          snap = json.load(open("data/weekly_snapshot.json"))
+          meta = json.load(open("data/meta.json"))
+          ids = [str(s["id"]) for s in meta["segments"]]
+          snap["seg_ids"] = ids
+          snap["seg_names"] = {str(s["id"]): s["name"] for s in meta["segments"]}
+          json.dump(snap, open("data/weekly_snapshot.json", "w"), indent=2)
+          print(f"stamped {len(ids)} segment ids into the snapshot")
+          PYEOF
+
+      - name: Show what Sunday would say
+        run: |
+          cp data/weekly_snapshot.json /tmp/seed.json
+          python3 scripts/weekly.py
+          cp /tmp/seed.json data/weekly_snapshot.json
+          rm -f weekly/2026-08-28.html
+
+      - name: Commit
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -- weekly.html data/weekly_latest.json 2>/dev/null || true
+          git clean -fd weekly/ 2>/dev/null || true
+          git add data/weekly_snapshot.json
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Stamp the segment list into the seeded snapshot"
+            git pull --rebase --autostash origin main
+            git push
+          fi
