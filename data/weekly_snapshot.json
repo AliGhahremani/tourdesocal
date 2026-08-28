@@ -39,7 +39,7 @@
         "618874": 1,
         "25403641": 3,
         "830079": 1,
-        "649404": 6,
+        "649404": 5,
         "13737114": 1,
         "3256589": 2
       },
@@ -76,16 +76,16 @@
         "3256589": 89
       },
       "attempts": {
-        "22971497": 24,
-        "25403641": 36,
+        "22971497": 23,
+        "25403641": 35,
         "8410981": 10,
         "609924": 1,
         "913750": 10,
-        "649404": 7,
+        "649404": 6,
         "13737114": 6,
         "618874": 5,
         "1189771": 6,
-        "7855869": 29,
+        "7855869": 28,
         "3615418": 1,
         "4905033": 1,
         "611821": 1,
@@ -135,7 +135,7 @@
         "8410981": 14,
         "609924": 4,
         "913750": 11,
-        "13737114": 8,
+        "13737114": 7,
         "580930": 2,
         "618874": 6,
         "25403641": 16,
@@ -150,7 +150,7 @@
         "2905337": 1,
         "22971497": 2,
         "757408": 1,
-        "649404": 8,
+        "649404": 7,
         "830079": 1,
         "633514": 1,
         "3256589": 10
@@ -195,7 +195,7 @@
         "25403641": 2,
         "22971497": 2,
         "609924": 1,
-        "649404": 20,
+        "649404": 19,
         "7855869": 1,
         "3615418": 1,
         "830079": 1,
@@ -251,7 +251,7 @@
         "4905033": 2,
         "611821": 2,
         "633514": 1,
-        "649404": 25,
+        "649404": 24,
         "2905337": 5,
         "13737114": 4,
         "3615418": 1,
@@ -310,5 +310,5 @@
     "polka": "Randee",
     "green": "Randee"
   },
-  "seeded": "Riding totals rolled back to the end of 2026-08-23 from Strava activity summaries. Segment bests, attempts, power, GC and jerseys are today's values, because state.json keeps only the current best per segment."
+  "reseeded": "Riding totals and segment attempts both rolled back to the end of 2026-08-23. Segment bests needed no rollback: every best in state.json carries its date and none was set on or after Aug 24, verified at run time. The one thing still at today's values is power, because state.json ratchets power upward and does not retain the previous figure, so a power best set Aug 24-27 will not be reported."
 }
