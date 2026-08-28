@@ -1,0 +1,124 @@
+name: Site tweaks
+
+# Three of Ali's asks, all cosmetic or additive. Nothing touches scoring.
+#
+#   1. Ranks read 1st/2nd/3rd instead of medal emoji, matching 4th/5th.
+#   2. The podium cards get gold/silver/bronze edges and matching rank pills,
+#      instead of every card looking alike but for the leader's orange.
+#   3. A countdown in the hero: days left in the season, counting today.
+#
+# Every inserted block is built with explicit \n joins rather than literal
+# newlines. A literal newline followed by a shallowly indented line silently
+# ends a YAML block scalar, which is how the first attempt at this broke.
+#
+# Delete this file once it has run.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  tweak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Patch index.html
+        run: |
+          python3 - <<'PYEOF'
+          P = "index.html"
+          s = open(P, encoding="utf-8").read()
+          NL = "\n"
+
+          def sub(old, new):
+              global s
+              n = s.count(old)
+              assert n == 1, f"expected 1 match, found {n}: {old[:70]!r}"
+              s = s.replace(old, new)
+
+          # ---- 1. ranks read like places, not medals -------------------------
+          sub('  const medals = ["\U0001F947","\U0001F948","\U0001F949","4th","5th","6th","7th","8th"];',
+              '  const medals = ["1st","2nd","3rd","4th","5th","6th","7th","8th"];')
+
+          # ---- 2. podium edge treatment --------------------------------------
+          LEADER = '  .pcard.leader{border-color:var(--orange);box-shadow:0 2px 10px rgba(252,82,0,.16)}'
+          PODIUM = NL.join([
+              LEADER,
+              '  /* Podium edges. Declared after .leader so first place reads gold rather',
+              '     than orange, matching the yellow jersey badge on the same card. */',
+              '  .pcard.pod{border-width:2px}',
+              '  .pcard.p1{border-color:var(--yellow-j);box-shadow:0 3px 16px rgba(232,180,0,.26)}',
+              '  .pcard.p2{border-color:#9aa3ab;box-shadow:0 3px 16px rgba(154,163,171,.24)}',
+              '  .pcard.p3{border-color:#b3722e;box-shadow:0 3px 16px rgba(179,114,46,.24)}',
+              '  .pcard.p1 .medal{background:var(--yellow-j);border-color:var(--yellow-j);color:#3a2c00}',
+              '  .pcard.p2 .medal{background:#9aa3ab;border-color:#9aa3ab;color:#fff}',
+              '  .pcard.p3 .medal{background:#b3722e;border-color:#b3722e;color:#fff}',
+          ])
+          sub(LEADER, PODIUM)
+
+          CARD = """    html += '<div class="pcard'+(!NO_DATA && i===0?' leader':'')+'">'+photo+"""
+          sub(CARD, NL.join([
+              """    html += '<div class="pcard'+(!NO_DATA && i===0?' leader':'')+""",
+              """      (!NO_DATA && i<3?' pod p'+(i+1):'')+'">'+photo+""",
+          ]))
+
+          # ---- 3. countdown in the hero --------------------------------------
+          MP = '  <div class="mp"><span class="dot" id="mpdot"><img src="logo.png" alt=""></span><span id="mpline"></span></div>'
+          sub(MP, NL.join(['  <div class="cdown" id="cdown"></div>', MP]))
+
+          GRID = '  .score .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}'
+          sub(GRID, NL.join([
+              "  .hero .cdown{margin-top:16px;display:inline-block;font-family:'JetBrains Mono',monospace;",
+              '    font-size:13px;letter-spacing:.04em;color:#1c1c20;background:rgba(232,180,0,.18);',
+              '    border:1px solid rgba(232,180,0,.55);border-radius:999px;padding:9px 18px}',
+              '  .hero .cdown b{font-weight:700;font-size:15px}',
+              GRID,
+          ]))
+
+          UPD = 'document.getElementById("updated").textContent = D.updated || "not yet, first run pending";'
+          sub(UPD, NL.join([
+              UPD,
+              '// Days left in the season, counting today, because today is still a day you',
+              "// can ride. The season closes at the end of December 31, so New Year's Eve",
+              '// counts. Recomputed on every page load, so it never goes stale.',
+              '(function(){',
+              '  const el = document.getElementById("cdown"); if (!el) return;',
+              '  const yr = Number(D.year) || new Date().getFullYear();',
+              '  const now = new Date();',
+              '  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());',
+              '  const days = Math.round((new Date(yr,11,31) - today)/86400000) + 1;',
+              "  el.innerHTML = days > 1   ? '<b>'+days+'</b> days left in the '+yr+' season'",
+              "               : days === 1 ? '<b>Final day</b> of the '+yr+' season'",
+              "               : 'The '+yr+' season is over';",
+              '})();',
+          ]))
+
+          open(P, "w", encoding="utf-8").write(s)
+          for k in ('"1st","2nd","3rd"', '.pcard.p1{', "' pod p'", 'id="cdown"', 'days left in the '):
+              assert k in s, f"missing after patch: {k}"
+          assert "\U0001F947" not in s, "medal emoji still present"
+          print("index.html patched, all checks passed")
+          PYEOF
+
+      - name: Commit
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Ranks as 1st/2nd/3rd, podium edge treatment, season countdown"
+            git pull --rebase --autostash origin main
+            git push
+          fi
