@@ -50,6 +50,10 @@ def _n(x):
     return f"{x:,.0f}"
 
 
+def _times(n):
+    return {1: "once", 2: "twice"}.get(n, f"{_w(n)} times")
+
+
 def _plural(n, one, many=None):
     return one if n == 1 else (many or one + "s")
 
@@ -77,7 +81,7 @@ def _o(n):
 # facts
 # --------------------------------------------------------------------------
 
-def season_facts(cur, meta, days_left, segs=None):
+def season_facts(cur, meta, days_left, segs=None, d=None):
     """Everything true about each rider's season, computed once."""
     riders = cur["riders"]
     seg_ids = cur["seg_ids"]
@@ -187,6 +191,18 @@ def season_facts(cur, meta, days_left, segs=None):
             "days_left": days_left, "year": cur["year"],
             "seg_added": (segs or {}).get("added") or [],
             "seg_removed": (segs or {}).get("removed") or [],
+            # this week's segment news, already computed by weekly.diff
+            "took": [k for k in ((d or {}).get("koms") or []) if k["to"] == name],
+            "lost_to": [k for k in ((d or {}).get("koms") or [])
+                        if k.get("from") == name],
+            "near": [{"seg": x["seg"], "leader": x["leader"],
+                      "behind": x["behind"], "tries": x["tries"],
+                      "pr": pr}
+                     for pr, pool in ((True, (d or {}).get("prs") or []),
+                                      (False, (d or {}).get("tried") or []))
+                     for x in pool
+                     if x["name"] == name and x.get("behind") is not None
+                     and x.get("leader")],
             "have": dict(r["bests"]),
             "was_kom": set(koms[name]) | gone_kom.get(name, set()),
         }
@@ -578,6 +594,66 @@ def _a_lost_dns(f, s):
     ]
 
 
+def _a_took_kom(f, s):
+    """This rider became fastest on a segment this week. The best news there is."""
+    if not f["took"]:
+        return None
+    x = f["took"][0]
+    prev = x["from"]
+    by = f" by {_mins(x['by'])}" if x.get("by") else ""
+    if prev:
+        return 96, [
+            f"You took {x['seg']} off {prev}{by}, in {x['time']}. "
+            f"That segment is yours until somebody comes and gets it.",
+            f"{x['seg']} is yours. {x['time']}, {by.strip() or 'clear'} of "
+            f"{prev}, who held it coming into this week.",
+            f"The headline from your week: {prev} no longer owns {x['seg']}. "
+            f"You do, on {x['time']}.",
+        ]
+    return 94, [
+        f"You are first on {x['seg']} with {x['time']}, the only time anybody "
+        f"has set on it this year. Hold it or somebody will take it.",
+    ]
+
+
+def _a_kom_taken(f, s):
+    """Somebody took a segment off this rider this week."""
+    if not f["lost_to"]:
+        return None
+    x = f["lost_to"][0]
+    by = f" by {_mins(x['by'])}" if x.get("by") else ""
+    return 92, [
+        f"{x['to']} took {x['seg']} off you{by} this week. You held that one "
+        f"coming in and you do not hold it now.",
+        f"You lost {x['seg']} to {x['to']}{by}. It is {x['time']} to get it back.",
+        f"{x['seg']} was yours until this week. {x['to']} went {x['time']} and "
+        f"it is his problem to defend now, not yours.",
+    ]
+
+
+def _a_near_miss(f, s):
+    """Attacked a segment this week and did not take it. Say by how much."""
+    if not f["near"]:
+        return None
+    x = min(f["near"], key=lambda y: y["behind"])
+    tries = _times(x["tries"])
+    pr = " You did take a personal best out of it." if x["pr"] else ""
+    if x["behind"] <= 15:
+        return 93, [
+            f"You went at {x['seg']} {tries} and finished {_mins(x['behind'])} "
+            f"behind {x['leader']}.{pr} That is close enough to be annoying and "
+            f"close enough to fix.",
+            f"{_mins(x['behind'])}. That is all that stood between you and "
+            f"{x['leader']} on {x['seg']} this week.{pr}",
+        ]
+    return 87, [
+        f"You attacked {x['seg']} {tries} this week and came up "
+        f"{_mins(x['behind'])} short of {x['leader']}.{pr}",
+        f"{x['seg']} {tries} this week, still {_mins(x['behind'])} off "
+        f"{x['leader']}.{pr} He has not had to respond yet.",
+    ]
+
+
 def _a_pace(f, s):
     if not f["ratio"] or f["ridden"] < 6:
         return None
@@ -605,11 +681,14 @@ ANGLES = {
     "complete": _a_complete, "pace": _a_pace,
     "new_seg": _a_new_seg, "new_seg_done": _a_new_seg_done,
     "lost_kom": _a_lost_kom, "lost_dns": _a_lost_dns,
+    "took_kom": _a_took_kom, "kom_taken": _a_kom_taken,
+    "near_miss": _a_near_miss,
 }
 
 # News angles report a thing that happened this week rather than a standing
 # fact, so they must never be suppressed by the rotation memory.
-NEWS = {"new_seg", "new_seg_done", "lost_kom", "lost_dns"}
+NEWS = {"new_seg", "new_seg_done", "lost_kom", "lost_dns",
+        "took_kom", "kom_taken", "near_miss"}
 
 # Angles that say much the same thing. Never use two from one set in one
 # paragraph, or it reads like the generator is stuck.
@@ -618,7 +697,9 @@ CLASHES = [{"koms", "no_koms"}, {"never", "steep", "table", "complete"},
            {"volume", "fpm", "power"}, {"pace", "no_koms"},
            {"lasts", "no_koms"}, {"grind", "spread"},
            {"new_seg", "new_seg_done"}, {"lost_kom", "lost_dns"},
-           {"new_seg", "never", "steep", "table", "complete"}]
+           {"new_seg", "never", "steep", "table", "complete"},
+           {"took_kom", "koms"}, {"kom_taken", "no_koms", "lasts"},
+           {"near_miss", "grind"}]
 
 
 # --------------------------------------------------------------------------
@@ -653,22 +734,35 @@ def _week_opener(rng, name, wk, d, seeded):
         out.append(f"{_w(rides).capitalize() if rides < 11 else _n(rides)} "
                    f"{_plural(rides, 'ride')}, {mi:,.0f} miles and {_n(ft)} feet.")
 
-    if prs:
-        big = max(prs, key=lambda x: x.get("gain") or 0)
+    # Work out which segments the ANGLES are about to cover in full, and let
+    # the opener stay off them. Otherwise the paragraph describes the same
+    # ride twice, once badly and once well.
+    took_ids = {k["id"] for k in (d.get("koms") or []) if k["to"] == name}
+    close = [x for x in prs + tried
+             if x.get("behind") is not None and x.get("leader")]
+    covered = set(took_ids)
+    if close:
+        covered.add(min(close, key=lambda y: y["behind"])["id"])
+
+    rest_prs = [x for x in prs if x.get("id") not in covered]
+    rest_tried = [x for x in tried if x.get("id") not in covered]
+
+    if rest_prs:
+        big = max(rest_prs, key=lambda x: x.get("gain") or 0)
         if big["first"]:
             out.append(f"First time down {big['seg']} in {big['time']}.")
         elif big.get("gain"):
-            out.append(f"You took {_clock(big['gain'])} off {big['seg']}, "
+            out.append(f"You took {_mins(big['gain'])} off {big['seg']}, "
                        f"down to {big['time']}.")
-        if len(prs) > 1:
-            out.append(f"{_w(len(prs)).capitalize()} personal bests in total.")
-    elif tried:
-        t = tried[0]
-        out.append(f"You hit {t['seg']} "
-                   f"{'once' if t['tries'] == 1 else _w(t['tries']) + ' times'} "
-                   f"and did not improve.")
-    elif rides > 0 and not seeded:
+    elif rest_tried:
+        t = rest_tried[0]
+        out.append(f"You hit {t['seg']} {_times(t['tries'])} and did not improve.")
+    elif not prs and not tried and rides > 0 and not seeded:
+        # only claim nothing was ridden when genuinely nothing was
         out.append("No segment on the list was touched.")
+
+    if len(prs) > 1:
+        out.append(f"{_w(len(prs)).capitalize()} personal bests this week.")
 
     if pwr:
         p = max(pwr, key=lambda x: x["watts"])
@@ -697,7 +791,7 @@ def assess(cur, meta, d, week_no, days_left, seen=None, seeded=False, said=None)
     """
     seen = {k: list(v) for k, v in (seen or {}).items()}
     said = {k: list(v) for k, v in (said or {}).items()}
-    F = season_facts(cur, meta, days_left, d.get("segs"))
+    F = season_facts(cur, meta, days_left, d.get("segs"), d)
     wk = {w["name"]: w for w in d["week"]}
     order = sorted(cur["gc"], key=lambda n: cur["gc"][n]["pos"])
 

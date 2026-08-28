@@ -18,6 +18,14 @@ M_PER_MI = 1609.344
 FT_PER_M = 3.280839895
 
 
+def _gap(sec):
+    sec = int(round(sec))
+    if sec < 60:
+        return f"{sec} second{'' if sec == 1 else 's'}"
+    m, r = divmod(sec, 60)
+    return f"{m}:{r:02d}"
+
+
 def _hrs(sec):
     h = sec / 3600.0
     return f"{h:.0f}" if h >= 10 else f"{h:.1f}"
@@ -118,6 +126,29 @@ def build_hooks(cur, d, prev):
             if w["name"] not in tried_names and w["miles"] > max(60.0, med):
                 hooks.append(("no_segments", 60, {
                     "who": w["name"], "mi": f"{w['miles']:,.0f}"}))
+
+    # ---- segments changing hands ----
+    # The biggest thing that can happen in a week. Outranks every PR, because
+    # a PR that beats nobody and a PR that takes a segment are not the same
+    # story and the digest used to report them identically.
+    for x in (d.get("koms") or []):
+        if x.get("from"):
+            hooks.append(("kom_change", 95, {
+                "who": x["to"], "seg": x["seg"], "from": x["from"],
+                "time": x["time"],
+                "by": _gap(x["by"]) if x.get("by") else "a matter of seconds"}))
+        else:
+            hooks.append(("kom_first", 80, {
+                "who": x["to"], "seg": x["seg"], "time": x["time"]}))
+
+    # ---- attacked it, still not theirs ----
+    for x in (d.get("tried") or []) + (d.get("prs") or []):
+        if x.get("behind") is None or not x.get("leader") or x.get("took"):
+            continue
+        if x["behind"] <= 20:
+            hooks.append(("so_close", 72, {
+                "who": x["name"], "seg": x["seg"], "owner": x["leader"],
+                "gap": _gap(x["behind"])}))
 
     # ---- PRs ----
     for x in d["prs"]:
@@ -263,6 +294,18 @@ LINES = {
         "{who} improved {seg} by {sec} second{s}. We are contractually obliged to call that a PR.",
         "A whole {sec} second{s} off {seg} for {who}. Frame it.",
     ],
+    "kom_change": [
+        "{who} took {seg} off {from} by {by}, {time}. That one has a new owner.",
+        "{seg} belongs to {who} now. {time}, {by} clear of {from}.",
+        "{from} held {seg} coming into this week and does not hold it now. {who} went {time}.",
+    ],
+    "kom_first": [
+        "{who} is first on {seg} with {time}, the only time anybody has put on it.",
+    ],
+    "so_close": [
+        "{who} went at {seg} and finished {gap} behind {owner}. Close enough to hurt.",
+        "{gap} is all that stood between {who} and {owner} on {seg}.",
+    ],
     "grinder": [
         "{who} has now hit {seg} {n} times this season and {owner} still owns it. At some point that stops being persistence.",
         "{n} cracks at {seg} for {who}, and the record is still {owner}'s. Admirable. Ineffective, but admirable.",
@@ -316,6 +359,18 @@ BASELINE = [
 # When several riders earn the same hook in one week, saying it four times in a
 # row reads like a bug. These collapse the group into one line instead.
 GROUPED = {
+    "kom_change": [
+        "{who} took {seg} off {from} by {by}, {time}. That one has a new owner.",
+        "{seg} belongs to {who} now. {time}, {by} clear of {from}.",
+        "{from} held {seg} coming into this week and does not hold it now. {who} went {time}.",
+    ],
+    "kom_first": [
+        "{who} is first on {seg} with {time}, the only time anybody has put on it.",
+    ],
+    "so_close": [
+        "{who} went at {seg} and finished {gap} behind {owner}. Close enough to hurt.",
+        "{gap} is all that stood between {who} and {owner} on {seg}.",
+    ],
     "grinder": [
         "{names} are all hammering away at segments somebody else owns. {n} riders, plenty of attempts, no records.",
         "{names} have each spent the season attacking a segment they still do not hold.",
@@ -363,6 +418,9 @@ HEADLINES = {
     "first_time":    "{who} finally rides {seg}",
     "no_segments":   "A week without a single segment",
     "failed_soft":   "{who} tried {seg} and came up short",
+    "kom_change":    "{who} takes {seg} off {from}",
+    "kom_first":     "{who} is first on {seg}",
+    "so_close":      "{who} misses {seg} by {gap}",
 }
 
 

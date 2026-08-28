@@ -34,6 +34,12 @@ M_PER_MI = 1609.344
 FT_PER_M = 3.280839895
 
 
+def fmt_gap(sec):
+    """A margin. Under a minute reads as seconds, because "0:08" does not."""
+    sec = int(round(sec))
+    return f"{sec} seconds" if sec < 60 else fmt_clock(sec)
+
+
 def fmt_clock(sec):
     sec = int(round(sec))
     h, rem = divmod(sec, 3600)
@@ -105,7 +111,8 @@ def diff(cur, prev):
     """What changed since last week. prev may be None on the first run."""
     d = {"baseline": prev is None, "movers": [], "week": [], "prs": [],
          "tried": [], "power": [], "jerseys": [],
-         "segs": {"added": [], "removed": [], "known": False}}
+         "segs": {"added": [], "removed": [], "known": False},
+         "koms": []}
     names = sorted(cur["riders"], key=lambda n: cur["gc"][n]["pos"])
 
     if prev is None:
@@ -117,6 +124,31 @@ def diff(cur, prev):
 
     pr_r = prev.get("riders", {})
     pr_gc = prev.get("gc", {})
+
+    # Segment leadership. Who is fastest on each segment is the thing riders
+    # actually care about week to week, and until now the digest never said.
+    # Both sides are computed from bests, so no new snapshot field is needed.
+    def leader(pool, sid):
+        got = {n: b[sid] for n, b in pool.items() if sid in b}
+        if not got:
+            return None, None
+        who = min(got, key=got.get)
+        return who, got[who]
+
+    now_b = {n: cur["riders"][n]["bests"] for n in cur["riders"]}
+    old_b = {n: (pr_r.get(n) or {}).get("bests") or {} for n in cur["riders"]}
+    lead_now, lead_was = {}, {}
+    for sid in cur["seg_ids"]:
+        lead_now[sid] = leader(now_b, sid)
+        lead_was[sid] = leader(old_b, sid)
+        (who_n, sec_n), (who_w, sec_w) = lead_now[sid], lead_was[sid]
+        if who_n and who_n != who_w:
+            d["koms"].append({
+                "seg": cur["seg_name"].get(sid, sid), "id": sid,
+                "to": who_n, "from": who_w,
+                "time": cur["riders"][who_n]["times"].get(sid, fmt_clock(sec_n)),
+                "by": (sec_w - sec_n) if sec_w is not None else None,
+            })
 
     # The segment list itself can change between weeks, and when it does it
     # moves everybody's GC. A snapshot taken before this was tracked has no
@@ -159,15 +191,21 @@ def diff(cur, prev):
             old = pb.get(sid)
             new = r["bests"].get(sid)
             seg = cur["seg_name"].get(sid, sid)
+            who_lead, sec_lead = lead_now.get(sid, (None, None))
+            took = who_lead == n and (lead_was.get(sid) or (None,))[0] != n
+            behind = (new - sec_lead) if (new is not None and sec_lead is not None
+                                          and who_lead != n) else None
+            common = {"name": n, "seg": seg, "id": sid, "tries": new_att,
+                      "leader": who_lead if who_lead != n else None,
+                      "behind": behind, "took": took}
             if new is not None and (old is None or new < old):
-                d["prs"].append({"name": n, "seg": seg,
+                d["prs"].append({**common,
                                  "time": r["times"].get(sid, fmt_clock(new)),
                                  "was": fmt_clock(old) if old else None,
                                  "gain": (old - new) if old else None,
-                                 "first": old is None, "tries": new_att})
+                                 "first": old is None})
             else:
-                d["tried"].append({"name": n, "seg": seg, "tries": new_att,
-                                   "best": r["times"].get(sid)})
+                d["tried"].append({**common, "best": r["times"].get(sid)})
 
         # power bests
         pp = p.get("power") or {}
@@ -391,17 +429,41 @@ def render(cur, d, week_end, note, head=None, cards=None):
           f'<td style="padding:4px 0;text-align:right{style}">{w["rides"]}</td></tr>')
     A("</table>")
 
+    if d["koms"]:
+        A('<h2 style="font-size:15px;margin:22px 0 8px">Segments that changed '
+          'hands</h2>')
+        A('<div style="background:#fff1f2;border:1px solid #f3ccd1;'
+          'border-radius:10px;padding:12px 15px;font-size:14px;line-height:1.6">')
+        for x in d["koms"]:
+            if x["from"]:
+                by = f' by {fmt_gap(x["by"])}' if x.get("by") else ""
+                A(f'<div style="margin:3px 0"><b>{x["to"]}</b> took '
+                  f'<b>{x["seg"]}</b> off {x["from"]}{by}, in {x["time"]}.</div>')
+            else:
+                A(f'<div style="margin:3px 0"><b>{x["to"]}</b> is first on '
+                  f'<b>{x["seg"]}</b> with {x["time"]}, the only time set on it '
+                  f'this year.</div>')
+        A("</div>")
+
     if d["prs"]:
         A('<h2 style="font-size:15px;margin:22px 0 8px">New segment bests</h2><ul '
           'style="font-size:14px;padding-left:18px;margin:0">')
         for x in d["prs"]:
+            if x["took"]:
+                tail = ' <span style="color:#0a7d3c">and now leads it</span>'
+            elif x["behind"] is not None:
+                tail = (f' <span style="color:#6d6d78">still {fmt_gap(x["behind"])} '
+                        f'behind {x["leader"]}</span>')
+            else:
+                tail = ""
             if x["first"]:
                 A(f'<li style="margin:5px 0"><b>{x["name"]}</b> set a first time on '
-                  f'<b>{x["seg"]}</b>: {x["time"]}</li>')
+                  f'<b>{x["seg"]}</b>: {x["time"]}{tail}</li>')
             else:
                 A(f'<li style="margin:5px 0"><b>{x["name"]}</b> took '
-                  f'{fmt_clock(x["gain"])} off <b>{x["seg"]}</b>: '
-                  f'{x["time"]} <span style="color:#6d6d78">(was {x["was"]})</span></li>')
+                  f'{fmt_gap(x["gain"])} off <b>{x["seg"]}</b>: '
+                  f'{x["time"]} <span style="color:#6d6d78">(was {x["was"]})</span>'
+                  f'{tail}</li>')
         A("</ul>")
 
     if d["tried"]:
@@ -411,6 +473,9 @@ def render(cur, d, week_end, note, head=None, cards=None):
             n = x["tries"]
             times = "once" if n == 1 else f"{n} times"
             tail = f' and did not beat {x["best"]}' if x["best"] else ""
+            if x["behind"] is not None:
+                tail += (f', still {fmt_gap(x["behind"])} off '
+                         f'{x["leader"]}')
             A(f'<li style="margin:5px 0"><b>{x["name"]}</b> hit '
               f'<b>{x["seg"]}</b> {times}{tail}</li>')
         A("</ul>")
