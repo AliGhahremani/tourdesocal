@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Race still</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!--
+  Not a page anybody visits. This is what the renderer screenshots to make the
+  PNG that goes in the Sunday email, because email clients do not run
+  JavaScript and the animated chart cannot travel.
+
+  ?m=miles or ?m=feet picks the race. It loads the same race.js the live pages
+  use, so the still can never drift from the interactive version.
+-->
+<style>
+  :root{--line:#e6e2da;--muted:#6d6d78;--orange:#fc5200;--polka-j:#d8283e;--green-j:#12813f}
+  *{box-sizing:border-box}
+  body{margin:0;background:#fff;width:1000px;color:#1c1c20;
+    font-family:'Archivo',-apple-system,Segoe UI,Helvetica,Arial,sans-serif}
+  .rc{padding:18px 20px 16px}
+  .rc .hd{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .rc .jd{width:14px;height:14px;border-radius:50%;flex:none}
+  body.green .jd{background:var(--green-j)}
+  body.polka .jd{background:#fff;border:1px solid var(--line);
+    background-image:radial-gradient(var(--polka-j) 33%,transparent 34%);background-size:8px 8px}
+  .rc h3{font-family:'Archivo Black';font-size:17px;margin:0}
+  .rc .stamp{display:none}
+  .rc .sub{color:var(--muted);font-size:13px;margin:6px 0 12px}
+  .rc .lg{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 12px;font-size:13.5px}
+  .rc .lgi{display:inline-flex;align-items:center;gap:7px}
+  .rc .lgav{width:26px;height:26px;border-radius:50%;object-fit:cover;flex:none;border:2px solid}
+  .rc .lgav.nf{border:none}
+  .rc .lgi b{font-weight:600}
+  .rc .lgi em{font-family:'JetBrains Mono',monospace;font-style:normal;font-size:12.5px;
+    color:var(--muted);min-width:80px}
+  .rc .lgi em.lead{color:var(--orange);font-weight:700}
+  .rc svg{width:100%;height:auto;display:block;overflow:visible}
+  .rc text.ax{font-family:'JetBrains Mono',monospace;fill:#8a8a95}
+  .rc text.lbl{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700}
+  .rc .ctl,.rc details,.rc .built,.rc .cross,.rc .hit{display:none!important}
+</style></head>
+<body>
+  <div class="rc" id="race">
+    <div class="hd"><span class="jd"></span><h3></h3><span class="stamp"></span></div>
+    <div class="sub"></div>
+    <div class="lg"></div>
+    <div class="plot"></div>
+  </div>
+<script src="../avatars.js"></script>
+<script src="../data/history.js"></script>
+<script src="../race.js"></script>
+<script>
+(function(){
+  var m = new URLSearchParams(location.search).get("m") === "feet" ? "feet" : "miles";
+  var green = m === "miles";
+  document.body.className = green ? "green" : "polka";
+  document.querySelector("#race h3").textContent =
+    green ? "The Green Jersey race, miles behind the leader"
+          : "The Polka Dot Jersey race, feet of climbing behind the leader";
+  document.querySelector("#race .sub").textContent =
+    "Every day of the season so far. The leader rides along the top, and a line touching it is a lead change.";
+  var nfm = function(n){ return Math.round(n).toLocaleString(); };
+  drawRace(document.getElementById("race"), HISTORY, m,
+    {id: green ? "g" : "p",
+     fmt: function(v){ return nfm(v) + (green ? " mi" : " ft"); },
+     aria: green ? "Miles behind the green jersey leader"
+                 : "Feet of climbing behind the polka dot leader"});
+  document.documentElement.setAttribute("data-ready","1");
+})();
+</script>
+</body></html>
