@@ -169,7 +169,6 @@ def main():
         "ali": os.environ.get("STRAVA_REFRESH_ALI", ""),
         "jake": os.environ.get("STRAVA_REFRESH_JAKE", ""),
         "randee": os.environ.get("STRAVA_REFRESH_RANDEE", ""),
-        "michael": os.environ.get("STRAVA_REFRESH_MICHAEL", ""),
         "abe": os.environ.get("STRAVA_REFRESH_ABE", ""),
         "jose": os.environ.get("STRAVA_REFRESH_JOSE", ""),
     }
@@ -459,18 +458,34 @@ def main():
     # The site scores GC client side, but the archive needs the finishing order
     # in Python. Same rule: total elapsed time, a missed segment costs the
     # slowest finisher's time plus 10 percent.
+    #
+    # Takes the year as an argument. It used to be inlined against the current
+    # year only, and the roll of honour then archived the *previous* year using
+    # *this* year's table. Anything that reads a season must be told which one.
     PENALTY = 1.10
-    gc_totals = {}
-    for seg in segs_out:
-        fin = [r for r in seg["riders"] if r["sec"] is not None]
-        if not fin:
-            continue
-        pen = round(max(r["sec"] for r in fin) * PENALTY)
-        for r in seg["riders"]:
-            gc_totals[r["name"]] = gc_totals.get(r["name"], 0) + (
-                r["sec"] if r["sec"] is not None else pen)
-    gc_out = [{"name": n, "sec": t, "total": fmt_time(t)}
-              for n, t in sorted(gc_totals.items(), key=lambda kv: kv[1])]
+
+    def compute_gc(yr):
+        totals, real = {}, {}
+        for seg in meta["segments"]:
+            sid_s = str(seg["id"])
+            rows = []
+            for key, ath in state["athletes"].items():
+                yrec = (ath.get("season") or {}).get(yr) or {}
+                b = (yrec.get("bests") or {}).get(sid_s)
+                rows.append((ath["display"], b["sec"] if b else None))
+                if b:
+                    real[ath["display"]] = real.get(ath["display"], 0) + 1
+            fin = [s for _, s in rows if s is not None]
+            if not fin:
+                continue
+            pen = round(max(fin) * PENALTY)
+            for name, sec in rows:
+                totals[name] = totals.get(name, 0) + (sec if sec is not None else pen)
+        gc = [{"name": n, "sec": t, "total": fmt_time(t)}
+              for n, t in sorted(totals.items(), key=lambda kv: kv[1])]
+        return gc, len(real)
+
+    gc_out, _ = compute_gc(year)
 
     # ---- roll of honour ----
     # The first run of a new year freezes the season that just ended: the GC
@@ -488,13 +503,19 @@ def main():
             y = (ath.get("season") or {}).get(prev)
             if y:
                 prev_totals[ath["display"]] = y
-        if prev not in done and prev_totals:
-            gc = [{"name": r["name"], "total": r["total"]} for r in gc_out]
+        prev_gc, prev_riders = compute_gc(prev)
+        # Three riders who actually set a time is the bar for "there was a
+        # season". Below that it is a test ride or a stray import, and freezing it
+        # puts a fictional champion on the homepage forever. This exact case
+        # shipped: a 2025 roll of honour built from two riders with one ride each,
+        # crediting a polka dot jersey for 423 feet of climbing.
+        if prev not in done and prev_totals and prev_riders >= 3:
+            gc = [{"name": r["name"], "total": r["total"]} for r in prev_gc]
             top = lambda k: max(prev_totals.items(), key=lambda kv: kv[1][k])
             climb = top("elev_m"); miles = top("dist_m")
             honours["seasons"].insert(0, {
                 "year": prev,
-                "yellow": (gc[0] if gc else None),
+                "yellow": (gc[0] if gc else None),  # from prev_gc, not this year's
                 "polka": {"name": climb[0],
                           "feet": round(climb[1]["elev_m"] * 3.280839895)},
                 "green": {"name": miles[0],

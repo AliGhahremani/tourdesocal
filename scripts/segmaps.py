@@ -82,7 +82,7 @@ def main():
     csec = os.environ["STRAVA_CLIENT_SECRET"]
     rt = next((os.environ.get(k) for k in
                ("STRAVA_REFRESH_ALI", "STRAVA_REFRESH_JAKE", "STRAVA_REFRESH_RANDEE",
-                "STRAVA_REFRESH_MICHAEL", "STRAVA_REFRESH_ABE", "STRAVA_REFRESH_JOSE")
+                "STRAVA_REFRESH_ABE", "STRAVA_REFRESH_JOSE")
                if os.environ.get(k)), None)
     if not rt:
         sys.exit("no refresh token in the environment")

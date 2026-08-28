@@ -266,7 +266,7 @@ OPENERS = [
 QUIET = [
     "Nothing happened this week. Nobody rode anything that counted, nothing moved, "
     "and the standings are exactly where you left them. Do better.",
-    "A remarkably quiet week. No PRs, no attempts, no movement. Six cyclists, "
+    "A remarkably quiet week. No PRs, no attempts, no movement. Five cyclists, "
     "collectively, achieved nothing measurable.",
     "The week produced no news whatsoever. Either everyone is tapering for "
     "something or everyone has given up.",

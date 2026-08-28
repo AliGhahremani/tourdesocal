@@ -1,46 +1,4 @@
 {
   "note": "Past season winners. Appended automatically by scripts/update.py the first time it runs in a new year. Hand editing is fine too.",
-  "seasons": [
-    {
-      "year": "2025",
-      "yellow": {
-        "name": "Jose",
-        "total": "3:04:13"
-      },
-      "polka": {
-        "name": "Jake",
-        "feet": 423
-      },
-      "green": {
-        "name": "Jake",
-        "miles": 15.0
-      },
-      "gc": [
-        {
-          "name": "Jose",
-          "total": "3:04:13"
-        },
-        {
-          "name": "Randee",
-          "total": "3:10:20"
-        },
-        {
-          "name": "Abe",
-          "total": "3:16:43"
-        },
-        {
-          "name": "Ali",
-          "total": "3:16:48"
-        },
-        {
-          "name": "Jake",
-          "total": "3:20:21"
-        },
-        {
-          "name": "Michael",
-          "total": "3:34:49"
-        }
-      ]
-    }
-  ]
+  "seasons": []
 }
