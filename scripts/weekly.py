@@ -540,6 +540,34 @@ def render(cur, d, week_end, note, head=None, cards=None):
           'moved for reasons that have nothing to do with this week\'s riding.'
           '</div></div>')
 
+    # The jersey races, as pictures. Email clients do not run JavaScript, so
+    # the animated chart cannot travel; these are stills of the same chart,
+    # rendered by scripts/render_race.js from the same race.js the site uses.
+    # Referenced by absolute URL rather than attached, because Gmail does not
+    # render data: URIs in img src. Each one links through to the live,
+    # animated, scrubbable version.
+    #
+    # If the render step failed there is no image, and the digest simply does
+    # not mention it. A missing picture is better than a broken one.
+    SITE = "https://tourdesocal.com"
+    shots = [(n, t, u) for n, t, u in (
+        ("green.png", "The green jersey race, miles behind the leader", "race/green.html"),
+        ("polka.png", "The polka dot race, feet of climbing behind the leader", "race/polka.html"))
+        if os.path.exists(os.path.join(ROOT, "race", n))]
+    if shots:
+        A('<h2 style="font-size:15px;margin:26px 0 8px">The jersey races</h2>')
+        A('<p style="font-size:13px;color:#6d6d78;margin:0 0 10px">'
+          'The leader rides along the top line and everyone else hangs below, so a '
+          'line touching the top is a lead change. Tap either one to watch the '
+          'season play out.</p>')
+        for name, cap, page in shots:
+            A(f'<a href="{SITE}/{page}" style="text-decoration:none;color:inherit">'
+              f'<img src="{SITE}/race/{name}" width="600" alt="{cap}" '
+              f'style="width:100%;max-width:600px;height:auto;display:block;'
+              f'border:1px solid #e6e2da;border-radius:10px;margin:0 0 6px"></a>')
+            A(f'<p style="font-size:12.5px;color:#6d6d78;margin:0 0 16px">{cap}. '
+              f'<a href="{SITE}/{page}" style="color:#fc5200">Watch it play out &rarr;</a></p>')
+
     # Individual assessments. Everyone gets one every week, in GC order, so
     # the man in yellow reads his first and the man in last reads his last.
     if cards:
