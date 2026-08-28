@@ -70,6 +70,52 @@ jobs:
           # Saturday. continue-on-error so a rate limit cannot kill the digest.
           python scripts/update.py
 
+      # The email needs pictures of the charts, and email clients do not run
+      # JavaScript. Rebuild the season history first so the stills include
+      # today's rides, then render and push them BEFORE the send: the email
+      # references them by absolute URL, so they have to be live already.
+      #
+      # continue-on-error throughout. A failed render must never cost the
+      # digest; weekly.py simply leaves the images out if the files are absent.
+      - name: Refresh the season history
+        if: inputs.test_to == ''
+        continue-on-error: true
+        env:
+          CID: "274192"
+          CSEC: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          RT_ALI: ${{ secrets.STRAVA_REFRESH_ALI }}
+          RT_JAKE: ${{ secrets.STRAVA_REFRESH_JAKE }}
+          RT_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
+          RT_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
+          RT_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+        run: python3 scripts/history.py
+
+      - name: Render the race charts
+        id: shots
+        continue-on-error: true
+        run: |
+          npm i --no-save playwright@1.47.2
+          npx playwright install --with-deps chromium
+          node scripts/render_race.js race
+          ls -la race/*.png
+
+      - name: Publish the charts before the email goes out
+        if: inputs.test_to == '' && steps.shots.outcome == 'success'
+        continue-on-error: true
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/history.js race/green.png race/polka.png
+          if git diff --cached --quiet; then
+            echo "Charts unchanged."
+          else
+            git commit -m "Race charts for $(date -u +%F)"
+            git pull --rebase --autostash origin main
+            git push
+            # Pages needs a moment before the email can reference the images.
+            sleep 45
+          fi
+
       - name: Build the digest
         id: build
         run: |
@@ -117,7 +163,8 @@ jobs:
           # This step only runs when test_to is empty, so a test send never
           # lands in the archive.
           git add weekly.html weekly/ data/weekly_snapshot.json data/weekly_latest.json \
-                  data/state.json data.js data/last_run.json data/honours.json
+                  data/state.json data.js data/last_run.json data/honours.json \
+                  data/history.js race/green.png race/polka.png
           if git diff --cached --quiet; then
             echo "No digest changes."
           else
