@@ -44,8 +44,17 @@
   /* The countdown and the leader chip sit on the same line, so they are the
      same object: white pill, hairline border, one soft shadow. The yellow
      wash made the countdown shout over the thing it sits next to. */
-  .hero .pills{margin-top:26px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
-  .hero .cdown{display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;
+  /* Two chips, one object. align-items:stretch matches their heights, and
+     flex:1 with a capped row width makes them the same size instead of the
+     countdown looking like a footnote next to the standings. */
+  .hero .pills{margin-top:26px;display:flex;flex-wrap:wrap;align-items:stretch;
+    gap:12px;max-width:860px}
+  /* On a phone they wrap onto separate lines, where stretch cannot equalise
+     them, so pin a shared minimum. The leader chip's height comes from its
+     34px avatar; this keeps the countdown level with it either way. */
+  .hero .pills>*{flex:1 1 300px;min-height:62px;box-sizing:border-box}
+  .hero .cdown{display:inline-flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;
     font-size:13px;letter-spacing:.04em;color:var(--muted);background:#fff;
     border:1px solid var(--line);border-radius:999px;padding:9px 20px;
     box-shadow:0 1px 4px rgba(20,20,30,.06)}
