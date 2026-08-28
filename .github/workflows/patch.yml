@@ -1,0 +1,75 @@
+name: One off patch
+
+# 1. scripts/update.py stops swallowing BudgetExhausted on the activity and
+#    stream fetches. It was being caught by the generic "skip this activity"
+#    handler, so running out of rate limit mid-rider skipped every remaining
+#    activity, spent a real 429 on each one, and then stamped last_epoch as if
+#    the whole year had been read.
+# 2. Resets last_epoch for Randee only. The run log shows all 11 swallowed
+#    failures were his; Ali and Jake finished before the budget ran out and
+#    their data is sound, so re-reading them would waste about 300 reads.
+#    Safe to redo: season totals dedupe by activity id, attempts by effort id,
+#    times take the minimum, power only ratchets up.
+#
+# Delete this file once it has run.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Apply
+        run: |
+          python - <<'PYEOF'
+          import base64, json, datetime
+          P = json.loads(base64.b64decode("eyJodW5rcyI6IHsic2NyaXB0cy91cGRhdGUucHkiOiBbWyIgICAgICAgICAgICAgICAgICAgIGNvbnRpbnVlXG4gICAgICAgICAgICAgICAgdHJ5OlxuICAgICAgICAgICAgICAgICAgICBkZXRhaWwgPSBodHRwKGZcIntBUEl9L2FjdGl2aXRpZXMve2FbJ2lkJ119P2luY2x1ZGVfYWxsX2VmZm9ydHM9dHJ1ZVwiLCB0b2tlbj1hY2Nlc3MpXG4gICAgICAgICAgICAgICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOlxuICAgICAgICAgICAgICAgICAgICBwcmludChmXCJbe2tleX1dIGFjdGl2aXR5IHthWydpZCddfSBmZXRjaCBmYWlsZWQ6IHtlfVwiLCBmaWxlPXN5cy5zdGRlcnIpXG4gICAgICAgICAgICAgICAgICAgIGNvbnRpbnVlIiwgIiAgICAgICAgICAgICAgICAgICAgY29udGludWVcbiAgICAgICAgICAgICAgICB0cnk6XG4gICAgICAgICAgICAgICAgICAgIGRldGFpbCA9IGh0dHAoZlwie0FQSX0vYWN0aXZpdGllcy97YVsnaWQnXX0/aW5jbHVkZV9hbGxfZWZmb3J0cz10cnVlXCIsIHRva2VuPWFjY2VzcylcbiAgICAgICAgICAgICAgICBleGNlcHQgQnVkZ2V0RXhoYXVzdGVkOlxuICAgICAgICAgICAgICAgICAgICAjIE91dCBvZiBidWRnZXQgaXMgbm90IFwidGhpcyBhY3Rpdml0eSBpcyBicm9rZW4sIHNraXAgaXRcIi4gSWZcbiAgICAgICAgICAgICAgICAgICAgIyB0aGUgaGFuZGxlciBiZWxvdyBzd2FsbG93cyBpdCwgZXZlcnkgcmVtYWluaW5nIGFjdGl2aXR5IGlzXG4gICAgICAgICAgICAgICAgICAgICMgc2tpcHBlZCB0aGUgc2FtZSB3YXksIGVhY2ggb25lIHNwZW5kaW5nIGEgcmVhbCA0MjkgdGhhdCBzdGlsbFxuICAgICAgICAgICAgICAgICAgICAjIGNvdW50cyBhZ2FpbnN0IHRoZSBkYWlseSB0b3RhbCwgYW5kIHRoZW4gbGFzdF9lcG9jaCBpc1xuICAgICAgICAgICAgICAgICAgICAjIHN0YW1wZWQgYXMgdGhvdWdoIHRoZSB3aG9sZSB5ZWFyIGhhZCBiZWVuIHJlYWQuIFRoYXQgaXMgaG93IGFcbiAgICAgICAgICAgICAgICAgICAgIyByaWRlciBlbmRzIHVwIG1hcmtlZCBjb21wbGV0ZSBob2xkaW5nIG9ubHkgSmFudWFyeSwgd2l0aFxuICAgICAgICAgICAgICAgICAgICAjIHRoZWlyIGZhc3RlciByaWRlcyBsYXRlciBpbiB0aGUgeWVhciBuZXZlciBsb29rZWQgYXQuXG4gICAgICAgICAgICAgICAgICAgIHJhaXNlXG4gICAgICAgICAgICAgICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOlxuICAgICAgICAgICAgICAgICAgICBwcmludChmXCJbe2tleX1dIGFjdGl2aXR5IHthWydpZCddfSBmZXRjaCBmYWlsZWQ6IHtlfVwiLCBmaWxlPXN5cy5zdGRlcnIpXG4gICAgICAgICAgICAgICAgICAgIGNvbnRpbnVlIl0sIFsiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY2hhbmdlZCA9IFRydWVcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN1bW1hcnkuYXBwZW5kKFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGZcInthdGhbJ2Rpc3BsYXknXX0gbmV3IHthY3RfeWVhcn0ge3cvLzYwfSBtaW4gcG93ZXI6IHt2YWx9IFdcIilcbiAgICAgICAgICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6XG4gICAgICAgICAgICAgICAgICAgIHByaW50KGZcIlt7a2V5fV0gcG93ZXIgY2FsYyBmYWlsZWQgZm9yIHthWydpZCddfToge2V9XCIsIGZpbGU9c3lzLnN0ZGVycilcbiAgICAgICAgICAgICAgICAjIFNlYXNvbiB0b3RhbHMuIElkZW1wb3RlbnQ6IGV2ZXJ5IGNvdW50ZWQgYWN0aXZpdHkgaWQgaXMgcmVjb3JkZWQsIiwgIiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNoYW5nZWQgPSBUcnVlXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdW1tYXJ5LmFwcGVuZChcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBmXCJ7YXRoWydkaXNwbGF5J119IG5ldyB7YWN0X3llYXJ9IHt3Ly82MH0gbWluIHBvd2VyOiB7dmFsfSBXXCIpXG4gICAgICAgICAgICAgICAgZXhjZXB0IEJ1ZGdldEV4aGF1c3RlZDpcbiAgICAgICAgICAgICAgICAgICAgcmFpc2UgICAgICAgICAgIyBzYW1lIHJlYXNvbiBhcyB0aGUgYWN0aXZpdHkgZmV0Y2ggYWJvdmVcbiAgICAgICAgICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6XG4gICAgICAgICAgICAgICAgICAgIHByaW50KGZcIlt7a2V5fV0gcG93ZXIgY2FsYyBmYWlsZWQgZm9yIHthWydpZCddfToge2V9XCIsIGZpbGU9c3lzLnN0ZGVycilcbiAgICAgICAgICAgICAgICAjIFNlYXNvbiB0b3RhbHMuIElkZW1wb3RlbnQ6IGV2ZXJ5IGNvdW50ZWQgYWN0aXZpdHkgaWQgaXMgcmVjb3JkZWQsIl1dfSwgInJlc2V0X2Vwb2NoIjogeyJyaWRlcnMiOiBbInJhbmRlZSJdLCAidG8iOiAxNzY3MjI1NjAwfX0="))
+          for path, hunks in P["hunks"].items():
+              s = open(path).read()
+              for old, new in hunks:
+                  n = s.count(old)
+                  assert n == 1, "%s: expected 1 match, found %d for:\n%s" % (path, n, old[:200])
+                  s = s.replace(old, new)
+              open(path, "w").write(s)
+              print("patched", path, len(hunks), "hunks")
+
+          r = P["reset_epoch"]
+          st = json.load(open("data/state.json"))
+          for k in r["riders"]:
+              a = st["athletes"].get(k)
+              if not a:
+                  print("no such rider", k); continue
+              was = a.get("last_epoch")
+              a["last_epoch"] = r["to"]
+              print("%-8s last_epoch %s -> %s (%s)" % (
+                  k, was, r["to"], datetime.datetime.utcfromtimestamp(r["to"]).date()))
+          json.dump(st, open("data/state.json", "w"), indent=2)
+          PYEOF
+      - name: Sanity check
+        run: |
+          python -c "import ast;ast.parse(open('scripts/update.py').read());print('update.py parses')"
+          python -c "import json;d=json.load(open('data/state.json'));print('state.json parses,',len(d['athletes']),'riders')"
+      - name: Commit
+        run: |
+          git config user.name "tourdesocal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add scripts/update.py data/state.json
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Running out of rate limit must not look like a finished year"
+            git pull --rebase --autostash origin main
+            git push
+          fi
