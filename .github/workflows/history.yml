@@ -44,15 +44,16 @@ name: Build season history
 on:
   workflow_dispatch:
   schedule:
-    # Every four hours at :35, which is half an hour after an update.yml run
-    # rather than on top of one. The standings now refresh hourly, so a daily
+    # Every four hours at :50, offset from update.yml's :05 and :35 so the two
+    # never sit in the same minute. They share a concurrency group, so a clash
+    # only queues rather than breaks, but queueing wastes a runner. The standings now refresh hourly, so a daily
     # chart rebuild would leave the race charts up to a day behind the table
     # they sit under.
     #
     # Six runs a day at about 11 reads each is ~66 of the 2,000 shared daily
     # budget. Rebuilding the whole season every time is what keeps it honest,
     # so this is the cost of not letting it drift.
-    - cron: "35 */4 * * *"
+    - cron: "50 */4 * * *"
 
 permissions:
   contents: write
