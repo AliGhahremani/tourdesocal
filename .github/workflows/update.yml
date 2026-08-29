@@ -2,16 +2,15 @@ name: Update standings
 
 on:
   schedule:
-    # 12:01 AM local, so the run closes out the day that just ended and the site is
-    # already current when anyone looks at it in the morning. Cron is UTC and cannot
-    # follow daylight saving, so run one or the other by month. Neither crosses a
-    # date boundary: 00:01 local is 07:01 or 08:01 UTC on the same day.
+    # Hourly, at :05. Ali's call 2026-08-29: he wants a ride on the board the
+    # same day, not the next morning. A run that finds nothing costs about ten
+    # reads (five token refreshes, five activity pages), so twenty four runs is
+    # roughly 250 of the 2,000 daily budget shared with 2024michael. Measured:
+    # a run that picked up fourteen activities used 27.
     #
-    # This also vacates the 8:00-8:30 slot entirely. Strava rate limits are per
-    # application and 2024michael runs at 8:00, so the two must never share a
-    # 15-minute window.
-    - cron: "1 7 * 3-10 *"      # 07:01 UTC = 12:01 AM PDT (Mar-Oct)
-    - cron: "1 8 * 1,2,11,12 *" # 08:01 UTC = 12:01 AM PST (Nov-Feb)
+    # UTC all year, so this is :05 past every hour Pacific too. No DST split is
+    # needed for an hourly job, which is one less thing to get wrong.
+    - cron: "5 * * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -47,10 +46,15 @@ jobs:
         run: |
           git config user.name "tourdesocal-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/state.json data.js data/last_run.json data/honours.json
+          # last_run.json carries finished_utc, so it differs on every single
+          # run. Staging it up front would make "nothing changed" impossible and
+          # push two dozen empty commits a day, each one rebuilding Pages. Stage
+          # the real data first, and only record the run when something moved.
+          git add data/state.json data.js data/honours.json
           if git diff --cached --quiet; then
             echo "No changes."
           else
+            git add data/last_run.json
             git commit -m "Auto-update standings $(date -u +%F)"
             # Another run, or a hand edit, may have pushed while this one was
             # waiting out a rate limit window. Without this the push is rejected

@@ -44,9 +44,15 @@ name: Build season history
 on:
   workflow_dispatch:
   schedule:
-    # after the 12:01 AM Pacific daily update has landed
-    - cron: "40 8 * 3-10 *"
-    - cron: "40 9 * 1,2,11,12 *"
+    # Every four hours at :35, which is half an hour after an update.yml run
+    # rather than on top of one. The standings now refresh hourly, so a daily
+    # chart rebuild would leave the race charts up to a day behind the table
+    # they sit under.
+    #
+    # Six runs a day at about 11 reads each is ~66 of the 2,000 shared daily
+    # budget. Rebuilding the whole season every time is what keeps it honest,
+    # so this is the cost of not letting it drift.
+    - cron: "35 */4 * * *"
 
 permissions:
   contents: write
