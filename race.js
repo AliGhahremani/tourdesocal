@@ -246,10 +246,10 @@ function drawRace(root, H, key, opts){
       note.classList.add("stale");
       note.textContent = "Heads up: the season history was last rebuilt on "
         + shortDay(built) + ", " + age + " days ago. It normally rebuilds every "
-        + "morning, so this chart is behind the standings.";
+        + "four hours, so this chart is behind the standings.";
     } else {
       note.textContent = "Rebuilt from Strava " + shortDay(built)
-        + ". Updates every morning.";
+        + ". Standings refresh every half hour; these charts every four.";
     }
     root.appendChild(note);
   })();
