@@ -36,7 +36,7 @@ PWINDOWS = [300, 600, 1200, 1800, 3600]  # power best-effort windows (sec)
 # Headroom left on the daily counter. It is deliberately larger than one run
 # needs, because 2024michael shares this allowance and runs at 08:00. A backfill
 # chewing through every last read would starve the other site.
-def local_stamp():
+def local_stamp(when=None):
     """When the data last changed, in Pacific, to the minute.
 
     The runner is UTC. `datetime.date.today()` there meant that any run after
@@ -47,12 +47,15 @@ def local_stamp():
     The minute matters too: with the site refreshing this often, "Aug 29" alone
     cannot tell you whether your ride from an hour ago is in yet.
     """
+    when = when or datetime.datetime.now(datetime.timezone.utc)
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=datetime.timezone.utc)
     try:
         from zoneinfo import ZoneInfo
-        now = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
+        now = when.astimezone(ZoneInfo("America/Los_Angeles"))
     except Exception:
         # no tzdata: Pacific is never more than 8 hours behind UTC
-        now = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=8)
+        now = when - datetime.timedelta(hours=8)
     return (now.strftime("%b %d, %Y at %I:%M %p")
             .replace(" 0", " ").replace("at 0", "at ").replace(" AM", " AM").strip())
 
@@ -415,6 +418,24 @@ def main():
 
     if changed:
         state["updated"] = local_stamp()
+    elif " at " not in str(state.get("updated") or ""):
+        # One-time repair. "updated" is only rewritten when the data changes, so
+        # switching the stamp to include a time left the footer showing the old
+        # date-only string until somebody happened to ride. Nothing was broken,
+        # but the site looked like the change had not landed.
+        #
+        # last_run.json is only committed when something changed, so its
+        # finished_utc IS the moment the data last moved. Restamp from that
+        # rather than from now, which would claim a freshness we do not have.
+        try:
+            prev_run = json.load(open(LAST_RUN_PATH))
+            when = datetime.datetime.fromisoformat(
+                prev_run["finished_utc"].replace("Z", "+00:00"))
+            state["updated"] = local_stamp(when)
+            changed = True
+            print(f"restamped 'updated' as {state['updated']}", file=sys.stderr)
+        except Exception as e:
+            print(f"could not restamp 'updated': {e}", file=sys.stderr)
     # _seen is an in-memory set for dedupe; the persisted list is "ids".
     for _a in state["athletes"].values():
         for _y in (_a.get("season") or {}).values():
