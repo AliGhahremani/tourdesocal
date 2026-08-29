@@ -9,7 +9,7 @@ Diffs the live data/state.json against last week's snapshot and writes:
   /tmp/weekly_email.html      the email body, read by the workflow
 
 Reads nothing from Strava, so it costs nothing against the shared rate limit.
-It runs after the daily update, on whatever state that update left behind.
+It runs after an update pass, on whatever state that pass left behind.
 
 The first run has no snapshot to compare against, so it writes a baseline and
 says so rather than inventing a week of progress.
