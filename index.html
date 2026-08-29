@@ -154,6 +154,27 @@
   #bigmap{height:520px;border-radius:10px}
   .arena .cap{font-size:12.5px;color:var(--muted);margin-top:10px;padding:0 6px 4px}
   .segs{padding:46px 0 20px}
+  /* Twenty one cards is a long scroll when you are hunting for one of them.
+     This is an index: four columns on a desktop, two on a phone, and every
+     entry jumps straight to the card further down the same page. */
+  .segjump{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+    gap:6px 14px;margin:0 0 26px;padding:16px 18px;background:var(--card,#fff);
+    border:1px solid var(--line);border-radius:12px}
+  .segjump a{display:flex;align-items:baseline;gap:9px;padding:5px 6px;
+    border-radius:7px;text-decoration:none;color:#242428;font-size:13.5px;
+    line-height:1.35;min-width:0}
+  .segjump a:hover{background:#f5f2ec;color:var(--orange)}
+  .segjump a .jn{font-family:'JetBrains Mono',monospace;font-size:11px;
+    color:var(--muted);flex:0 0 auto}
+  .segjump a:hover .jn{color:var(--orange)}
+  .segjump a .jt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* so a jumped-to card does not sit jammed against the top of the window */
+  .seg{scroll-margin-top:16px}
+  @media(max-width:560px){
+    .segjump{grid-template-columns:repeat(2,1fr);gap:4px 10px;padding:12px 12px}
+    .segjump a{font-size:12.5px;gap:7px}
+  }
+
   .seg{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:26px;overflow:hidden;box-shadow:0 1px 6px rgba(20,20,30,.05)}
   .seg-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:baseline;padding:22px 24px 0}
   .seg-head .num{font-family:'JetBrains Mono',monospace;color:var(--orange);font-size:13px;letter-spacing:.15em}
@@ -286,6 +307,7 @@
 
 <section class="segs"><div class="wrap">
   <h2>The <span id="nsegD">…</span> Segments</h2>
+  <nav class="segjump" id="segjump" aria-label="Jump to a segment"></nav>
   <div id="seglist"></div>
 </div></section>
 
@@ -635,6 +657,15 @@ function routeMap(divId, pl, interactive, gr){
 const SEGS_AZ = D.segs.slice().sort((a,b)=>
   a.name.localeCompare(b.name, "en", {numeric:true, sensitivity:"base"}));
 const SEG_POS = new Map(SEGS_AZ.map((sg,i)=>[sg.id, String(i+1).padStart(2,"0")]));
+// The jump index, built from SEGS_AZ so it is in the same order as the cards.
+(function(){
+  const nav = document.getElementById("segjump");
+  if (!nav) return;
+  nav.innerHTML = SEGS_AZ.map(sg =>
+    '<a href="#seg-'+sg.id+'"><span class="jn">'+SEG_POS.get(sg.id)+'</span>'+
+    '<span class="jt">'+sg.name+'</span></a>').join("");
+})();
+
 (function(){
   const list = document.getElementById("seglist");
   SEGS_AZ.forEach(sg=>{
@@ -659,6 +690,7 @@ const SEG_POS = new Map(SEGS_AZ.map((sg,i)=>[sg.id, String(i+1).padStart(2,"0")]
     }).join("");
     const el = document.createElement("div");
     el.className="seg";
+    el.id = "seg-" + sg.id;
     el.innerHTML =
      '<div class="seg-head"><span class="num">'+SEG_POS.get(sg.id)+'</span><h3>'+sg.name+'</h3>'+
      '<span class="loc">'+sg.loc+'</span><a href="https://www.strava.com/segments/'+sg.id+'" target="_blank" rel="noopener">View on Strava ↗</a></div>'+
