@@ -36,6 +36,27 @@ PWINDOWS = [300, 600, 1200, 1800, 3600]  # power best-effort windows (sec)
 # Headroom left on the daily counter. It is deliberately larger than one run
 # needs, because 2024michael shares this allowance and runs at 08:00. A backfill
 # chewing through every last read would starve the other site.
+def local_stamp():
+    """When the data last changed, in Pacific, to the minute.
+
+    The runner is UTC. `datetime.date.today()` there meant that any run after
+    5pm Pacific stamped the site with TOMORROW's date, which nobody spots until
+    they look at the footer in the evening. Harmless at one run a day at
+    midnight; wrong several times a day now that this runs every half hour.
+
+    The minute matters too: with the site refreshing this often, "Aug 29" alone
+    cannot tell you whether your ride from an hour ago is in yet.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+        now = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
+    except Exception:
+        # no tzdata: Pacific is never more than 8 hours behind UTC
+        now = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=8)
+    return (now.strftime("%b %d, %Y at %I:%M %p")
+            .replace(" 0", " ").replace("at 0", "at ").replace(" AM", " AM").strip())
+
+
 DAILY_RESERVE = 200
 # Sleeps through a 15 minute window boundary allowed in ONE run, however the need
 # is discovered: pre-emptively, or by eating a 429. Kept low because the backfill
@@ -393,7 +414,7 @@ def main():
                 print(f"[{key}] progress saved. resumes from {progress_epoch}", file=sys.stderr)
 
     if changed:
-        state["updated"] = datetime.date.today().strftime("%b %d, %Y").replace(" 0", " ")
+        state["updated"] = local_stamp()
     # _seen is an in-memory set for dedupe; the persisted list is "ids".
     for _a in state["athletes"].values():
         for _y in (_a.get("season") or {}).values():
