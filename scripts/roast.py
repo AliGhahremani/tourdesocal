@@ -138,14 +138,23 @@ def build_hooks(cur, d, prev):
     # a PR that beats nobody and a PR that takes a segment are not the same
     # story and the digest used to report them identically.
     for x in (d.get("koms") or []):
-        if x.get("from"):
+        # "to" and "from" are LISTS: a dead heat is joint first, so a segment
+        # can change hands to two people at once. ctx values must stay strings,
+        # because blurb() puts "who" in a set to track who has been mentioned.
+        who = _join(x["to"]) if isinstance(x.get("to"), list) else x.get("to")
+        frm = _join(x["from"]) if isinstance(x.get("from"), list) else x.get("from")
+        many = isinstance(x.get("to"), list) and len(x["to"]) > 1
+        if frm:
             hooks.append(("kom_change", 95, {
-                "who": x["to"], "seg": x["seg"], "from": x["from"],
-                "time": x["time"],
+                "who": who, "seg": x["seg"], "from": frm,
+                "time": x["time"], "vs": "take" if many else "takes",
                 "by": _gap(x["by"]) if x.get("by") else "a matter of seconds"}))
         else:
             hooks.append(("kom_first", 80, {
-                "who": x["to"], "seg": x["seg"], "time": x["time"]}))
+                "who": who, "seg": x["seg"], "time": x["time"],
+                "vbe": "are" if many else "is",
+                "only": "and they are level on it"
+                        if many else "the only time anybody has put on it"}))
 
     # ---- attacked it, still not theirs ----
     for x in (d.get("tried") or []) + (d.get("prs") or []):
@@ -163,7 +172,7 @@ def build_hooks(cur, d, prev):
             hooks.append(("first_time", 45, {"who": x["name"], "seg": x["seg"]}))
         elif x["gain"] and x["gain"] >= 20:
             hooks.append(("big_pr", 75, {
-                "who": x["name"], "seg": x["seg"], "sec": int(x["gain"]),
+                "who": x["name"], "seg": x["seg"], "sec": _gap(int(x["gain"])),
                 "time": x["time"]}))
         elif x["gain"] and x["gain"] <= 2:
             hooks.append(("tiny_pr", 50, {
@@ -294,8 +303,8 @@ LINES = {
         "First recorded effort on {seg} from {who}. It exists now.",
     ],
     "big_pr": [
-        "{who} took {sec} seconds off {seg} and set {time}. That is a proper improvement, not a rounding error.",
-        "{sec} seconds off {seg} for {who}. Something has changed and the rest of you should be worried.",
+        "{who} took {sec} off {seg} and set {time}. That is a proper improvement, not a rounding error.",
+        "{sec} off {seg} for {who}. Something has changed and the rest of you should be worried.",
     ],
     "tiny_pr": [
         "{who} improved {seg} by {sec} second{s}. We are contractually obliged to call that a PR.",
@@ -307,7 +316,7 @@ LINES = {
         "{from} held {seg} coming into this week and does not hold it now. {who} went {time}.",
     ],
     "kom_first": [
-        "{who} is first on {seg} with {time}, the only time anybody has put on it.",
+        "{who} {vbe} first on {seg} with {time}, {only}.",
     ],
     "so_close": [
         "{who} went at {seg} and finished {gap} behind {owner}. Close enough to hurt.",
@@ -397,6 +406,14 @@ GROUPED = {
 
 
 def _join(names):
+    """Empty is a real case: a segment can change hands FROM nobody, when the
+    first time anybody has ridden it is set this week. Crashing there would
+    have taken the whole digest down on an ordinary Sunday."""
+    names = list(names)
+    if not names:
+        return ""
+    if len(names) == 1:
+        return names[0]
     names = list(names)
     if len(names) == 1:
         return names[0]
@@ -421,8 +438,8 @@ HEADLINES = {
     "first_time":    "{who} finally rides {seg}",
     "no_segments":   "A week without a single segment",
     "failed_soft":   "{who} tried {seg} and came up short",
-    "kom_change":    "{who} takes {seg} off {from}",
-    "kom_first":     "{who} is first on {seg}",
+    "kom_change":    "{who} {vs} {seg} off {from}",
+    "kom_first":     "{who} {vbe} first on {seg}",
     "so_close":      "{who} misses {seg} by {gap}",
 }
 

@@ -51,6 +51,16 @@ def local_today():
                 - datetime.timedelta(hours=8)).date()
 
 
+def _names(xs):
+    """Ali / Ali and Jake / Ali, Jake and Randee."""
+    xs = list(xs)
+    if not xs:
+        return None
+    if len(xs) == 1:
+        return xs[0]
+    return ", ".join(xs[:-1]) + " and " + xs[-1]
+
+
 def fmt_gap(sec):
     """A margin. Under a minute reads as seconds, because "0:08" does not."""
     sec = int(round(sec))
@@ -146,18 +156,22 @@ def diff(cur, prev):
     # actually care about week to week, and until now the digest never said.
     # Both sides are computed from bests, so no new snapshot field is needed.
     def leader(pool, sid):
-        """Fastest rider on a segment, or (None, sec) when it is a dead heat.
+        """Everyone on the fastest time, and that time.
 
-        Nobody holds a segment they are only equal fastest on, so a tie has no
-        holder. Without this, min() picks one of them arbitrarily and the
-        digest reports a takeover in a week where nothing changed.
+        A dead heat is JOINT first, not nobody first: two riders on 15:36 both
+        hold the segment and the next rider is third. That is how the site has
+        always counted it (index.html credits every rider whose time equals the
+        best), and the digest now agrees. Ali's call, 2026-08-29.
+
+        Returning the whole set also fixes the takeover logic honestly: min()
+        picking one of two tied riders at random used to report a segment
+        changing hands in a week when nothing had changed.
         """
         got = {n: b[sid] for n, b in pool.items() if sid in b}
         if not got:
-            return None, None
+            return frozenset(), None
         best = min(got.values())
-        top = [n for n, v in got.items() if v == best]
-        return (top[0] if len(top) == 1 else None), best
+        return frozenset(n for n, v in got.items() if v == best), best
 
     now_b = {n: cur["riders"][n]["bests"] for n in cur["riders"]}
     old_b = {n: (pr_r.get(n) or {}).get("bests") or {} for n in cur["riders"]}
@@ -165,14 +179,19 @@ def diff(cur, prev):
     for sid in cur["seg_ids"]:
         lead_now[sid] = leader(now_b, sid)
         lead_was[sid] = leader(old_b, sid)
-        (who_n, sec_n), (who_w, sec_w) = lead_now[sid], lead_was[sid]
-        if who_n and who_n != who_w:
-            d["koms"].append({
-                "seg": cur["seg_name"].get(sid, sid), "id": sid,
-                "to": who_n, "from": who_w,
-                "time": cur["riders"][who_n]["times"].get(sid, fmt_clock(sec_n)),
-                "by": (sec_w - sec_n) if sec_w is not None else None,
-            })
+        (now_h, sec_n), (was_h, sec_w) = lead_now[sid], lead_was[sid]
+        if now_h and now_h != was_h:
+            gained = sorted(now_h - was_h)          # who is newly on top
+            lost = sorted(was_h - now_h)            # who was on top and is not
+            if gained:
+                any_new = gained[0]
+                d["koms"].append({
+                    "seg": cur["seg_name"].get(sid, sid), "id": sid,
+                    "to": gained, "from": lost,
+                    "joint": len(now_h) > 1,
+                    "time": cur["riders"][any_new]["times"].get(sid, fmt_clock(sec_n)),
+                    "by": (sec_w - sec_n) if (sec_w is not None and sec_w > sec_n) else None,
+                })
 
     # The segment list itself can change between weeks, and when it does it
     # moves everybody's GC. A snapshot taken before this was tracked has no
@@ -215,14 +234,14 @@ def diff(cur, prev):
             old = pb.get(sid)
             new = r["bests"].get(sid)
             seg = cur["seg_name"].get(sid, sid)
-            who_lead, sec_lead = lead_now.get(sid, (None, None))
-            took = bool(who_lead) and who_lead == n \
-                and (lead_was.get(sid) or (None,))[0] != n
+            hold_now, sec_lead = lead_now.get(sid, (frozenset(), None))
+            hold_was = (lead_was.get(sid) or (frozenset(),))[0]
+            took = n in hold_now and n not in hold_was
             gap = (new - sec_lead) if (new is not None and sec_lead is not None) else None
             # level with the fastest time is not "behind" it
             behind = gap if (gap is not None and gap > 0) else None
             common = {"name": n, "seg": seg, "id": sid, "tries": new_att,
-                      "leader": who_lead if behind is not None else None,
+                      "leader": _names(sorted(hold_now)) if behind is not None else None,
                       "behind": behind, "took": took}
             if new is not None and (old is None or new < old):
                 d["prs"].append({**common,
@@ -462,14 +481,17 @@ def render(cur, d, week_end, note, head=None, cards=None, shame=None):
         A('<div style="background:#fff1f2;border:1px solid #f3ccd1;'
           'border-radius:10px;padding:12px 15px;font-size:14px;line-height:1.6">')
         for x in d["koms"]:
+            who = _names(x["to"])
+            verb = "are" if len(x["to"]) > 1 else "is"
+            joint = " and are now joint fastest" if x.get("joint") else ""
             if x["from"]:
                 by = f' by {fmt_gap(x["by"])}' if x.get("by") else ""
-                A(f'<div style="margin:3px 0"><b>{x["to"]}</b> took '
-                  f'<b>{x["seg"]}</b> off {x["from"]}{by}, in {x["time"]}.</div>')
+                A(f'<div style="margin:3px 0"><b>{who}</b> took '
+                  f'<b>{x["seg"]}</b> off {_names(x["from"])}{by}, in '
+                  f'{x["time"]}{joint}.</div>')
             else:
-                A(f'<div style="margin:3px 0"><b>{x["to"]}</b> is first on '
-                  f'<b>{x["seg"]}</b> with {x["time"]}, the only time set on it '
-                  f'this year.</div>')
+                A(f'<div style="margin:3px 0"><b>{who}</b> {verb} first on '
+                  f'<b>{x["seg"]}</b> with {x["time"]}.</div>')
         A("</div>")
 
     if d["prs"]:

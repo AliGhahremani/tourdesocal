@@ -109,8 +109,11 @@ def season_facts(cur, meta, days_left, segs=None, d=None, elapsed_days=1):
         best = min(got.values())
         for n, sec in got.items():
             ratios[n].append(sec / best)
-        winner = min(got, key=got.get)
-        koms[winner].append(sid)
+        # Everyone on the fastest time holds it. A dead heat is joint first,
+        # and index.html has always counted it that way.
+        for n, sec in got.items():
+            if sec == best:
+                koms[n].append(sid)
         if len(got) >= 3:
             lasts[max(got, key=got.get)].append(sid)
 
@@ -129,7 +132,10 @@ def season_facts(cur, meta, days_left, segs=None, d=None, elapsed_days=1):
         sid = x["id"]
         got = {n: r["bests"][sid] for n, r in riders.items() if sid in r["bests"]}
         if got:
-            gone_kom.setdefault(min(got, key=got.get), set()).add(sid)
+            b = min(got.values())
+            for n, sec in got.items():
+                if sec == b:
+                    gone_kom.setdefault(n, set()).add(sid)
 
     order = sorted(cur["gc"], key=lambda n: cur["gc"][n]["pos"])
     lead_sec = cur["gc"][order[0]]["sec"] if order else 0
@@ -199,9 +205,10 @@ def season_facts(cur, meta, days_left, segs=None, d=None, elapsed_days=1):
             "seg_added": (segs or {}).get("added") or [],
             "seg_removed": (segs or {}).get("removed") or [],
             # this week's segment news, already computed by weekly.diff
-            "took": [k for k in ((d or {}).get("koms") or []) if k["to"] == name],
+            "took": [k for k in ((d or {}).get("koms") or [])
+                     if name in k["to"] and name not in (k.get("from") or [])],
             "lost_to": [k for k in ((d or {}).get("koms") or [])
-                        if k.get("from") == name],
+                        if name in (k.get("from") or []) and name not in k["to"]],
             "near": [{"seg": x["seg"], "leader": x["leader"],
                       "behind": x["behind"], "tries": x["tries"],
                       "pr": pr}
@@ -209,6 +216,7 @@ def season_facts(cur, meta, days_left, segs=None, d=None, elapsed_days=1):
                                       (False, (d or {}).get("tried") or []))
                      for x in pool
                      if x["name"] == name and x.get("behind") is not None],
+            "name": name,
             "have": dict(r["bests"]),
             "was_kom": set(koms[name]) | gone_kom.get(name, set()),
         }
@@ -233,8 +241,9 @@ def _a_koms(f, s):
         return None
     names = [f["seg_name"].get(i, "") for i in f["koms"][:2]]
     return 70, [
-        f"You hold {_w(n)} segments outright, and {names[0]} is one of them.",
-        f"{_w(n).capitalize()} segments on this site are yours until somebody takes them off you.",
+        f"You are fastest on {_w(n)} segments, and {names[0]} is one of them.",
+        f"{_w(n).capitalize()} segments on this site are yours until somebody "
+        f"goes quicker.",
         f"Nobody has beaten you on {_w(n)} of the {_w(f['total_segs'])}.",
     ]
 
@@ -605,8 +614,17 @@ def _a_took_kom(f, s):
     if not f["took"]:
         return None
     x = f["took"][0]
-    prev = x["from"]
+    prev = _join(x["from"]) if x.get("from") else None
+    mates = [m for m in x["to"] if m != f["name"]] if isinstance(x.get("to"), list) else []
     by = f" by {_mins(x['by'])}" if x.get("by") else ""
+    if prev and mates:
+        return 96, [
+            f"You and {_join(mates)} both went {x['time']} on {x['seg']}, which "
+            f"takes it off {prev} and leaves the pair of you joint fastest. "
+            f"Nobody owns it outright until one of you goes quicker.",
+            f"{x['seg']} is yours and {_join(mates)}'s, dead level on {x['time']}, "
+            f"and {prev} is out of it.",
+        ]
     if prev:
         return 96, [
             f"You took {x['seg']} off {prev}{by}, in {x['time']}. "
@@ -628,6 +646,7 @@ def _a_kom_taken(f, s):
         return None
     x = f["lost_to"][0]
     by = f" by {_mins(x['by'])}" if x.get("by") else ""
+    x = dict(x, to=_join(x["to"]) if isinstance(x.get("to"), list) else x.get("to"))
     return 92, [
         f"{x['to']} took {x['seg']} off you{by} this week. You held that one "
         f"coming in and you do not hold it now.",
