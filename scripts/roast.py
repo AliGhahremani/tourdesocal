@@ -149,6 +149,12 @@ def build_hooks(cur, d, prev):
                 "who": who, "seg": x["seg"], "from": frm,
                 "time": x["time"], "vs": "take" if many else "takes",
                 "by": _gap(x["by"]) if x.get("by") else "a matter of seconds"}))
+        elif x.get("with"):
+            # joined an existing holder on the same time: nobody lost anything,
+            # and it is emphatically not the only time on the segment.
+            hooks.append(("kom_level", 84, {
+                "who": who, "seg": x["seg"], "time": x["time"],
+                "held": _join(x["with"])}))
         else:
             hooks.append(("kom_first", 80, {
                 "who": who, "seg": x["seg"], "time": x["time"],
@@ -318,6 +324,11 @@ LINES = {
     "kom_first": [
         "{who} {vbe} first on {seg} with {time}, {only}.",
     ],
+    "kom_level": [
+        "{who} drew level with {held} on {seg}, both of them on {time}.",
+        "{who} matched {held} to the second on {seg}: {time} apiece, and "
+        "neither of them owns it.",
+    ],
     "so_close": [
         "{who} went at {seg} and finished {gap} behind {owner}. Close enough to hurt.",
         "{gap} is all that stood between {who} and {owner} on {seg}.",
@@ -440,6 +451,7 @@ HEADLINES = {
     "failed_soft":   "{who} tried {seg} and came up short",
     "kom_change":    "{who} {vs} {seg} off {from}",
     "kom_first":     "{who} {vbe} first on {seg}",
+    "kom_level":     "{who} draws level with {held} on {seg}",
     "so_close":      "{who} misses {seg} by {gap}",
 }
 

@@ -183,11 +183,12 @@ def diff(cur, prev):
         if now_h and now_h != was_h:
             gained = sorted(now_h - was_h)          # who is newly on top
             lost = sorted(was_h - now_h)            # who was on top and is not
+            stay = sorted(now_h & was_h)            # on top before and still on top
             if gained:
                 any_new = gained[0]
                 d["koms"].append({
                     "seg": cur["seg_name"].get(sid, sid), "id": sid,
-                    "to": gained, "from": lost,
+                    "to": gained, "from": lost, "with": stay,
                     "joint": len(now_h) > 1,
                     "time": cur["riders"][any_new]["times"].get(sid, fmt_clock(sec_n)),
                     "by": (sec_w - sec_n) if (sec_w is not None and sec_w > sec_n) else None,
@@ -242,7 +243,9 @@ def diff(cur, prev):
             behind = gap if (gap is not None and gap > 0) else None
             common = {"name": n, "seg": seg, "id": sid, "tries": new_att,
                       "leader": _names(sorted(hold_now)) if behind is not None else None,
-                      "behind": behind, "took": took}
+                      "behind": behind, "took": took,
+                      # joining a dead heat is not taking the segment outright
+                      "with": sorted(hold_now - {n}) if took else []}
             if new is not None and (old is None or new < old):
                 d["prs"].append({**common,
                                  "time": r["times"].get(sid, fmt_clock(new)),
@@ -483,12 +486,16 @@ def render(cur, d, week_end, note, head=None, cards=None, shame=None):
         for x in d["koms"]:
             who = _names(x["to"])
             verb = "are" if len(x["to"]) > 1 else "is"
-            joint = " and are now joint fastest" if x.get("joint") else ""
+            joint = ", and are now joint fastest" if x.get("joint") else ""
             if x["from"]:
                 by = f' by {fmt_gap(x["by"])}' if x.get("by") else ""
                 A(f'<div style="margin:3px 0"><b>{who}</b> took '
                   f'<b>{x["seg"]}</b> off {_names(x["from"])}{by}, in '
                   f'{x["time"]}{joint}.</div>')
+            elif x.get("with"):
+                A(f'<div style="margin:3px 0"><b>{who}</b> drew level with '
+                  f'{_names(x["with"])} on <b>{x["seg"]}</b>, both on '
+                  f'{x["time"]}. Nobody owns it outright.</div>')
             else:
                 A(f'<div style="margin:3px 0"><b>{who}</b> {verb} first on '
                   f'<b>{x["seg"]}</b> with {x["time"]}.</div>')
@@ -498,7 +505,10 @@ def render(cur, d, week_end, note, head=None, cards=None, shame=None):
         A('<h2 style="font-size:15px;margin:22px 0 8px">New segment bests</h2><ul '
           'style="font-size:14px;padding-left:18px;margin:0">')
         for x in d["prs"]:
-            if x["took"]:
+            if x["took"] and x.get("with"):
+                tail = (' <span style="color:#0a7d3c">and is now level with '
+                        f'{_names(x["with"])} at the front</span>')
+            elif x["took"]:
                 tail = ' <span style="color:#0a7d3c">and now leads it</span>'
             elif x["behind"] is not None:
                 tail = (f' <span style="color:#6d6d78">still {fmt_gap(x["behind"])} '

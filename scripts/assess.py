@@ -19,6 +19,19 @@ offered that week.
 """
 import datetime
 import random
+import sys
+
+
+def _join(names):
+    """Ali / Ali and Jake / Ali, Jake and Randee. Empty is a real case."""
+    names = list(names)
+    if not names:
+        return ""
+    if len(names) == 1:
+        return names[0]
+    if len(names) == 2:
+        return f"{names[0]} and {names[1]}"
+    return ", ".join(names[:-1]) + f" and {names[-1]}"
 
 M_PER_MI = 1609.344
 FT_PER_M = 3.280839895
@@ -634,6 +647,15 @@ def _a_took_kom(f, s):
             f"The headline from your week: {prev} no longer owns {x['seg']}. "
             f"You do, on {x['time']}.",
         ]
+    if x.get("with"):
+        held = _join(x["with"])
+        return 94, [
+            f"You drew level with {held} on {x['seg']}, both of you on "
+            f"{x['time']}. Level is not ahead. One more second and it is yours "
+            f"outright.",
+            f"{x['seg']} is a dead heat now: you and {held} on {x['time']} "
+            f"apiece. Neither of you owns it until one of you goes quicker.",
+        ]
     return 94, [
         f"You are first on {x['seg']} with {x['time']}, the only time anybody "
         f"has set on it this year. Hold it or somebody will take it.",
@@ -646,13 +668,16 @@ def _a_kom_taken(f, s):
         return None
     x = f["lost_to"][0]
     by = f" by {_mins(x['by'])}" if x.get("by") else ""
+    # a segment can change hands to two people at once, so the pronoun has to move
+    many = isinstance(x.get("to"), list) and len(x["to"]) > 1
+    theirs = "their" if many else "his"
     x = dict(x, to=_join(x["to"]) if isinstance(x.get("to"), list) else x.get("to"))
     return 92, [
         f"{x['to']} took {x['seg']} off you{by} this week. You held that one "
         f"coming in and you do not hold it now.",
         f"You lost {x['seg']} to {x['to']}{by}. It is {x['time']} to get it back.",
         f"{x['seg']} was yours until this week. {x['to']} went {x['time']} and "
-        f"it is his problem to defend now, not yours.",
+        f"it is {theirs} problem to defend now, not yours.",
     ]
 
 
@@ -919,8 +944,9 @@ def shame_of_the_week(F, d, rng):
 
         for x in f["lost_to"]:
             by = f" by {_mins(x['by'])}" if x.get("by") else ""
+            who = _join(x["to"]) if isinstance(x.get("to"), list) else x["to"]
             picks.append((80, name,
-                f"let {x['to']} take {x['seg']} off him{by}",
+                f"let {who} take {x['seg']} off him{by}",
                 f"He held it coming into this week. He does not hold it now."))
 
         tried = [x for x in (d.get("tried") or []) if x["name"] == name]
@@ -981,7 +1007,9 @@ def assess(cur, meta, d, week_no, days_left, seen=None, seeded=False, said=None)
         for key, fn in ANGLES.items():
             try:
                 got = fn(f, cur)
-            except Exception:
+            except Exception as e:
+                print(f"assess: angle {key} failed for {name}: "
+                      f"{type(e).__name__}: {e}", file=sys.stderr)
                 got = None
             if got:
                 score, phrasings = got
