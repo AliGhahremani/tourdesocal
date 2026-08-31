@@ -81,7 +81,17 @@
   .pcard.p2 .medal{background:#9aa3ab;border-color:#9aa3ab;color:#fff}
   .pcard.p3 .medal{background:#b3722e;border-color:#b3722e;color:#fff}
   .pcard .medal{position:absolute;top:10px;left:10px;font-family:'Archivo Black';font-size:13px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:8px;padding:4px 10px}
-  .pcard .jersey{position:absolute;top:10px;right:10px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.1em;background:var(--orange);color:#fff;border-radius:6px;padding:4px 8px;text-transform:uppercase}
+  /* One rider can hold two or three jerseys at once, so the badges stack down
+     the right hand side instead of one being pinned to the corner. */
+  .pcard .jerseys{position:absolute;top:10px;right:10px;z-index:2;display:flex;
+    flex-direction:column;align-items:flex-end;gap:4px}
+  .pcard .jersey{font-family:'JetBrains Mono',monospace;font-size:9.5px;
+    letter-spacing:.1em;background:var(--orange);color:#fff;border-radius:6px;
+    padding:4px 8px;text-transform:uppercase;white-space:nowrap;
+    box-shadow:0 1px 4px rgba(0,0,0,.18)}
+  .pcard .jersey.y{background:var(--yellow-j);color:#3a2c00}
+  .pcard .jersey.p{background:var(--polka-j);color:#fff}
+  .pcard .jersey.g{background:var(--green-j);color:#fff}
   .pcard .nm{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:18px;letter-spacing:.02em}
   .pcard .body{padding:14px 18px 16px}
   .pcard .rl{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
@@ -277,7 +287,7 @@
 </div></section>
 
 <section class="score"><div class="wrap">
-  <h2>General Classification</h2>
+  <h2>Rider Profiles</h2>
   <div class="grid" id="standings"></div>
 </div></section>
 
@@ -494,6 +504,19 @@ const powerRows = {};
   const leadTime = order.length ? order[0][1] : 0;
   const medals = ["1st","2nd","3rd","4th","5th","6th","7th","8th"];
   const box = document.getElementById("standings");
+
+  // Who holds each jersey right now, so every card can say so rather than only
+  // the yellow one. Own names: the summary strip further down declares its own
+  // `season` later in this scope, and reusing it here would be a dead zone.
+  // Nobody wears anything until somebody has actually ridden.
+  const jSeason = D.season || [];
+  const jTop = k => jSeason.length
+    ? jSeason.slice().sort((a,b)=>b[k]-a[k])[0].name : null;
+  const JERSEYS = [
+    ["y","Yellow Jersey",    NO_DATA ? null : order[0][0]],
+    ["p","Polka Dot Jersey", jTop("feet")],
+    ["g","Green Jersey",     jTop("miles")],
+  ];
   let html = "";
   order.forEach(([name,t],i)=>{
     const photo = PH[name] ? '<img class="photo" loading="lazy" decoding="async" src="'+PH[name]+'" alt="'+name+'">' :
@@ -504,7 +527,9 @@ const powerRows = {};
     html += '<div class="pcard'+(!NO_DATA && i===0?' leader':'')+
       (!NO_DATA && i<3?' pod p'+(i+1):'')+'">'+photo+
       (NO_DATA ? '' : '<span class="medal">'+medals[i]+'</span>')+
-      (!NO_DATA && i===0?'<span class="jersey">Yellow Jersey</span>':'')+
+      (()=>{const b=JERSEYS.filter(j=>j[2]===name)
+              .map(j=>'<span class="jersey '+j[0]+'">'+j[1]+'</span>').join('');
+            return b ? '<div class="jerseys">'+b+'</div>' : '';})()+
       '<div class="body"><div class="nm">'+nameLink(name,name)+'</div><div class="rl">'+(SURNAMES[name]||'')+'</div>'+
       '<div class="tot">'+(NO_DATA ? '\u2014' : fmtClock(t))+'</div>'+
       '<div class="gapline">'+gapline+'</div>'+
