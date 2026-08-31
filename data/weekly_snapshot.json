@@ -1,5 +1,5 @@
 {
-  "taken_utc": "2026-08-31T10:54:52Z",
+  "taken_utc": "2026-08-31T03:48:29Z",
   "year": "2026",
   "riders": {
     "Ali": {
@@ -320,67 +320,37 @@
   },
   "assess_seen": {
     "Jose": [
-      "leader",
-      "table",
       "never"
     ],
-    "Ali": [
-      "never",
-      "ahead"
-    ],
+    "Ali": [],
     "Jake": [
-      "koms",
-      "grind",
       "table"
     ],
-    "Abe": [
-      "behind",
-      "lasts",
-      "indoor"
-    ],
-    "Randee": [
-      "yellow",
-      "volume",
-      "never"
-    ]
+    "Abe": [],
+    "Randee": []
   },
   "assess_said": {
     "Jose": [
-      "Nothing at all this week. The season has a deadline and it does not care what came up.",
-      "The jersey is yours by 7:47. Leading in August is not the same as leading on December 31.",
-      "Add up everything you are giving away by not riding the segments you skip and it comes to about 6:38. That is not training, that is paperwork.",
       "The headline from your week: Ali no longer owns Pacific Island South. You do, on 11:56.",
       "157 miles against your own 99 average. Something has got into you and the rest of them should hope it wears off.",
       "Three segments still have no 2026 time against your name. Park Ave alone is worth 3:04 to you, and it is not going to ride itself."
     ],
     "Ali": [
-      "You did not get on the bike once. Everyone else did, and the gaps in this email are the receipt.",
-      "Dump Hill is the single most expensive thing you are not doing, at roughly 1:44, and it is one of two you have skipped all year.",
-      "You are 7:47 off Jose. With 123 days left that is a gap you close by riding, not by hoping.",
       "Laguna Canyon -LF 2 F is yours and Jake's, dead level on 15:36, and Randee is out of it.",
       "Jose took Pacific Island South off you by 5:01 this week. You held that one coming in and you do not hold it now.",
       "You attacked Portola KOM Climb once this week and came up 24 seconds short of Abe and Jose."
     ],
     "Jake": [
-      "Zero rides. Not a slow week, not a short week. Zero.",
-      "You are fastest on five segments, and Quail Hill Sprint Climb is one of them.",
-      "Irvine Speedway has taken 37 attempts off you and given nothing back. Jose has not had to defend it once.",
       "You and Ali both went 15:36 on Laguna Canyon -LF 2 F, which takes it off Randee and leaves the pair of you joint fastest. Nobody owns it outright until one of you goes quicker.",
       "3 seconds. That is all that stood between you and Jose on Irvine Speedway this week.",
       "Add up everything you are giving away by not riding the segments you skip and it comes to about 10:49. That is not training, that is paperwork."
     ],
     "Abe": [
-      "Check your mirrors. Randee sits 54 seconds back.",
-      "Two segments have you at the bottom of the sheet.",
-      "28 percent of your saddle time this year was indoors, 45 hours of it. It counts, but it does not win segments.",
       "You lost Starcrest to Ali by 9 seconds. It is 4:24 to get it back.",
       "Pacific Island South once this week, still 37 seconds off Jose. You did take a personal best out of it. He has not had to respond yet.",
       "That is 187 percent of a normal week for you. Credit where it is due, and a warning to everybody above you."
     ],
     "Randee": [
-      "Yellow is 12:17 away. Not close, not impossible.",
-      "188 rides, 246 hours, top of the pile on volume. That is a season nobody can argue with.",
-      "You have ridden everything except Santa Vittoria Dr. bump in 2026. That single omission is costing you roughly 5 seconds.",
       "You drew level with Jake on 4000 meter, both of you on 5:01. Level is not ahead. One more second and it is yours outright.",
       "You went at Irvine Speedway once and finished 3 seconds behind Jose. That is close enough to be annoying and close enough to fix.",
       "Laguna Canyon -LF 2 F was yours until this week. Ali and Jake went 15:36 and it is their problem to defend now, not yours."
