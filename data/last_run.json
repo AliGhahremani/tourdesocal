@@ -13,15 +13,15 @@
       "activities_seen": 2
     },
     "jose": {
-      "activities_seen": 4
+      "activities_seen": 5
     }
   },
   "notes": [],
-  "finished_utc": "2026-08-31T10:53:16Z",
-  "reads_this_run": 29,
+  "finished_utc": "2026-08-31T16:06:55Z",
+  "reads_this_run": 31,
   "window_waits": 0,
-  "rate_limit_window": "17/200",
-  "rate_limit_daily": "89/2000",
+  "rate_limit_window": "18/200",
+  "rate_limit_daily": "118/2000",
   "tokens_present": [
     "abe",
     "ali",
