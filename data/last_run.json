@@ -1,27 +1,27 @@
 {
   "riders": {
     "ali": {
-      "activities_seen": 3
+      "activities_seen": 2
     },
     "jake": {
       "activities_seen": 2
     },
     "randee": {
-      "activities_seen": 5
+      "activities_seen": 4
     },
     "abe": {
       "activities_seen": 2
     },
     "jose": {
-      "activities_seen": 3
+      "activities_seen": 4
     }
   },
   "notes": [],
-  "finished_utc": "2026-08-31T01:33:24Z",
-  "reads_this_run": 27,
+  "finished_utc": "2026-08-31T03:46:46Z",
+  "reads_this_run": 29,
   "window_waits": 0,
-  "rate_limit_window": "16/200",
-  "rate_limit_daily": "16/2000",
+  "rate_limit_window": "17/200",
+  "rate_limit_daily": "33/2000",
   "tokens_present": [
     "abe",
     "ali",

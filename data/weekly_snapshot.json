@@ -1,10 +1,10 @@
 {
-  "taken_utc": "2026-08-23T23:59:59Z",
+  "taken_utc": "2026-08-31T03:48:29Z",
   "year": "2026",
   "riders": {
     "Ali": {
       "bests": {
-        "8410981": 1164,
+        "8410981": 936,
         "609924": 984,
         "913750": 661,
         "7855869": 136,
@@ -21,12 +21,14 @@
         "830079": 3386,
         "649404": 256,
         "13737114": 96,
-        "3256589": 95
+        "3256589": 95,
+        "1189771": 454,
+        "757408": 264
       },
       "attempts": {
-        "8410981": 5,
+        "8410981": 6,
         "609924": 2,
-        "913750": 5,
+        "913750": 6,
         "7855869": 20,
         "580930": 1,
         "22971497": 2,
@@ -39,9 +41,11 @@
         "618874": 1,
         "25403641": 3,
         "830079": 1,
-        "649404": 5,
+        "649404": 6,
         "13737114": 1,
-        "3256589": 2
+        "3256589": 2,
+        "1189771": 1,
+        "757408": 1
       },
       "power": {
         "300": 329,
@@ -50,18 +54,18 @@
         "1800": 234,
         "3600": 220
       },
-      "dist_m": 3919979.9999999995,
-      "elev_m": 50830.1,
-      "rides": 137,
-      "time_s": 655594,
+      "dist_m": 4117354.1999999997,
+      "elev_m": 52347.1,
+      "rides": 142,
+      "time_s": 683028,
       "vtime_s": 105765,
       "vrides": 43
     },
     "Jake": {
       "bests": {
-        "22971497": 338,
+        "22971497": 336,
         "25403641": 70,
-        "8410981": 1161,
+        "8410981": 936,
         "609924": 939,
         "913750": 634,
         "649404": 258,
@@ -73,24 +77,26 @@
         "4905033": 785,
         "611821": 755,
         "633514": 528,
-        "3256589": 89
+        "3256589": 89,
+        "757408": 300
       },
       "attempts": {
-        "22971497": 23,
-        "25403641": 35,
-        "8410981": 10,
+        "22971497": 25,
+        "25403641": 37,
+        "8410981": 11,
         "609924": 1,
-        "913750": 10,
-        "649404": 6,
+        "913750": 11,
+        "649404": 7,
         "13737114": 6,
         "618874": 5,
-        "1189771": 6,
-        "7855869": 28,
+        "1189771": 7,
+        "7855869": 29,
         "3615418": 1,
         "4905033": 1,
         "611821": 1,
         "633514": 1,
-        "3256589": 3
+        "3256589": 3,
+        "757408": 1
       },
       "power": {
         "300": 355,
@@ -99,10 +105,10 @@
         "1800": 245,
         "3600": 219
       },
-      "dist_m": 4062888.7999999984,
-      "elev_m": 33366.0,
-      "rides": 98,
-      "time_s": 514336,
+      "dist_m": 4240919.799999998,
+      "elev_m": 35041.0,
+      "rides": 103,
+      "time_s": 537506,
       "vtime_s": 0,
       "vrides": 0
     },
@@ -113,7 +119,7 @@
         "913750": 638,
         "13737114": 54,
         "580930": 1067,
-        "618874": 318,
+        "618874": 301,
         "25403641": 70,
         "7855869": 134,
         "1189771": 369,
@@ -132,13 +138,13 @@
         "3256589": 75
       },
       "attempts": {
-        "8410981": 14,
+        "8410981": 15,
         "609924": 4,
         "913750": 11,
-        "13737114": 7,
+        "13737114": 8,
         "580930": 2,
-        "618874": 6,
-        "25403641": 16,
+        "618874": 7,
+        "25403641": 17,
         "7855869": 13,
         "1189771": 3,
         "3615418": 1,
@@ -150,7 +156,7 @@
         "2905337": 1,
         "22971497": 2,
         "757408": 1,
-        "649404": 7,
+        "649404": 8,
         "830079": 1,
         "633514": 1,
         "3256589": 10
@@ -162,10 +168,10 @@
         "1800": 214,
         "3600": 201
       },
-      "dist_m": 5373684.400000001,
-      "elev_m": 54724.799999999996,
-      "rides": 185,
-      "time_s": 858133,
+      "dist_m": 5598471.800000002,
+      "elev_m": 55969.799999999996,
+      "rides": 188,
+      "time_s": 885848,
       "vtime_s": 0,
       "vrides": 0
     },
@@ -185,7 +191,8 @@
         "2905337": 558,
         "913750": 599,
         "8410981": 1164,
-        "3256589": 100
+        "3256589": 100,
+        "596560": 753
       },
       "attempts": {
         "13737114": 13,
@@ -195,14 +202,15 @@
         "25403641": 2,
         "22971497": 2,
         "609924": 1,
-        "649404": 19,
+        "649404": 20,
         "7855869": 1,
         "3615418": 1,
         "830079": 1,
         "2905337": 1,
         "913750": 2,
         "8410981": 1,
-        "3256589": 1
+        "3256589": 1,
+        "596560": 1
       },
       "power": {
         "300": 296,
@@ -211,10 +219,10 @@
         "1800": 229,
         "3600": 212
       },
-      "dist_m": 4105236.5999999978,
-      "elev_m": 37138.6,
-      "rides": 95,
-      "time_s": 536115,
+      "dist_m": 4340201.899999998,
+      "elev_m": 39411.6,
+      "rides": 100,
+      "time_s": 567455,
       "vtime_s": 160968,
       "vrides": 45
     },
@@ -233,7 +241,7 @@
         "2905337": 547,
         "13737114": 67,
         "3615418": 641,
-        "596560": 1093,
+        "596560": 716,
         "609701": 752,
         "6140474": 612,
         "830079": 2960,
@@ -251,11 +259,11 @@
         "4905033": 2,
         "611821": 2,
         "633514": 1,
-        "649404": 24,
+        "649404": 25,
         "2905337": 5,
         "13737114": 4,
         "3615418": 1,
-        "596560": 1,
+        "596560": 2,
         "609701": 1,
         "6140474": 1,
         "830079": 1,
@@ -270,39 +278,39 @@
         "1800": 248,
         "3600": 220
       },
-      "dist_m": 5271712.2,
-      "elev_m": 50802.0,
-      "rides": 106,
-      "time_s": 669421,
+      "dist_m": 5524038.9,
+      "elev_m": 53260.0,
+      "rides": 114,
+      "time_s": 704108,
       "vtime_s": 0,
       "vrides": 0
     }
   },
   "gc": {
     "Jose": {
-      "sec": 11043,
+      "sec": 10666,
       "pos": 1,
       "ridden": 18
     },
-    "Randee": {
-      "sec": 11420,
-      "pos": 2,
-      "ridden": 20
-    },
-    "Abe": {
-      "sec": 11798,
-      "pos": 3,
-      "ridden": 13
-    },
     "Ali": {
-      "sec": 11808,
-      "pos": 4,
-      "ridden": 17
+      "sec": 11133,
+      "pos": 2,
+      "ridden": 19
     },
     "Jake": {
-      "sec": 12021,
+      "sec": 11258,
+      "pos": 3,
+      "ridden": 16
+    },
+    "Abe": {
+      "sec": 11349,
+      "pos": 4,
+      "ridden": 14
+    },
+    "Randee": {
+      "sec": 11403,
       "pos": 5,
-      "ridden": 15
+      "ridden": 20
     }
   },
   "jerseys": {
@@ -310,7 +318,44 @@
     "polka": "Randee",
     "green": "Randee"
   },
-  "reseeded": "Riding totals and segment attempts both rolled back to the end of 2026-08-23. Segment bests needed no rollback: every best in state.json carries its date and none was set on or after Aug 24, verified at run time. The one thing still at today's values is power, because state.json ratchets power upward and does not retain the previous figure, so a power best set Aug 24-27 will not be reported.",
+  "assess_seen": {
+    "Jose": [
+      "never"
+    ],
+    "Ali": [],
+    "Jake": [
+      "table"
+    ],
+    "Abe": [],
+    "Randee": []
+  },
+  "assess_said": {
+    "Jose": [
+      "The headline from your week: Ali no longer owns Pacific Island South. You do, on 11:56.",
+      "157 miles against your own 99 average. Something has got into you and the rest of them should hope it wears off.",
+      "Three segments still have no 2026 time against your name. Park Ave alone is worth 3:04 to you, and it is not going to ride itself."
+    ],
+    "Ali": [
+      "Laguna Canyon -LF 2 F is yours and Jake's, dead level on 15:36, and Randee is out of it.",
+      "Jose took Pacific Island South off you by 5:01 this week. You held that one coming in and you do not hold it now.",
+      "You attacked Portola KOM Climb once this week and came up 24 seconds short of Abe and Jose."
+    ],
+    "Jake": [
+      "You and Ali both went 15:36 on Laguna Canyon -LF 2 F, which takes it off Randee and leaves the pair of you joint fastest. Nobody owns it outright until one of you goes quicker.",
+      "3 seconds. That is all that stood between you and Jose on Irvine Speedway this week.",
+      "Add up everything you are giving away by not riding the segments you skip and it comes to about 10:49. That is not training, that is paperwork."
+    ],
+    "Abe": [
+      "You lost Starcrest to Ali by 9 seconds. It is 4:24 to get it back.",
+      "Pacific Island South once this week, still 37 seconds off Jose. You did take a personal best out of it. He has not had to respond yet.",
+      "That is 187 percent of a normal week for you. Credit where it is due, and a warning to everybody above you."
+    ],
+    "Randee": [
+      "You drew level with Jake on 4000 meter, both of you on 5:01. Level is not ahead. One more second and it is yours outright.",
+      "You went at Irvine Speedway once and finished 3 seconds behind Jose. That is close enough to be annoying and close enough to fix.",
+      "Laguna Canyon -LF 2 F was yours until this week. Ali and Jake went 15:36 and it is their problem to defend now, not yours."
+    ]
+  },
   "seg_ids": [
     "649404",
     "7855869",
