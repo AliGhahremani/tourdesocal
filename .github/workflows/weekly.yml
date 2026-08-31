@@ -17,27 +17,29 @@ name: Weekly digest
 
 on:
   schedule:
-    # Sunday 8:30 PM Pacific, which is Monday morning in UTC.
+    # THE DIGEST GOES OUT AT 8:30 PM PACIFIC ON SUNDAY. Never another day,
+    # never another time. Ali's rule, 2026-08-31, after a run that GitHub
+    # dispatched five hours late mailed everybody at 3:52 AM on a Monday.
     #
-    # GitHub runs scheduled workflows on a BEST EFFORT basis and silently drops
-    # them under load, which is how the 2026-08-30 digest missed its slot: the
-    # half hourly updater was landing roughly every two hours that day. So the
-    # send is attempted four times across Sunday evening instead of once, and
-    # the crons sit on odd minutes because the top of the hour and the half
-    # hour are the busiest, most heavily shed moments on the shared runners.
+    # GitHub's scheduler cannot be trusted to hit a minute. It runs scheduled
+    # workflows on a BEST EFFORT basis and sheds them under load; this repo has
+    # seen delays of five hours and better than two hours routinely. So the
+    # cron is not the clock. The cron only tries to get a runner EARLY, and the
+    # guard job then sits on that runner and waits until 8:30 PM Pacific before
+    # letting anything send. A run that arrives at 6 PM waits two and a half
+    # hours and goes out on time; a run that arrives after 11 PM is refused
+    # outright rather than mailing everybody in the middle of the night.
     #
-    # Every attempt after the first sees weekly/<that Sunday>.html already in
-    # the repo and exits before sending, so nobody is ever mailed twice. All
-    # four attempts fall on the same Pacific Sunday, which is what makes that
-    # filename a reliable "already sent" marker.
-    - cron: "32 3 * 3-10 1"       # 8:32 PM PDT Sun (Mar-Oct)
-    - cron: "20 4 * 3-10 1"       # 9:20 PM PDT Sun, if the first was dropped
-    - cron: "10 5 * 3-10 1"       # 10:10 PM PDT Sun
-    - cron: "40 6 * 3-10 1"       # 11:40 PM PDT Sun, last chance
-    - cron: "32 4 * 1,2,11,12 1"  # 8:32 PM PST Sun (Nov-Feb)
+    # Four attempts per Sunday, first one to get a runner wins, and the guard
+    # stops the rest by looking for weekly/<that Sunday>.html.
+    - cron: "0 23 * 3-10 0"       # 4:00 PM PDT Sun, waits until 8:30
+    - cron: "0 1 * 3-10 1"        # 6:00 PM PDT Sun, waits until 8:30
+    - cron: "32 3 * 3-10 1"       # 8:32 PM PDT Sun, sends straight away
+    - cron: "20 4 * 3-10 1"       # 9:20 PM PDT Sun, last chance
+    - cron: "0 0 * 1,2,11,12 1"   # 4:00 PM PST Sun (Nov-Feb), waits until 8:30
+    - cron: "0 2 * 1,2,11,12 1"   # 6:00 PM PST Sun
+    - cron: "32 4 * 1,2,11,12 1"  # 8:32 PM PST Sun
     - cron: "20 5 * 1,2,11,12 1"  # 9:20 PM PST Sun
-    - cron: "10 6 * 1,2,11,12 1"  # 10:10 PM PST Sun
-    - cron: "40 7 * 1,2,11,12 1"  # 11:40 PM PST Sun
   workflow_dispatch:
     inputs:
       test_to:
@@ -63,17 +65,23 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Has this week's digest already gone out? weekly/ holds one page per email
-  # actually sent, named for the SUNDAY the digest covers, and it is committed
-  # only on a real send. Its presence is therefore proof the mail went, and the
-  # cheapest possible check: one checkout, no secrets, no Strava reads.
+  # Two questions, and the answer to both has to be yes before a single email
+  # moves: has this week's digest already gone out, and is it actually 8:30 PM
+  # on Sunday yet?
   #
-  # The marker is the week's Sunday, never "today". GitHub ran the 8:32 PM
-  # Sunday slot at 3:52 AM Monday on 2026-08-31, five hours late; a guard keyed
-  # on today's date called that a different week, let it through, and mailed
-  # everybody a second digest saying nobody had ridden.
+  # weekly/ holds one page per email actually sent, named for the SUNDAY the
+  # digest covers, and it is committed only on a real send, so its presence is
+  # proof the mail went. The marker is the week's Sunday, never "today": GitHub
+  # ran the 8:32 PM Sunday slot at 3:52 AM Monday on 2026-08-31, and a guard
+  # keyed on today's date called that a different week, let it through, and
+  # mailed everybody a second digest saying nobody had ridden.
+  #
+  # The wait is what makes the send punctual. This job holds the runner until
+  # 8:30 PM Pacific, so the delivery time depends on a sleep we control rather
+  # than on when GitHub feels like starting the job.
   guard:
     runs-on: ubuntu-latest
+    timeout-minutes: 330
     outputs:
       go: ${{ steps.check.outputs.go }}
     steps:
@@ -83,24 +91,69 @@ jobs:
           FORCE: ${{ inputs.force }}
           TEST_TO: ${{ inputs.test_to }}
         run: |
-          day=$(TZ=America/Los_Angeles date +%F)
-          dow=$(TZ=America/Los_Angeles date +%w)   # 0 = Sunday
-          # Back up to this week's Sunday. A no-op when the run is on time.
-          day=$(date -u -d "$day - $dow days" +%F)
-          echo "Pacific now: $(TZ=America/Los_Angeles date '+%F %H:%M %a'), digest week: $day"
-          if [[ "$TEST_TO" != "" ]]; then
-            echo "Test send, always allowed." ; echo "go=true" >> "$GITHUB_OUTPUT" ; exit 0
-          fi
+          set -uo pipefail
+          skip() { echo "go=false" >> "$GITHUB_OUTPUT"; exit 0; }
+          go()   { echo "go=true"  >> "$GITHUB_OUTPUT"; exit 0; }
+
+          now() { TZ=America/Los_Angeles date "+$1"; }
+          week() {
+            local d dw
+            d=$(now %F); dw=$(now %w)          # %w: 0 = Sunday
+            date -u -d "$d - $dw days" +%F     # back up to this week's Sunday
+          }
+
+          echo "Pacific now: $(now '%F %H:%M %a')"
+
+          # A test send goes to one address and never touches the archive, so
+          # it is exempt from both questions.
+          if [[ "$TEST_TO" != "" ]]; then echo "Test send, always allowed."; go; fi
+
           if [[ "$FORCE" == "true" ]]; then
-            echo "::warning::force was set, so this sends even if the week already went out."
-            echo "go=true" >> "$GITHUB_OUTPUT" ; exit 0
+            echo "::warning::force was set: sending regardless of the week marker and the clock."
+            go
           fi
-          if [[ -f "weekly/$day.html" ]]; then
-            echo "::notice::weekly/$day.html is already in the repo, so the digest for the week ending $day has been sent. Stopping before anybody is mailed twice."
-            echo "go=false" >> "$GITHUB_OUTPUT"
+
+          wk=$(week)
+          if [[ -f "weekly/$wk.html" ]]; then
+            echo "::notice::weekly/$wk.html is already in the repo, so the digest for the week ending $wk has been sent. Stopping."
+            skip
+          fi
+
+          # Sunday only. A run that has slipped past midnight is a run that
+          # missed its slot, and a late email is worse than none.
+          if [[ "$(now %w)" != "0" ]]; then
+            echo "::warning::It is $(now %A) in California, not Sunday, so this run is too late to be the Sunday digest. Nothing sent."
+            skip
+          fi
+
+          # Wait for 8:30 PM Pacific. This is the actual clock for the send.
+          target=$(TZ=America/Los_Angeles date -d "$(now %F) 20:30" +%s)
+          left=$(( target - $(date +%s) ))
+          if (( left > 19800 )); then
+            # More than 5.5 hours early. The job timeout would kill the wait, so
+            # let a later cron handle it rather than burning a runner for nothing.
+            echo "::warning::$(( left / 3600 )) hours early, which is longer than this job may run. Leaving it to a later attempt."
+            skip
+          elif (( left > 0 )); then
+            echo "Waiting $(( left / 60 )) minutes, until 8:30 PM Pacific."
+            sleep "$left"
+          elif (( left < -9000 )); then
+            # After 11 PM Pacific. Too late to be "Sunday night".
+            echo "::warning::It is already $(now %H:%M) in California. Too late for a Sunday night email, so nothing was sent."
+            skip
           else
-            echo "go=true" >> "$GITHUB_OUTPUT"
+            echo "Past 8:30 PM already, sending now."
           fi
+
+          # Hours may have passed inside that sleep. Ask the marker question
+          # again against the LIVE repo: another attempt that was queued behind
+          # this one could have sent in the meantime.
+          git fetch -q origin main || true
+          if git cat-file -e "origin/main:weekly/$wk.html" 2>/dev/null; then
+            echo "::notice::The digest for $wk was sent while this run was waiting. Stopping."
+            skip
+          fi
+          go
 
   digest:
     needs: guard
