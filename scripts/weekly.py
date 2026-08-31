@@ -605,12 +605,26 @@ def render(cur, d, week_end, note, head=None, cards=None, shame=None):
     if not d["baseline"]:
         A('<h2 style="font-size:15px;margin:26px 0 8px">Shame of the week</h2>')
         if shame:
-            A('<div style="background:#fff1f2;border:1px solid #f3ccd1;'
-              'border-left:4px solid #d8283e;border-radius:0 10px 10px 0;'
-              'padding:13px 16px;font-size:14.5px;line-height:1.6">'
+            # The face is the joke. faces/<name>.jpg is the same 160px head shot
+            # the segment tables use, written out as a plain file because email
+            # clients strip data: URIs. A missing file degrades to alt text and
+            # the paragraph still reads, so this can never break a send.
+            slug = re.sub(r"[^a-z]", "", shame["name"].lower())
+            A('<table role="presentation" cellpadding="0" cellspacing="0" '
+              'border="0" width="100%" style="background:#fff1f2;'
+              'border:1px solid #f3ccd1;border-left:4px solid #d8283e;'
+              'border-radius:0 10px 10px 0"><tr>'
+              '<td width="80" valign="top" style="padding:13px 0 13px 16px">'
+              f'<img src="{SITE}/faces/{slug}.jpg" width="64" height="64" '
+              f'alt="{shame["name"]}" style="display:block;width:64px;'
+              'height:64px;border-radius:50%;border:2px solid #d8283e;'
+              'object-fit:cover"></td>'
+              '<td valign="middle" style="padding:13px 16px 13px 12px;'
+              'font-size:14.5px;line-height:1.6">'
               f'<b style="font-size:16px">{shame["name"]}</b>, who '
               f'{shame["verdict"]}.<br>'
-              f'<span style="color:#4a4a55">{shame["detail"]}</span></div>')
+              f'<span style="color:#4a4a55">{shame["detail"]}</span>'
+              '</td></tr></table>')
         else:
             A('<div style="background:#f2f7f2;border:1px solid #cfe0cf;'
               'border-left:4px solid #12813f;border-radius:0 10px 10px 0;'
