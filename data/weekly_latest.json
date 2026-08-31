@@ -1,346 +1,44 @@
 {
-  "generated": "Aug 30, 2026",
+  "generated": "Aug 31, 2026",
   "baseline": false,
-  "blurb": "Let us see what everyone got up to. Ali held Pacific Island South coming into this week and does not hold it now. Jose went 11:56. Randee matched Jake to the second on 4000 meter: 5:01 apiece, and neither of them owns it. Ali took 3:48 off Laguna Canyon -LF 2 F and set 15:36. That is a proper improvement, not a rounding error. Jake came within 3 seconds of Jose on Irvine Speedway and no closer. Abe slid 1 place down the GC without touching a bike wrong. Just got out-ridden.",
+  "blurb": "Another week, another set of receipts. Jose, Ali, Jake, Abe and Randee all recorded zero. That is 5 bikes gathering dust simultaneously.",
   "diff": {
     "baseline": false,
-    "movers": [
-      {
-        "name": "Ali",
-        "from": 4,
-        "to": 2,
-        "up": true
-      },
-      {
-        "name": "Jake",
-        "from": 5,
-        "to": 3,
-        "up": true
-      },
-      {
-        "name": "Abe",
-        "from": 3,
-        "to": 4,
-        "up": false
-      },
-      {
-        "name": "Randee",
-        "from": 2,
-        "to": 5,
-        "up": false
-      }
-    ],
+    "movers": [],
     "week": [
       {
         "name": "Jose",
-        "miles": 156.7885424123122,
-        "feet": 8064.30446191,
-        "rides": 8
+        "miles": 0.0,
+        "feet": 0.0,
+        "rides": 0
       },
       {
         "name": "Ali",
-        "miles": 122.64264197089011,
-        "feet": 4977.034120715,
-        "rides": 5
+        "miles": 0.0,
+        "feet": 0.0,
+        "rides": 0
       },
       {
         "name": "Jake",
-        "miles": 110.62333472520451,
-        "feet": 5495.406824125001,
-        "rides": 5
+        "miles": 0.0,
+        "feet": 0.0,
+        "rides": 0
       },
       {
         "name": "Abe",
-        "miles": 146.00066859540271,
-        "feet": 7457.349081335001,
-        "rides": 5
+        "miles": 0.0,
+        "feet": 0.0,
+        "rides": 0
       },
       {
         "name": "Randee",
-        "miles": 139.6764147379307,
-        "feet": 4084.6456692750003,
-        "rides": 3
+        "miles": 0.0,
+        "feet": 0.0,
+        "rides": 0
       }
     ],
-    "prs": [
-      {
-        "name": "Jose",
-        "seg": "Pacific Island South",
-        "id": "596560",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": true,
-        "with": [],
-        "time": "11:56",
-        "was": "18:13",
-        "gain": 377,
-        "first": false
-      },
-      {
-        "name": "Ali",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": true,
-        "with": [
-          "Jake"
-        ],
-        "time": "15:36",
-        "was": "19:24",
-        "gain": 228,
-        "first": false
-      },
-      {
-        "name": "Ali",
-        "seg": "Starcrest",
-        "id": "757408",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": true,
-        "with": [],
-        "time": "4:24",
-        "was": null,
-        "gain": null,
-        "first": true
-      },
-      {
-        "name": "Ali",
-        "seg": "Ridgeline Dr - Turtle Rock Dr Stop Sign",
-        "id": "1189771",
-        "tries": 1,
-        "leader": "Abe",
-        "behind": 150,
-        "took": false,
-        "with": [],
-        "time": "7:34",
-        "was": null,
-        "gain": null,
-        "first": true
-      },
-      {
-        "name": "Jake",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": true,
-        "with": [
-          "Ali"
-        ],
-        "time": "15:36",
-        "was": "19:21",
-        "gain": 225,
-        "first": false
-      },
-      {
-        "name": "Jake",
-        "seg": "Back Bay 2 mile TT",
-        "id": "22971497",
-        "tries": 2,
-        "leader": null,
-        "behind": null,
-        "took": false,
-        "with": [],
-        "time": "5:36",
-        "was": "5:38",
-        "gain": 2,
-        "first": false
-      },
-      {
-        "name": "Jake",
-        "seg": "Starcrest",
-        "id": "757408",
-        "tries": 1,
-        "leader": "Ali",
-        "behind": 36,
-        "took": false,
-        "with": [],
-        "time": "5:00",
-        "was": null,
-        "gain": null,
-        "first": true
-      },
-      {
-        "name": "Abe",
-        "seg": "Pacific Island South",
-        "id": "596560",
-        "tries": 1,
-        "leader": "Jose",
-        "behind": 37,
-        "took": false,
-        "with": [],
-        "time": "12:33",
-        "was": null,
-        "gain": null,
-        "first": true
-      },
-      {
-        "name": "Randee",
-        "seg": "4000 meter",
-        "id": "618874",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": true,
-        "with": [
-          "Jake"
-        ],
-        "time": "5:01",
-        "was": "5:18",
-        "gain": 17,
-        "first": false
-      }
-    ],
-    "tried": [
-      {
-        "name": "Jose",
-        "seg": "Portola KOM Climb",
-        "id": "649404",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": false,
-        "with": [],
-        "best": "3:52"
-      },
-      {
-        "name": "Ali",
-        "seg": "Portola KOM Climb",
-        "id": "649404",
-        "tries": 1,
-        "leader": "Abe and Jose",
-        "behind": 24,
-        "took": false,
-        "with": [],
-        "best": "4:16"
-      },
-      {
-        "name": "Ali",
-        "seg": "Newport Coast Climb",
-        "id": "913750",
-        "tries": 1,
-        "leader": "Abe",
-        "behind": 62,
-        "took": false,
-        "with": [],
-        "best": "11:01"
-      },
-      {
-        "name": "Jake",
-        "seg": "Portola KOM Climb",
-        "id": "649404",
-        "tries": 1,
-        "leader": "Abe and Jose",
-        "behind": 26,
-        "took": false,
-        "with": [],
-        "best": "4:18"
-      },
-      {
-        "name": "Jake",
-        "seg": "Quail Hill Sprint Climb",
-        "id": "7855869",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": false,
-        "with": [],
-        "best": "2:12"
-      },
-      {
-        "name": "Jake",
-        "seg": "Newport Coast Climb",
-        "id": "913750",
-        "tries": 1,
-        "leader": "Abe",
-        "behind": 35,
-        "took": false,
-        "with": [],
-        "best": "10:34"
-      },
-      {
-        "name": "Jake",
-        "seg": "Irvine Speedway",
-        "id": "25403641",
-        "tries": 2,
-        "leader": "Jose",
-        "behind": 3,
-        "took": false,
-        "with": [],
-        "best": "1:10"
-      },
-      {
-        "name": "Jake",
-        "seg": "Ridgeline Dr - Turtle Rock Dr Stop Sign",
-        "id": "1189771",
-        "tries": 1,
-        "leader": "Abe",
-        "behind": 37,
-        "took": false,
-        "with": [],
-        "best": "5:41"
-      },
-      {
-        "name": "Abe",
-        "seg": "Portola KOM Climb",
-        "id": "649404",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": false,
-        "with": [],
-        "best": "3:52"
-      },
-      {
-        "name": "Randee",
-        "seg": "Portola KOM Climb",
-        "id": "649404",
-        "tries": 1,
-        "leader": "Abe and Jose",
-        "behind": 13,
-        "took": false,
-        "with": [],
-        "best": "4:05"
-      },
-      {
-        "name": "Randee",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "tries": 1,
-        "leader": "Ali and Jake",
-        "behind": 133,
-        "took": false,
-        "with": [],
-        "best": "17:49"
-      },
-      {
-        "name": "Randee",
-        "seg": "Irvine Speedway",
-        "id": "25403641",
-        "tries": 1,
-        "leader": "Jose",
-        "behind": 3,
-        "took": false,
-        "with": [],
-        "best": "1:10"
-      },
-      {
-        "name": "Randee",
-        "seg": "Jeronimoooo!",
-        "id": "13737114",
-        "tries": 1,
-        "leader": "Jake",
-        "behind": 4,
-        "took": false,
-        "with": [],
-        "best": "0:54"
-      }
-    ],
+    "prs": [],
+    "tried": [],
     "power": [],
     "jerseys": [],
     "segs": {
@@ -348,64 +46,6 @@
       "removed": [],
       "known": true
     },
-    "koms": [
-      {
-        "seg": "4000 meter",
-        "id": "618874",
-        "to": [
-          "Randee"
-        ],
-        "from": [],
-        "with": [
-          "Jake"
-        ],
-        "joint": true,
-        "time": "5:01",
-        "by": null
-      },
-      {
-        "seg": "Pacific Island South",
-        "id": "596560",
-        "to": [
-          "Jose"
-        ],
-        "from": [
-          "Ali"
-        ],
-        "with": [],
-        "joint": false,
-        "time": "11:56",
-        "by": 301
-      },
-      {
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "to": [
-          "Ali",
-          "Jake"
-        ],
-        "from": [
-          "Randee"
-        ],
-        "with": [],
-        "joint": true,
-        "time": "15:36",
-        "by": 133
-      },
-      {
-        "seg": "Starcrest",
-        "id": "757408",
-        "to": [
-          "Ali"
-        ],
-        "from": [
-          "Abe"
-        ],
-        "with": [],
-        "joint": false,
-        "time": "4:24",
-        "by": 9
-      }
-    ]
+    "koms": []
   }
 }
