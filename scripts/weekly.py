@@ -37,18 +37,37 @@ FT_PER_M = 3.280839895
 def local_today():
     """Today in Pacific, not on the runner.
 
-    weekly.yml fires at 03:30 UTC, which is 8:30 PM Pacific on SUNDAY but
-    already MONDAY in UTC. Using the runner's date labelled every digest and
-    every archive file with the day after the week it covers.
+    weekly.yml fires in the small hours UTC, which is the evening BEFORE in
+    Pacific. Using the runner's date labelled every digest with the day after
+    the week it covers.
     """
     try:
         from zoneinfo import ZoneInfo
         return datetime.datetime.now(ZoneInfo("America/Los_Angeles")).date()
     except Exception:
-        # no tzdata: Pacific is never more than 8 hours behind UTC, and the
-        # send is at 20:30 local, so this lands on the right day either way.
+        # no tzdata: Pacific is never more than 8 hours behind UTC.
         return (datetime.datetime.now(datetime.timezone.utc)
                 - datetime.timedelta(hours=8)).date()
+
+
+def week_sunday(today=None):
+    """The Sunday this digest belongs to, in Pacific time.
+
+    NOT "today". GitHub dispatches scheduled workflows on a best effort basis
+    and drops them under load; on 2026-08-31 the Sunday 8:32 PM slot was
+    actually run at 3:52 AM MONDAY, five hours late. Naming the digest after
+    the day it happened to run meant a late run called itself a different week,
+    sailed past the "already sent" guard, and mailed everybody a second digest
+    reporting that nobody had ridden - because the real one had already moved
+    the snapshot forward seven hours earlier.
+
+    Anchoring to the week's Sunday makes the name stable no matter how late
+    the runner shows up, which is what makes weekly/<date>.html a trustworthy
+    record of "this week has been sent".
+    """
+    d = today or local_today()
+    # Monday is 0 in Python, Sunday is 6. On a Sunday this is a no-op.
+    return d - datetime.timedelta(days=(d.weekday() + 1) % 7)
 
 
 def _names(xs):
@@ -690,7 +709,7 @@ def main():
             print(f"snapshot unreadable, treating as baseline: {e}")
 
     d = diff(cur, prev)
-    today = local_today()
+    today = week_sunday()
     week_end = today.strftime("%b %d, %Y").replace(" 0", " ")
     week_no = today.isocalendar()[1] + today.isocalendar()[0] * 100
     note = blurb(cur, d, prev, week_no)
