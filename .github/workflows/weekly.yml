@@ -63,10 +63,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Has this Sunday's digest already gone out? weekly/ holds one page per email
-  # actually sent, named for the Pacific date of the send, and it is committed
+  # Has this week's digest already gone out? weekly/ holds one page per email
+  # actually sent, named for the SUNDAY the digest covers, and it is committed
   # only on a real send. Its presence is therefore proof the mail went, and the
   # cheapest possible check: one checkout, no secrets, no Strava reads.
+  #
+  # The marker is the week's Sunday, never "today". GitHub ran the 8:32 PM
+  # Sunday slot at 3:52 AM Monday on 2026-08-31, five hours late; a guard keyed
+  # on today's date called that a different week, let it through, and mailed
+  # everybody a second digest saying nobody had ridden.
   guard:
     runs-on: ubuntu-latest
     outputs:
@@ -79,7 +84,10 @@ jobs:
           TEST_TO: ${{ inputs.test_to }}
         run: |
           day=$(TZ=America/Los_Angeles date +%F)
-          echo "Pacific date: $day"
+          dow=$(TZ=America/Los_Angeles date +%w)   # 0 = Sunday
+          # Back up to this week's Sunday. A no-op when the run is on time.
+          day=$(date -u -d "$day - $dow days" +%F)
+          echo "Pacific now: $(TZ=America/Los_Angeles date '+%F %H:%M %a'), digest week: $day"
           if [[ "$TEST_TO" != "" ]]; then
             echo "Test send, always allowed." ; echo "go=true" >> "$GITHUB_OUTPUT" ; exit 0
           fi
@@ -88,7 +96,7 @@ jobs:
             echo "go=true" >> "$GITHUB_OUTPUT" ; exit 0
           fi
           if [[ -f "weekly/$day.html" ]]; then
-            echo "::notice::weekly/$day.html is already in the repo, so this week's digest has been sent. Stopping before anybody is mailed twice."
+            echo "::notice::weekly/$day.html is already in the repo, so the digest for the week ending $day has been sent. Stopping before anybody is mailed twice."
             echo "go=false" >> "$GITHUB_OUTPUT"
           else
             echo "go=true" >> "$GITHUB_OUTPUT"
