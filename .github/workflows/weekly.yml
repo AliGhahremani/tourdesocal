@@ -17,9 +17,27 @@ name: Weekly digest
 
 on:
   schedule:
-    # Sunday 8:30 PM local, which is Monday morning in UTC.
-    - cron: "30 3 * 3-10 1"       # 03:30 UTC Mon = 8:30 PM PDT Sun (Mar-Oct)
-    - cron: "30 4 * 1,2,11,12 1"  # 04:30 UTC Mon = 8:30 PM PST Sun (Nov-Feb)
+    # Sunday 8:30 PM Pacific, which is Monday morning in UTC.
+    #
+    # GitHub runs scheduled workflows on a BEST EFFORT basis and silently drops
+    # them under load, which is how the 2026-08-30 digest missed its slot: the
+    # half hourly updater was landing roughly every two hours that day. So the
+    # send is attempted four times across Sunday evening instead of once, and
+    # the crons sit on odd minutes because the top of the hour and the half
+    # hour are the busiest, most heavily shed moments on the shared runners.
+    #
+    # Every attempt after the first sees weekly/<that Sunday>.html already in
+    # the repo and exits before sending, so nobody is ever mailed twice. All
+    # four attempts fall on the same Pacific Sunday, which is what makes that
+    # filename a reliable "already sent" marker.
+    - cron: "32 3 * 3-10 1"       # 8:32 PM PDT Sun (Mar-Oct)
+    - cron: "20 4 * 3-10 1"       # 9:20 PM PDT Sun, if the first was dropped
+    - cron: "10 5 * 3-10 1"       # 10:10 PM PDT Sun
+    - cron: "40 6 * 3-10 1"       # 11:40 PM PDT Sun, last chance
+    - cron: "32 4 * 1,2,11,12 1"  # 8:32 PM PST Sun (Nov-Feb)
+    - cron: "20 5 * 1,2,11,12 1"  # 9:20 PM PST Sun
+    - cron: "10 6 * 1,2,11,12 1"  # 10:10 PM PST Sun
+    - cron: "40 7 * 1,2,11,12 1"  # 11:40 PM PST Sun
   workflow_dispatch:
     inputs:
       test_to:
@@ -28,6 +46,11 @@ on:
         type: string
       skip_update:
         description: "Skip the Strava catch-up (use when only testing the email)"
+        required: false
+        type: boolean
+        default: false
+      force:
+        description: "Send even if this Sunday's digest has already gone out. Mails everybody twice."
         required: false
         type: boolean
         default: false
@@ -40,7 +63,40 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Has this Sunday's digest already gone out? weekly/ holds one page per email
+  # actually sent, named for the Pacific date of the send, and it is committed
+  # only on a real send. Its presence is therefore proof the mail went, and the
+  # cheapest possible check: one checkout, no secrets, no Strava reads.
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        env:
+          FORCE: ${{ inputs.force }}
+          TEST_TO: ${{ inputs.test_to }}
+        run: |
+          day=$(TZ=America/Los_Angeles date +%F)
+          echo "Pacific date: $day"
+          if [[ "$TEST_TO" != "" ]]; then
+            echo "Test send, always allowed." ; echo "go=true" >> "$GITHUB_OUTPUT" ; exit 0
+          fi
+          if [[ "$FORCE" == "true" ]]; then
+            echo "::warning::force was set, so this sends even if the week already went out."
+            echo "go=true" >> "$GITHUB_OUTPUT" ; exit 0
+          fi
+          if [[ -f "weekly/$day.html" ]]; then
+            echo "::notice::weekly/$day.html is already in the repo, so this week's digest has been sent. Stopping before anybody is mailed twice."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
   digest:
+    needs: guard
+    if: needs.guard.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
