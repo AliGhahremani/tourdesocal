@@ -16,11 +16,46 @@ YEAR = 2026
 COUNTED = ("Ride", "VirtualRide", "GravelRide", "MountainBikeRide")
 M, FT = 1609.344, 3.280839895
 
-def post(url, data):
-    r = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(),
-                               method="POST")
-    with urllib.request.urlopen(r) as f:
-        return json.load(f)
+class Throttled(Exception):
+    """Strava said no for a reason that will pass on its own."""
+
+
+def post(url, data, tries=4):
+    """Refresh a token, retrying the answers that are temporary.
+
+    Strava throttles the token endpoint separately from the data API and does
+    not always use 429 to say so: on 2026-09-01 this came back 403 on the very
+    first rider, six seconds in, while update.py was refreshing the same five
+    tokens happily every half hour. One un-retried hiccup killed the whole
+    rebuild and mailed Ali about it.
+
+    The body is printed because the status code alone never says which of
+    "slow down", "wrong secret" or "revoked token" happened.
+    """
+    for attempt in range(tries):
+        r = urllib.request.Request(url,
+                                   data=urllib.parse.urlencode(data).encode(),
+                                   method="POST")
+        try:
+            with urllib.request.urlopen(r) as f:
+                return json.load(f)
+        except urllib.error.HTTPError as e:
+            body = ""
+            try:
+                body = e.read().decode("utf-8", "replace")[:300]
+            except Exception:
+                pass
+            temporary = e.code in (403, 429, 500, 502, 503, 504)
+            print(f"  token POST {e.code}: {body}")
+            if temporary and attempt < tries - 1:
+                wait = 20 * (attempt + 1)
+                print(f"  retrying in {wait}s")
+                time.sleep(wait)
+                continue
+            if temporary:
+                raise Throttled(f"{e.code} after {tries} attempts: {body}")
+            raise
+    raise RuntimeError("unreachable")
 
 def get(url, token):
     for attempt in range(4):
@@ -34,6 +69,10 @@ def get(url, token):
                 print("  429, waiting 60s")
                 time.sleep(60)
                 continue
+            if e.code in (429, 500, 502, 503, 504):
+                # same reasoning as post(): stale beats partial, and a rate
+                # limit is not something to wake anybody up about
+                raise Throttled(f"GET {e.code} after {attempt + 1} attempts")
             raise
     raise RuntimeError("gave up")
 
@@ -57,7 +96,8 @@ idx = {d: i for i, d in enumerate(days)}
 miles, feet, names = {}, {}, []
 usage = None
 reads = 0
-for key, ath in sorted(state["athletes"].items()):
+try:
+  for key, ath in sorted(state["athletes"].items()):
     name = ath["display"]
     rt = os.environ.get("RT_" + key.upper())
     if not rt:
@@ -113,6 +153,22 @@ for key, ath in sorted(state["athletes"].items()):
     miles[name] = cm
     feet[name] = cf
     print(f"[{name}] {n:4d} rides  ->  {cm[-1]:,.1f} mi, {cf[-1]:,.0f} ft")
+except Throttled as e:
+    # Partial history is worse than stale history: a rider missing from the
+    # file is a line missing from the charts. Leave the last good file in
+    # place and let the next run, four hours from now, try again. This is not
+    # worth failing the workflow over, so it exits 0 and nobody gets mailed.
+    print(f"::warning::Strava throttled the token endpoint ({e}). "
+          f"data/history.js was left as it was; the next run will retry.")
+    sys.exit(0)
+
+if not names:
+    # No rider produced data, so every token was missing or refused. Writing
+    # here would replace a good history.js with an empty one and blank both
+    # charts, which is a far louder failure than simply not updating.
+    print("::warning::No rider data was fetched, so data/history.js was left "
+          "as it was.")
+    sys.exit(0)
 
 out = {"year": str(YEAR), "updated": today.isoformat(),
        "riders": names, "days": days, "miles": miles, "feet": feet}
