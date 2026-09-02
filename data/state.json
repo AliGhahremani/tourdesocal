@@ -1,10 +1,10 @@
 {
-  "updated": "Sep 2, 2026 at 2:28 AM",
+  "updated": "Sep 2, 2026 at 6:48 AM",
   "athletes": {
     "ali": {
       "id": 20156041,
       "display": "Ali",
-      "last_epoch": 1788341285,
+      "last_epoch": 1788356917,
       "strava_id": 20156041,
       "season": {
         "2026": {
@@ -378,7 +378,7 @@
     "jake": {
       "id": 2977194,
       "display": "Jake",
-      "last_epoch": 1788341287,
+      "last_epoch": 1788356919,
       "strava_id": 2977194,
       "season": {
         "2026": {
@@ -787,7 +787,7 @@
     "randee": {
       "id": 100854849,
       "display": "Randee",
-      "last_epoch": 1788341287,
+      "last_epoch": 1788356919,
       "strava_id": 100854849,
       "season": {
         "2026": {
@@ -1269,7 +1269,7 @@
     "abe": {
       "id": "abe",
       "display": "Abe",
-      "last_epoch": 1788341288,
+      "last_epoch": 1788356921,
       "strava_id": 17625052,
       "season": {
         "2026": {
@@ -1569,7 +1569,7 @@
     "jose": {
       "id": "jose",
       "display": "Jose",
-      "last_epoch": 1788341290,
+      "last_epoch": 1788356923,
       "strava_id": 106484862,
       "season": {
         "2026": {
