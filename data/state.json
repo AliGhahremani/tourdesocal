@@ -1,10 +1,10 @@
 {
-  "updated": "Sep 2, 2026 at 6:48 AM",
+  "updated": "Sep 2, 2026 at 10:50 AM",
   "athletes": {
     "ali": {
       "id": 20156041,
       "display": "Ali",
-      "last_epoch": 1788356917,
+      "last_epoch": 1788371406,
       "strava_id": 20156041,
       "season": {
         "2026": {
@@ -378,7 +378,7 @@
     "jake": {
       "id": 2977194,
       "display": "Jake",
-      "last_epoch": 1788356919,
+      "last_epoch": 1788371408,
       "strava_id": 2977194,
       "season": {
         "2026": {
@@ -787,7 +787,7 @@
     "randee": {
       "id": 100854849,
       "display": "Randee",
-      "last_epoch": 1788356919,
+      "last_epoch": 1788371409,
       "strava_id": 100854849,
       "season": {
         "2026": {
@@ -1269,13 +1269,13 @@
     "abe": {
       "id": "abe",
       "display": "Abe",
-      "last_epoch": 1788356921,
+      "last_epoch": 1788371410,
       "strava_id": 17625052,
       "season": {
         "2026": {
-          "dist_m": 4388777.699999997,
-          "elev_m": 39671.6,
-          "rides": 101,
+          "dist_m": 4408809.799999997,
+          "elev_m": 39874.6,
+          "rides": 102,
           "ids": [
             16927121957,
             16930337974,
@@ -1377,7 +1377,8 @@
             19916980686,
             19936612860,
             19953649745,
-            19991324190
+            19991324190,
+            20005915705
           ],
           "bests": {
             "13737114": {
@@ -1560,16 +1561,16 @@
             "1800": 229,
             "3600": 212
           },
-          "time_s": 574119,
-          "vtime_s": 160968,
-          "vrides": 45
+          "time_s": 576856,
+          "vtime_s": 163705,
+          "vrides": 46
         }
       }
     },
     "jose": {
       "id": "jose",
       "display": "Jose",
-      "last_epoch": 1788356923,
+      "last_epoch": 1788371414,
       "strava_id": 106484862,
       "season": {
         "2026": {
