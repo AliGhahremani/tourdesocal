@@ -181,6 +181,7 @@ jobs:
           STRAVA_REFRESH_MICHAEL: ${{ secrets.STRAVA_REFRESH_MICHAEL }}
           STRAVA_REFRESH_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
           STRAVA_REFRESH_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+          STRAVA_REFRESH_OSCAR: ${{ secrets.STRAVA_REFRESH_OSCAR }}
         run: |
           # Sunday rides land after the morning run, and Sunday is when people
           # actually ride. Without this the digest reports a week that ends
@@ -205,6 +206,7 @@ jobs:
           RT_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
           RT_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
           RT_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+          RT_OSCAR: ${{ secrets.STRAVA_REFRESH_OSCAR }}
         run: python3 scripts/history.py
 
       - name: Render the race charts

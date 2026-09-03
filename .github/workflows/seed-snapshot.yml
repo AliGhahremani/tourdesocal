@@ -52,6 +52,7 @@ jobs:
           RT_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
           RT_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
           RT_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+          RT_OSCAR: ${{ secrets.STRAVA_REFRESH_OSCAR }}
         run: |
           python3 - <<'PYEOF'
           import datetime, json, os, sys, urllib.parse, urllib.request

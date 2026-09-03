@@ -39,6 +39,7 @@ jobs:
           CID: "274192"
           CSEC: ${{ secrets.STRAVA_CLIENT_SECRET }}
           RT_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+          RT_OSCAR: ${{ secrets.STRAVA_REFRESH_OSCAR }}
           RT_ALI: ${{ secrets.STRAVA_REFRESH_ALI }}
           RT_JAKE: ${{ secrets.STRAVA_REFRESH_JAKE }}
           RT_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
