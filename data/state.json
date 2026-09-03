@@ -1998,6 +1998,12 @@
           "time_s": 7368
         }
       }
+    },
+    "oscar": {
+      "id": 103800251,
+      "display": "Oscar",
+      "last_epoch": 1767225600,
+      "strava_id": 103800251
     }
   },
   "season_start_epoch": 1767225600
