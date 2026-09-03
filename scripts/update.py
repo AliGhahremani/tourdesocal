@@ -195,6 +195,7 @@ def main():
         "randee": os.environ.get("STRAVA_REFRESH_RANDEE", ""),
         "abe": os.environ.get("STRAVA_REFRESH_ABE", ""),
         "jose": os.environ.get("STRAVA_REFRESH_JOSE", ""),
+        "oscar": os.environ.get("STRAVA_REFRESH_OSCAR", ""),
     }
 
     # The backfill fires every 15 minutes. Once the daily allowance is gone,
