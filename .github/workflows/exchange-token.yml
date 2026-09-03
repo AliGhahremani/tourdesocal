@@ -18,9 +18,9 @@ on:
           - ALI
           - JAKE
           - RANDEE
-          - MICHAEL
           - ABE
           - JOSE
+          - OSCAR
       code:
         description: "Paste the code from tourdesocal.com/auth.html (a full URL also works)"
         required: true
