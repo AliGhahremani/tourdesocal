@@ -339,7 +339,7 @@
 
 <script src="data.js"></script>
 <script src="avatars.js"></script>
-<script>window.PHOTOS={Ali:"photos/ali.webp",Jake:"photos/jake.webp",Randee:"photos/randee.webp",Abe:"photos/abe.webp",Jose:"photos/jose.webp"};</script>
+<script>window.PHOTOS={Ali:"photos/ali.webp",Jake:"photos/jake.webp",Randee:"photos/randee.webp",Abe:"photos/abe.webp",Jose:"photos/jose.webp",Oscar:"photos/oscar.webp"};</script>
 <script>
 const D = window.SITE_DATA;
 const AV = window.AVATARS || {};
@@ -360,11 +360,11 @@ const nameLink = (name, inner) => LINKS[name]
 const avImg = (name, cls) => AV[name] ? '<img class="'+cls+'" src="'+AV[name]+'" alt="'+name+'">' : '';
 // Jose's Strava profile shows only "Jose C"; the full name came from Ali.
 const SURNAMES = {Ali:"Ghahremani", Jake:"Graves", Randee:"Tolentino",
-                  Abe:"Arechiga", Jose:"Comino"};
-// Weights in lbs. Confirmed by Ali: Ali 181, Randee 187, Abe 160, Jose 161.
-// Jake 190 is an inherited placeholder and has never been checked.
+                  Abe:"Arechiga", Jose:"Comino", Oscar:"Cervantes"};
+// Weights in lbs. Confirmed by Ali: Ali 181, Randee 187, Abe 160, Jose 161,
+// Oscar 137. Jake 190 is an inherited placeholder and has never been checked.
 // Only affects the W/kg display, never the GC, which is pure elapsed time.
-const WEIGHT_LBS = {Ali:181, Randee:187, Jake:190, Abe:160, Jose:161};
+const WEIGHT_LBS = {Ali:181, Randee:187, Jake:190, Abe:160, Jose:161, Oscar:137};
 const KG = {}; for (const k in WEIGHT_LBS) KG[k] = WEIGHT_LBS[k]/2.20462;
 // Unknown weight means no W/kg figure rather than a wrong one.
 const wkg = (w, name) => (KG[name] ? (w/KG[name]).toFixed(2) : null);
