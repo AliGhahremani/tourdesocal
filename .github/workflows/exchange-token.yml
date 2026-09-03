@@ -109,6 +109,23 @@ jobs:
             echo "::warning::Credential probe inconclusive, continuing. Raw: $PROBE"
           fi
 
+          # ---- GitHub credential probe, also BEFORE the code is spent ----
+          # Storing the token needs ACTIONS_PAT, and a fine grained PAT expires.
+          # On 2026-09-03 an expired one let the Strava exchange succeed, printed
+          # "Authorized athlete: Oscar", then died writing the secret. The token
+          # was thrown away and the rider's single use code was already burnt, so
+          # the next three attempts failed with "code invalid" and pointed at
+          # entirely the wrong thing. Check the PAT while the code is still worth
+          # something.
+          if ! gh api "repos/${GITHUB_REPOSITORY}/actions/secrets/public-key" \
+                 >/dev/null 2>&1; then
+            echo "::error::ACTIONS_PAT cannot write secrets to this repository, so there would be nowhere to put the token. It has most likely expired."
+            echo "::error::Fix: github.com/settings/personal-access-tokens, generate a new fine grained token scoped to AliGhahremani/tourdesocal only, permission Secrets: Read and write, then update the ACTIONS_PAT repository secret with it."
+            echo "::error::Your authorization code was NOT used and is still valid."
+            exit 1
+          fi
+          echo "GitHub credential check passed. ACTIONS_PAT can write secrets."
+
           RESPONSE="$(curl -sS -X POST https://www.strava.com/oauth/token \
             -d client_id="$CLIENT_ID" \
             -d client_secret="$CLIENT_SECRET" \
@@ -132,7 +149,7 @@ jobs:
             REASON="$(echo "$RESPONSE" | jq -r '.errors[0].code // "unknown"')"
             MSG="$(echo "$RESPONSE" | jq -r '.message // "unknown"')"
             echo "::error::Strava rejected this. message=$MSG resource=$RESOURCE field=$FIELD code=$REASON"
-            echo "::error::If it says invalid, the code has already expired or been used. Have the rider open tourdesocal.com/auth.html again."
+            echo "::error::If it says invalid, the code has already expired or been used, including by an earlier run of this workflow that got further than it looked. Codes are single use. Have the rider open tourdesocal.com/auth.html again for a fresh one."
             echo "::error::If it mentions the athlete limit, click Upgrade at strava.com/settings/api first."
             exit 1
           fi
