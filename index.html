@@ -180,6 +180,27 @@
   .segjump a .jt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* so a jumped-to card does not sit jammed against the top of the window */
   .seg{scroll-margin-top:16px}
+  .segjump{scroll-margin-top:14px}
+
+  /* Jumping to a segment is one tap; getting back to the list was a long
+     scroll up past every rider profile. This rides along at the bottom of the
+     screen while you are down among the cards and takes you straight back.
+     Phone only: on a desktop the list is a flick away and a floating button is
+     just something in the way. */
+  .tosegs{position:fixed;left:50%;z-index:60;
+    bottom:calc(16px + env(safe-area-inset-bottom,0px));
+    display:none;align-items:center;gap:8px;
+    background:#3C4729;color:#FCFBF7;text-decoration:none;
+    font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.03em;
+    padding:12px 20px;border-radius:999px;white-space:nowrap;
+    box-shadow:0 5px 18px rgba(20,20,30,.32);
+    opacity:0;pointer-events:none;
+    transform:translateX(-50%) translateY(16px);
+    transition:opacity .18s ease, transform .18s ease}
+  .tosegs.on{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+  .tosegs .ar{font-size:15px;line-height:1}
+  @media(max-width:760px){.tosegs{display:flex}}
+  @media(prefers-reduced-motion:reduce){.tosegs{transition:none}}
   @media(max-width:560px){
     .segjump{grid-template-columns:repeat(2,1fr);gap:4px 10px;padding:12px 12px}
     .segjump a{font-size:12.5px;gap:7px}
@@ -314,6 +335,9 @@
   <div class="mapbox"><div id="bigmap"></div>
   <div class="cap">All <span id="nsegC">…</span> segments, plotted from actual Strava GPS data · San Diego → Orange County</div></div>
 </div></section>
+
+<a class="tosegs" id="tosegs" href="#segjump">
+  <span class="ar" aria-hidden="true">&uarr;</span>Back to segments</a>
 
 <section class="segs"><div class="wrap">
   <h2>The <span id="nsegD">…</span> Segments</h2>
@@ -686,6 +710,33 @@ const SEG_POS = new Map(SEGS_AZ.map((sg,i)=>[sg.id, String(i+1).padStart(2,"0")]
 (function(){
   const nav = document.getElementById("segjump");
   if (!nav) return;
+  // Floating "back to segments", phone only. Shown only while the list itself
+  // is off the top of the screen AND there is still segment left below, so it
+  // never appears over the rider profiles or the archive underneath.
+  (function(){
+    const btn = document.getElementById("tosegs");
+    const sect = document.querySelector("section.segs");
+    if (!btn || !sect) return;
+    let queued = false;
+    function tick(){
+      queued = false;
+      const n = nav.getBoundingClientRect(), s = sect.getBoundingClientRect();
+      // Half a screen of segments still below you, or it is not worth offering.
+      // At the very foot of the page the last card is done and what is on
+      // screen is the archive and the roll of honour, so it gets out of the way.
+      btn.classList.toggle("on", n.bottom < 0 && s.bottom > innerHeight * 0.45);
+    }
+    function onScroll(){ if (!queued){ queued = true; requestAnimationFrame(tick); } }
+    addEventListener("scroll", onScroll, {passive:true});
+    addEventListener("resize", onScroll);
+    tick();
+    btn.addEventListener("click", function(e){
+      e.preventDefault();
+      const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      nav.scrollIntoView({behavior: still ? "auto" : "smooth", block: "start"});
+    });
+  })();
+
   nav.innerHTML = SEGS_AZ.map(sg =>
     '<a href="#seg-'+sg.id+'"><span class="jn">'+SEG_POS.get(sg.id)+'</span>'+
     '<span class="jt">'+sg.name+'</span></a>').join("");
