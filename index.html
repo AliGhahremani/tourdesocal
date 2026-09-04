@@ -188,7 +188,7 @@
      Phone only: on a desktop the list is a flick away and a floating button is
      just something in the way. */
   .tosegs{position:fixed;left:50%;z-index:60;
-    bottom:calc(16px + env(safe-area-inset-bottom,0px));
+    bottom:calc(16px + env(safe-area-inset-bottom,0px) + var(--vvoff,0px));
     display:none;align-items:center;gap:8px;
     background:#3C4729;color:#FCFBF7;text-decoration:none;
     font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.03em;
@@ -717,6 +717,23 @@ const SEG_POS = new Map(SEGS_AZ.map((sg,i)=>[sg.id, String(i+1).padStart(2,"0")]
     const btn = document.getElementById("tosegs");
     const sect = document.querySelector("section.segs");
     if (!btn || !sect) return;
+    // Chrome on Android and Safari on iOS retract their toolbar as you scroll
+    // down and slide it back when you scroll up. A bottom-fixed element is
+    // placed against the LAYOUT viewport, which does not shrink, so the
+    // returning toolbar can sit on top of it. visualViewport reports what is
+    // actually on screen, so lift the button by the difference. Zero on a
+    // desktop, and zero on any browser without the API.
+    const vv = window.visualViewport;
+    function pin(){
+      const off = vv ? Math.max(0, innerHeight - vv.height - vv.offsetTop) : 0;
+      btn.style.setProperty("--vvoff", Math.round(off) + "px");
+    }
+    if (vv){
+      vv.addEventListener("resize", pin);
+      vv.addEventListener("scroll", pin);
+    }
+    pin();
+
     let queued = false;
     function tick(){
       queued = false;
