@@ -1,13 +1,13 @@
 {
   "riders": {
     "ali": {
-      "activities_seen": 2
+      "activities_seen": 3
     },
     "jake": {
-      "activities_seen": 0
+      "activities_seen": 1
     },
     "randee": {
-      "activities_seen": 3
+      "activities_seen": 5
     },
     "abe": {
       "activities_seen": 3
@@ -16,15 +16,15 @@
       "activities_seen": 2
     },
     "oscar": {
-      "activities_seen": 5
+      "activities_seen": 6
     }
   },
   "notes": [],
-  "finished_utc": "2026-09-03T23:57:07Z",
-  "reads_this_run": 26,
+  "finished_utc": "2026-09-04T04:18:47Z",
+  "reads_this_run": 31,
   "window_waits": 0,
-  "rate_limit_window": "18/200",
-  "rate_limit_daily": "433/2000",
+  "rate_limit_window": "21/200",
+  "rate_limit_daily": "21/2000",
   "tokens_present": [
     "abe",
     "ali",
@@ -34,7 +34,10 @@
     "randee"
   ],
   "tokens_missing": [],
-  "changes": [],
+  "changes": [
+    "Oscar new 2026 best on segment 611821: 9:54",
+    "Oscar new 2026 best on segment 596560: 12:21"
+  ],
   "backfill_complete": true,
   "daily_spent_on": null
 }
