@@ -1,7 +1,7 @@
 {
   "riders": {
     "ali": {
-      "activities_seen": 4
+      "activities_seen": 5
     },
     "jake": {
       "activities_seen": 3
@@ -16,15 +16,15 @@
       "activities_seen": 3
     },
     "oscar": {
-      "activities_seen": 4
+      "activities_seen": 3
     }
   },
   "notes": [],
-  "finished_utc": "2026-09-05T21:37:27Z",
+  "finished_utc": "2026-09-05T23:46:48Z",
   "reads_this_run": 39,
   "window_waits": 0,
   "rate_limit_window": "25/200",
-  "rate_limit_daily": "279/2000",
+  "rate_limit_daily": "318/2000",
   "tokens_present": [
     "abe",
     "ali",
@@ -34,9 +34,7 @@
     "randee"
   ],
   "tokens_missing": [],
-  "changes": [
-    "Jake new 2026 best on segment 3615418: 8:47"
-  ],
+  "changes": [],
   "backfill_complete": true,
   "daily_spent_on": null
 }
