@@ -112,6 +112,9 @@ def build_current(state, meta, year):
         riders[ath["display"]] = {
             "bests": {k: v["sec"] for k, v in (y.get("bests") or {}).items() if v},
             "times": {k: v["time"] for k, v in (y.get("bests") or {}).items() if v},
+            # kept because "when was this set" is the only way to tell a time a
+            # new rider brought with them from one they set during the week
+            "best_dates": {k: v.get("date") for k, v in (y.get("bests") or {}).items() if v},
             "attempts": dict(y.get("attempts") or {}),
             "power": dict(y.get("power") or {}),
             "dist_m": float(y.get("dist_m") or 0),
@@ -153,6 +156,89 @@ def build_current(state, meta, year):
             "seg_name": seg_name, "seg_ids": seg_ids}
 
 
+def _season_history():
+    """data/history.js as a dict, or None. Cumulative miles and feet per day."""
+    try:
+        raw = open(os.path.join(ROOT, "data", "history.js"), encoding="utf-8").read()
+        return json.loads(raw[raw.index("{"): raw.rstrip().rstrip(";").rindex("}") + 1])
+    except Exception as e:
+        print(f"history.js unreadable, new riders get a flat week: {e}")
+        return None
+
+
+def _seed_missing_rider(cur, name, week_start):
+    """What last week's snapshot WOULD have said about a rider who was not in it.
+
+    Oscar joined on 2026-09-03, four days before his first digest. Every number
+    of his would otherwise have diffed against zero: the email was about to
+    report 3,030 miles and 185 rides as one week's work, call fourteen segment
+    times set as far back as March "personal bests this week", and shame Jake
+    for losing Jeronimoooo! to a time Oscar had set in August, before the site
+    had ever heard of him.
+
+    Two records can prove what was already his. Every segment best carries the
+    date it was set, and data/history.js carries cumulative miles and feet for
+    every day of the season. Anything older than the week start belongs to the
+    baseline; only what is genuinely new gets reported.
+
+    Rides is the one figure neither record pins down, so it is counted as days
+    the rider's distance moved. A double day reads as one. That is a floor, it
+    only ever applies to a rider's first digest, and it beats printing a whole
+    season as a week.
+    """
+    r = cur["riders"][name]
+    dates = r.get("best_dates") or {}
+    old_bests, fresh, undated = {}, set(), []
+    for sid, sec in (r.get("bests") or {}).items():
+        raw = dates.get(sid)
+        when = None
+        if raw:
+            try:
+                when = datetime.datetime.strptime(raw, "%b %d, %Y").date()
+            except ValueError:
+                undated.append(raw)
+        if when is None:
+            # No usable date means we cannot tell old from new, so treat it as
+            # already theirs. Under-reporting a new rider's week beats crediting
+            # them with times they set months before anyone was watching.
+            undated.append(raw)
+            old_bests[sid] = sec
+        elif when <= week_start:
+            old_bests[sid] = sec
+        else:
+            fresh.add(sid)
+    if undated:
+        print(f"[{name}] {len(undated)} segment bests carry no usable date; "
+              f"treated as pre-existing")
+
+    # Attempts must look one lower on exactly the segments improved this week,
+    # or the PR loop skips them: it only looks at segments with a new attempt.
+    att = dict(r.get("attempts") or {})
+    for sid in fresh:
+        att[sid] = max(0, int(att.get(sid) or 1) - 1)
+
+    miles = r["dist_m"] / M_PER_MI
+    feet = r["elev_m"] * FT_PER_M
+    rides = r["rides"]
+    H = _season_history()
+    if H and name in (H.get("miles") or {}):
+        days = H["days"]
+        idx = {d: i for i, d in enumerate(days)}
+        key = week_start.isoformat()
+        if key in idx:
+            i = idx[key]
+            m, f = H["miles"][name], H["feet"][name]
+            miles, feet = m[i], f[i]
+            rides = max(0, rides - sum(
+                1 for j in range(i + 1, len(days)) if m[j] - m[j - 1] > 0.05))
+
+    return {"bests": old_bests, "attempts": att,
+            "power": dict(r.get("power") or {}),
+            "dist_m": miles * M_PER_MI, "elev_m": feet / FT_PER_M,
+            "rides": rides, "time_s": r.get("time_s", 0),
+            "vtime_s": r.get("vtime_s", 0), "vrides": r.get("vrides", 0)}
+
+
 def diff(cur, prev):
     """What changed since last week. prev may be None on the first run."""
     d = {"baseline": prev is None, "movers": [], "week": [], "prs": [],
@@ -168,8 +254,18 @@ def diff(cur, prev):
                               "feet": r["elev_m"] * FT_PER_M, "rides": r["rides"]})
         return d
 
-    pr_r = prev.get("riders", {})
+    pr_r = dict(prev.get("riders", {}))
     pr_gc = prev.get("gc", {})
+
+    # Anyone in the standings who was not in last week's snapshot joined during
+    # the week. Give them the baseline they never had, so their first digest
+    # reports the week they rode rather than the season they arrived with.
+    week_start = week_sunday() - datetime.timedelta(days=7)
+    for n in cur["riders"]:
+        if n not in pr_r:
+            pr_r[n] = _seed_missing_rider(cur, n, week_start)
+            d.setdefault("joined", []).append(n)
+            print(f"[{n}] no snapshot last week: seeded a baseline as of {week_start}")
 
     # Segment leadership. Who is fastest on each segment is the thing riders
     # actually care about week to week, and until now the digest never said.
