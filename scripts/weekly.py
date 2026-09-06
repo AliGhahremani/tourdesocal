@@ -593,6 +593,30 @@ def render(cur, d, week_end, note, head=None, cards=None, shame=None):
           f'<td style="padding:4px 0;text-align:right{style}">{w["rides"]}</td></tr>')
     A("</table>")
 
+    # Somebody joining is the biggest thing that can happen to a six rider
+    # league, and the digest was reporting the consequences without ever saying
+    # a new rider had turned up.
+    for nm in (d.get("joined") or []):
+        r = cur["riders"].get(nm) or {}
+        gc = (cur["gc"].get(nm) or {})
+        took = [k for k in d["koms"] if nm in (k.get("to") or [])]
+        seg_line = ""
+        if took:
+            seg_line = (" He took " + _names([k["seg"] for k in took]) +
+                        " in his first week.")
+        A('<h2 style="font-size:15px;margin:26px 0 8px">New this week</h2>')
+        A('<div style="background:#f2f7f2;border:1px solid #cfe0cf;'
+          'border-left:4px solid #12813f;border-radius:0 10px 10px 0;'
+          'padding:13px 16px;font-size:14.5px;line-height:1.6">'
+          f'<b style="font-size:16px">{nm}</b> joined the competition this week '
+          f'and is straight in at {ordinal(gc.get("pos") or 0)}. '
+          f'He did not start from nothing: {r.get("rides", 0):,} rides, '
+          f'{r.get("dist_m", 0) / M_PER_MI:,.0f} miles and '
+          f'{r.get("elev_m", 0) * FT_PER_M:,.0f} feet were already on his Strava '
+          f'for 2026, and they all count.{seg_line}'
+          '<br><span style="color:#4a4a55">Everything below covers this week '
+          'only, so his older times are not in it.</span></div>')
+
     if d["koms"]:
         A('<h2 style="font-size:15px;margin:22px 0 8px">Segments that changed '
           'hands</h2>')

@@ -224,7 +224,7 @@ def season_facts(cur, meta, days_left, segs=None, d=None, elapsed_days=1):
                         if name in (k.get("from") or []) and name not in k["to"]],
             "near": [{"seg": x["seg"], "leader": x["leader"],
                       "behind": x["behind"], "tries": x["tries"],
-                      "pr": pr}
+                      "pr": pr, "mine": x.get("time") or x.get("best")}
                      for pr, pool in ((True, (d or {}).get("prs") or []),
                                       (False, (d or {}).get("tried") or []))
                      for x in pool
@@ -691,6 +691,22 @@ def _a_near_miss(f, s):
     named = bool(x["leader"])
     x = dict(x, leader=x["leader"] or "the fastest time on it")
     pr = " You did take a personal best out of it." if x["pr"] else ""
+
+    # A gap is only something you did THIS WEEK if you set a time this week.
+    # Ali rode Quail Hill on Sunday and did not beat his own 2:16 from 17
+    # August, and the digest still told him "4 seconds is all that stood
+    # between you and Jake this week". The four seconds are real; they were
+    # earned in August. Where the ride produced nothing, say that instead.
+    if not x["pr"]:
+        mine = f" your own {x['mine']}," if x.get("mine") else ""
+        return 87, [
+            f"You went at {x['seg']} {tries} this week and did not beat{mine} "
+            f"which is still {_mins(x['behind'])} off {x['leader']}.",
+            f"{tries.capitalize()} at {x['seg']} this week and no improvement. "
+            f"{x['mine'] or 'Your time'} still stands, {_mins(x['behind'])} "
+            f"off {x['leader']}.",
+        ]
+
     if x["behind"] <= 15:
         return 93, [
             f"You went at {x['seg']} {tries} and finished {_mins(x['behind'])} "

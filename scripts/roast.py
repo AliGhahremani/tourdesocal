@@ -163,7 +163,10 @@ def build_hooks(cur, d, prev):
                         if many else "the only time anybody has put on it"}))
 
     # ---- attacked it, still not theirs ----
-    for x in (d.get("tried") or []) + (d.get("prs") or []):
+    # Only a time set THIS WEEK earns "came within N seconds". An attempt that
+    # beat nothing leaves the rider on an older time, and the gap belongs to
+    # whenever that was set, not to Sunday.
+    for x in (d.get("prs") or []):
         if x.get("behind") is None or x.get("took"):
             continue
         if x["behind"] <= 20:
