@@ -290,7 +290,15 @@ jobs:
             echo "::error::data/state.json is not valid JSON, so the digest was not built and no email was sent."; exit 1; }
 
           python scripts/weekly.py
-          echo "week=$(date -u +'%b %d, %Y' | sed 's/ 0/ /')" >> "$GITHUB_OUTPUT"
+          # The subject must name the SUNDAY the digest covers, the same day the
+          # archive page is named for. Using the runner's UTC date titled every
+          # Sunday-night email with Monday's date, because 8:30 PM Pacific is
+          # already tomorrow in UTC: the 2026-09-06 digest went out as "week
+          # ending Sep 7, 2026" while its own page said Sep 6.
+          d=$(TZ=America/Los_Angeles date +%F)
+          dw=$(TZ=America/Los_Angeles date +%w)          # %w: 0 = Sunday
+          sun=$(date -u -d "$d - $dw days" +'%b %d, %Y' | sed 's/ 0/ /')
+          echo "week=$sun" >> "$GITHUB_OUTPUT"
 
       - name: Check mail credentials
         id: mail
