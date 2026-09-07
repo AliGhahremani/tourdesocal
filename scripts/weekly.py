@@ -28,6 +28,7 @@ OUT_JSON = os.path.join(ROOT, "data", "weekly_latest.json")
 OUT_HTML = os.path.join(ROOT, "weekly.html")
 ARCHIVE = os.path.join(ROOT, "weekly")   # one file per email actually sent
 EMAIL_HTML = "/tmp/weekly_email.html"
+LAST_RUN = os.path.join(ROOT, "data", "last_run.json")
 
 PENALTY = 1.10
 M_PER_MI = 1609.344
@@ -48,6 +49,61 @@ def local_today():
         # no tzdata: Pacific is never more than 8 hours behind UTC.
         return (datetime.datetime.now(datetime.timezone.utc)
                 - datetime.timedelta(hours=8)).date()
+
+
+def last_strava_read(state):
+    """When Strava was last read, as an aware UTC datetime, or None.
+
+    data/last_run.json is written at the end of every update.py pass, so it is
+    the honest answer to "how current is this email". If it is missing or
+    unreadable, fall back to the newest per-rider last_epoch in state.json:
+    that is the watermark update.py advances, so the newest one is the last
+    time any rider synced.
+    """
+    try:
+        fin = (json.load(open(LAST_RUN)) or {}).get("finished_utc")
+        if fin:
+            return datetime.datetime.fromisoformat(fin.replace("Z", "+00:00"))
+    except Exception as e:
+        print(f"last_run.json unreadable, falling back to state.json: {e}",
+              file=sys.stderr)
+    eps = [a.get("last_epoch") for a in (state.get("athletes") or {}).values()
+           if a.get("last_epoch")]
+    if eps:
+        return datetime.datetime.fromtimestamp(max(eps), datetime.timezone.utc)
+    return None
+
+
+def freshness(when, now=None):
+    """One sentence saying how current the numbers are.
+
+    The pre-send Strava catch-up in weekly.yml is continue-on-error, so it can
+    fail without failing the run. Before this line existed that produced an
+    email which looked completely normal and quietly missed the day's rides,
+    which is worse than an email that admits it is behind. Two hours is the
+    threshold because the daily updater runs every 30 minutes, so anything
+    older than that means several passes in a row got nothing from Strava.
+    """
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    if when is None:
+        return ("We could not tell when Strava was last read, so these numbers "
+                "may be behind.")
+    try:
+        from zoneinfo import ZoneInfo
+        local = when.astimezone(ZoneInfo("America/Los_Angeles"))
+        label = "Pacific"
+    except Exception:
+        local = when
+        label = "UTC"
+    stamp = (local.strftime("%I:%M %p").lstrip("0") + " " + label
+             + local.strftime(" on %a %d %b").replace(" 0", " "))
+    behind = (now - when).total_seconds()
+    if behind > 2 * 3600:
+        hours = max(1, round(behind / 3600))
+        return (f"Strava was last read at {stamp}, about {hours} "
+                f"hour{'s' if hours != 1 else ''} before this went out, so "
+                "anything ridden since is not counted here yet.")
+    return f"Standings as of {stamp}."
 
 
 def week_sunday(today=None):
@@ -503,7 +559,8 @@ def rebuild_index():
         '</div></body></html>')
 
 
-def render(cur, d, week_end, note, head=None, cards=None, shame=None):
+def render(cur, d, week_end, note, head=None, cards=None, shame=None,
+           fresh=None):
     """One HTML body used for both the email and the archive page."""
     C = {"yellow": "#d9a400", "polka": "#c8102e", "green": "#0a7d3c"}
     JN = {"yellow": "Yellow", "polka": "Polka Dot", "green": "Green"}
@@ -805,9 +862,10 @@ def render(cur, d, week_end, note, head=None, cards=None, shame=None):
       '</div>')
 
     A('<p style="margin-top:26px;font-size:13px;color:#6d6d78">'
-      'Everything is scoped to the '
-      f'{cur["year"]} season. '
-      '<a href="https://tourdesocal.com" style="color:#fc5200">tourdesocal.com</a></p>')
+      + (f'{fresh} ' if fresh else '')
+      + 'Everything is scoped to the '
+      + f'{cur["year"]} season. '
+      + '<a href="https://tourdesocal.com" style="color:#fc5200">tourdesocal.com</a></p>')
     A("</div>")
     return "\n".join(p)
 
@@ -847,7 +905,10 @@ def main():
     for nm, txt in cards:
         print(f"  [{nm}] {txt}")
 
-    body = render(cur, d, week_end, note, head, cards, shame)
+    fresh = freshness(last_strava_read(state))
+    print("freshness:", fresh)
+
+    body = render(cur, d, week_end, note, head, cards, shame, fresh=fresh)
 
     open(EMAIL_HTML, "w").write(body)
     json.dump({"generated": week_end, "baseline": d["baseline"],
