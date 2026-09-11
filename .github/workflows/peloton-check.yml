@@ -1,0 +1,162 @@
+name: Who has posted an e-bike or Peloton ride
+
+# Diagnostic, 2026-09-11. Ali asked whether anyone has posted an e-bike or
+# Peloton ride since the site went live.
+#
+# It cannot be answered from the repo. update.py PRINTS its rejection
+# ("skipping <id>: e-bike or Peloton") and writes nothing: not to state.json,
+# not to last_run.json. So the only record is spread across every update run's
+# log, and GitHub cannot search across runs. This asks Strava instead.
+#
+# No inputs on purpose: a workflow input cannot be set from automation on this
+# repo, so anything behind a dropdown is unrunnable unattended.
+#
+# Cheap: activity SUMMARY pages are about 3 reads per rider. Summaries carry
+# `type`, so EBikeRide is caught for free. They do NOT carry device_name, which
+# is the only way to spot a Peloton, so detail is fetched for VirtualRide
+# activities only, and only those since the site went live. Zwift is also a
+# VirtualRide and is legitimate, which is exactly why device_name is needed to
+# tell them apart.
+#
+# Read-only. Commits nothing. Delete once the question is settled.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Ask Strava
+        env:
+          CID: "274192"
+          CSEC: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          RT_ALI: ${{ secrets.STRAVA_REFRESH_ALI }}
+          RT_JAKE: ${{ secrets.STRAVA_REFRESH_JAKE }}
+          RT_RANDEE: ${{ secrets.STRAVA_REFRESH_RANDEE }}
+          RT_ABE: ${{ secrets.STRAVA_REFRESH_ABE }}
+          RT_JOSE: ${{ secrets.STRAVA_REFRESH_JOSE }}
+          RT_OSCAR: ${{ secrets.STRAVA_REFRESH_OSCAR }}
+        run: |
+          python3 - <<'PYEOF'
+          import datetime, json, os, time, urllib.error, urllib.parse, urllib.request
+
+          # The site went live on 2026-08-27. "Since we built this" means since
+          # then; everything before it was backfilled under the same rule.
+          LIVE = datetime.date(2026, 8, 27)
+          YEAR_START = int(datetime.datetime(2026, 1, 1,
+                           tzinfo=datetime.timezone.utc).timestamp())
+          M = 1609.344
+          DETAIL_BUDGET = 60          # hard cap so a bad week cannot run away
+
+          RIDERS = ["ALI", "JAKE", "RANDEE", "ABE", "JOSE", "OSCAR"]
+          usage = None
+
+          def post(url, data):
+              r = urllib.request.Request(
+                  url, data=urllib.parse.urlencode(data).encode(), method="POST")
+              with urllib.request.urlopen(r) as f:
+                  return json.load(f)
+
+          def get(url, token):
+              global usage
+              r = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+              with urllib.request.urlopen(r) as f:
+                  usage = f.headers.get("X-RateLimit-Usage")
+                  return json.load(f)
+
+          spent = 0
+          findings = []        # every ride the updater would have thrown away
+          zwift_ok = []        # legitimate virtual rides, for contrast
+
+          for who in RIDERS:
+              rt = os.environ.get("RT_" + who)
+              if not rt:
+                  print(f"[{who}] no refresh token configured, skipped")
+                  continue
+              try:
+                  tok = post("https://www.strava.com/oauth/token", {
+                      "client_id": os.environ["CID"],
+                      "client_secret": os.environ["CSEC"],
+                      "grant_type": "refresh_token", "refresh_token": rt})["access_token"]
+              except urllib.error.HTTPError as e:
+                  print(f"[{who}] token refresh failed ({e.code}); their data is NOT in this report")
+                  continue
+
+              acts, page = [], 1
+              while page <= 6:
+                  batch = get("https://www.strava.com/api/v3/athlete/activities"
+                              f"?after={YEAR_START}&per_page=200&page={page}", tok)
+                  if not batch:
+                      break
+                  acts += batch
+                  page += 1
+
+              ebikes  = [a for a in acts if a.get("type") == "EBikeRide"]
+              virtual = [a for a in acts if a.get("type") == "VirtualRide"]
+
+              def day(a):
+                  return (a.get("start_date_local") or a.get("start_date") or "")[:10]
+
+              for a in ebikes:
+                  findings.append((who, day(a), "EBikeRide", "",
+                                   (a.get("distance") or 0) / M, str(a.get("name"))[:48]))
+
+              # device_name is detail-only, so Peloton can only be spotted there.
+              recent_virtual = [a for a in virtual
+                                if day(a) >= LIVE.isoformat()]
+              for a in recent_virtual:
+                  if spent >= DETAIL_BUDGET:
+                      print("::warning::detail budget spent; some virtual rides were not checked")
+                      break
+                  try:
+                      d = get(f"https://www.strava.com/api/v3/activities/{a['id']}", tok)
+                      spent += 1
+                      time.sleep(0.3)
+                  except urllib.error.HTTPError as e:
+                      print(f"[{who}] could not read activity {a['id']} ({e.code})")
+                      continue
+                  dev = str(d.get("device_name") or "")
+                  row = (who, day(a), "VirtualRide", dev,
+                         (a.get("distance") or 0) / M, str(a.get("name"))[:48])
+                  if "peloton" in dev.lower():
+                      findings.append(row)
+                  else:
+                      zwift_ok.append(row)
+
+              print(f"[{who}] {len(acts)} activities in 2026: "
+                    f"{len(ebikes)} e-bike, {len(virtual)} virtual "
+                    f"({len(recent_virtual)} since the site went live)")
+
+          print("\n" + "=" * 72)
+          print("RIDES THE UPDATER THREW AWAY (e-bike, or device_name says Peloton)")
+          print("=" * 72)
+          if not findings:
+              print("  None. Nobody has posted one, all year.")
+          else:
+              since = [f for f in findings if f[1] >= LIVE.isoformat()]
+              before = [f for f in findings if f[1] < LIVE.isoformat()]
+              for label, rows in (("SINCE THE SITE WENT LIVE (27 Aug)", since),
+                                  ("EARLIER IN 2026, backfilled under the same rule", before)):
+                  print(f"\n{label}: {len(rows)}")
+                  for who, d, kind, dev, mi, name in sorted(rows, key=lambda r: r[1]):
+                      tail = f"  device={dev}" if dev else ""
+                      print(f"  {d}  {who:7} {kind:12} {mi:6.1f} mi  {name}{tail}")
+
+          print("\nLEGITIMATE VIRTUAL RIDES SINCE 27 AUG (Zwift and friends, these DO count)")
+          if not zwift_ok:
+              print("  none")
+          for who, d, kind, dev, mi, name in sorted(zwift_ok, key=lambda r: r[1]):
+              print(f"  {d}  {who:7} {mi:6.1f} mi  device={dev or 'unknown'}  {name}")
+
+          print(f"\nDetail reads spent: {spent}. Strava rate limit usage: {usage}")
+          PYEOF
