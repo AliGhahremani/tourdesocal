@@ -11,12 +11,14 @@ name: Who has posted an e-bike or Peloton ride
 # No inputs on purpose: a workflow input cannot be set from automation on this
 # repo, so anything behind a dropdown is unrunnable unattended.
 #
-# Cheap: activity SUMMARY pages are about 3 reads per rider. Summaries carry
-# `type`, so EBikeRide is caught for free. They do NOT carry device_name, which
-# is the only way to spot a Peloton, so detail is fetched for VirtualRide
-# activities only, and only those since the site went live. Zwift is also a
-# VirtualRide and is legitimate, which is exactly why device_name is needed to
-# tell them apart.
+# Activity SUMMARY pages are about 3 reads per rider and carry `type`, so
+# EBikeRide is caught for free across the whole year. They do NOT carry
+# device_name, which is the only way to spot a Peloton, so detail is fetched for
+# every activity since the site went live, whatever its type. Restricting that
+# to VirtualRide was the bug in the first version: it reported a clean sweep
+# while a Peloton that Strava types as a plain Ride would have gone unseen.
+# Zwift is a VirtualRide too and is legitimate, which is why device_name rather
+# than type is what separates them.
 #
 # Read-only. Commits nothing. Delete once the question is settled.
 
@@ -56,7 +58,10 @@ jobs:
           YEAR_START = int(datetime.datetime(2026, 1, 1,
                            tzinfo=datetime.timezone.utc).timestamp())
           M = 1609.344
-          DETAIL_BUDGET = 60          # hard cap so a bad week cannot run away
+          DETAIL_BUDGET = 250         # hard cap so a bad week cannot run away
+          # Activity the Sep 6 digest log recorded as rejected, to be looked
+          # up directly: the first version of this check did not find it.
+          PROBE = {"ABE": [20068355325]}
 
           RIDERS = ["ALI", "JAKE", "RANDEE", "ABE", "JOSE", "OSCAR"]
           usage = None
@@ -111,8 +116,13 @@ jobs:
                   findings.append((who, day(a), "EBikeRide", "",
                                    (a.get("distance") or 0) / M, str(a.get("name"))[:48]))
 
-              # device_name is detail-only, so Peloton can only be spotted there.
-              recent_virtual = [a for a in virtual
+              # device_name is detail-only, so Peloton can only be spotted there,
+              # and it must be checked on EVERY activity since launch, not just
+              # the virtual ones. update.py tests device_name on whatever it
+              # fetches, so a Peloton that Strava types as a plain Ride would
+              # slip past a VirtualRide-only filter. The first version of this
+              # check did exactly that and reported a false all-clear.
+              recent_virtual = [a for a in acts
                                 if day(a) >= LIVE.isoformat()]
               for a in recent_virtual:
                   if spent >= DETAIL_BUDGET:
@@ -126,16 +136,28 @@ jobs:
                       print(f"[{who}] could not read activity {a['id']} ({e.code})")
                       continue
                   dev = str(d.get("device_name") or "")
-                  row = (who, day(a), "VirtualRide", dev,
+                  row = (who, day(a), str(a.get("type")), dev,
                          (a.get("distance") or 0) / M, str(a.get("name"))[:48])
-                  if "peloton" in dev.lower():
+                  if "peloton" in dev.lower() or d.get("type") == "EBikeRide":
                       findings.append(row)
-                  else:
+                  elif a.get("type") == "VirtualRide":
                       zwift_ok.append(row)
+
+              for pid in PROBE.get(who, []):
+                  try:
+                      d = get(f"https://www.strava.com/api/v3/activities/{pid}", tok)
+                      print(f"[{who}] probe {pid}: type=" + str(d.get("type"))
+                            + " sport=" + str(d.get("sport_type"))
+                            + " device=" + str(d.get("device_name"))
+                            + " date=" + str(d.get("start_date_local"))[:10]
+                            + " name=" + str(d.get("name"))[:40])
+                  except urllib.error.HTTPError as e:
+                      print(f"[{who}] probe {pid}: gone or unreadable ({e.code}) "
+                            "- most likely deleted from Strava since")
 
               print(f"[{who}] {len(acts)} activities in 2026: "
                     f"{len(ebikes)} e-bike, {len(virtual)} virtual "
-                    f"({len(recent_virtual)} since the site went live)")
+                    f"({len(recent_virtual)} activities of any type since the site went live)")
 
           print("\n" + "=" * 72)
           print("RIDES THE UPDATER THREW AWAY (e-bike, or device_name says Peloton)")
