@@ -1,10 +1,10 @@
 {
-  "updated": "Sep 11, 2026 at 11:44 AM",
+  "updated": "Sep 11, 2026 at 2:40 PM",
   "athletes": {
     "ali": {
       "id": 20156041,
       "display": "Ali",
-      "last_epoch": 1789152246,
+      "last_epoch": 1789162800,
       "strava_id": 20156041,
       "season": {
         "2026": {
@@ -390,7 +390,7 @@
     "jake": {
       "id": 2977194,
       "display": "Jake",
-      "last_epoch": 1789152251,
+      "last_epoch": 1789162804,
       "strava_id": 2977194,
       "season": {
         "2026": {
@@ -809,7 +809,7 @@
     "randee": {
       "id": 100854849,
       "display": "Randee",
-      "last_epoch": 1789152253,
+      "last_epoch": 1789162806,
       "strava_id": 100854849,
       "season": {
         "2026": {
@@ -1299,13 +1299,13 @@
     "abe": {
       "id": "abe",
       "display": "Abe",
-      "last_epoch": 1789152254,
+      "last_epoch": 1789162806,
       "strava_id": 17625052,
       "season": {
         "2026": {
-          "dist_m": 4529771.699999997,
-          "elev_m": 40955.6,
-          "rides": 105,
+          "dist_m": 4552913.299999997,
+          "elev_m": 41111.6,
+          "rides": 106,
           "ids": [
             16927121957,
             16930337974,
@@ -1411,7 +1411,8 @@
             20005915705,
             20020528128,
             20049679456,
-            20104957983
+            20104957983,
+            20134812401
           ],
           "bests": {
             "13737114": {
@@ -1599,7 +1600,7 @@
             "1800": 229,
             "3600": 212
           },
-          "time_s": 593544,
+          "time_s": 596651,
           "vtime_s": 163705,
           "vrides": 46
         }
@@ -1608,7 +1609,7 @@
     "jose": {
       "id": "jose",
       "display": "Jose",
-      "last_epoch": 1789152256,
+      "last_epoch": 1789162809,
       "strava_id": 106484862,
       "season": {
         "2026": {
@@ -2053,7 +2054,7 @@
     "oscar": {
       "id": 103800251,
       "display": "Oscar",
-      "last_epoch": 1789152260,
+      "last_epoch": 1789162812,
       "strava_id": 103800251,
       "season": {
         "2025": {
