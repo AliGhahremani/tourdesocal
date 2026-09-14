@@ -1,126 +1,79 @@
 {
-  "generated": "Sep 6, 2026",
+  "generated": "Sep 13, 2026",
   "baseline": false,
-  "blurb": "Another week, another set of receipts. Oscar took Pacific Island North off Jose by 44 seconds, 9:54. That one has a new owner. Jose took 1:50 off Highlands and set 9:52. That is a proper improvement, not a rounding error. 11 seconds is all that stood between Jake and Randee on Torrey Pines. Abe dropped 1 place. Not from riding badly, from other people riding at all. Ali went at Portola KOM Climb once and came away with nothing. There is always next week. Ali, Jake, Randee, Abe, Jose and Oscar are all hammering away at segments somebody else owns. 6 riders, plenty of attempts, no records.",
+  "blurb": "Another week, another set of receipts. The green jersey has a new owner. Jose takes it, Randee hands it over. That is how this works. Abe went at Portola KOM Climb 4 times. 3:52 stands. At some point that stops being training and starts being a hobby. Oscar went at Back Bay Climb Out twice and came away with nothing. There is always next week. Ali, Jake, Randee, Abe, Jose and Oscar have each spent the season attacking a segment they still do not hold.",
   "diff": {
     "baseline": false,
-    "movers": [
-      {
-        "name": "Jake",
-        "from": 3,
-        "to": 4,
-        "up": false
-      },
-      {
-        "name": "Abe",
-        "from": 4,
-        "to": 5,
-        "up": false
-      },
-      {
-        "name": "Randee",
-        "from": 5,
-        "to": 6,
-        "up": false
-      }
-    ],
+    "movers": [],
     "week": [
       {
         "name": "Jose",
-        "miles": 128.19148671756892,
-        "feet": 6519.028871365001,
+        "miles": 123.7202860295872,
+        "feet": 5793.963254570001,
         "rides": 5
       },
       {
         "name": "Ali",
-        "miles": 110.79060785015491,
-        "feet": 7683.72703409,
-        "rides": 6
+        "miles": 51.85715421935952,
+        "feet": 3448.162729645,
+        "rides": 4
       },
       {
         "name": "Oscar",
-        "miles": 99.10197794877875,
-        "feet": 4675.451443077976,
-        "rides": 6
+        "miles": 102.71110464885071,
+        "feet": 5974.409448795001,
+        "rides": 7
       },
       {
         "name": "Jake",
-        "miles": 127.8195339218959,
-        "feet": 5209.97375326,
+        "miles": 75.69823480871709,
+        "feet": 3087.270341195,
         "rides": 3
       },
       {
         "name": "Abe",
-        "miles": 91.36244333094703,
-        "feet": 3700.78740156,
-        "rides": 4
+        "miles": 63.055816531456294,
+        "feet": 3356.299212585,
+        "rides": 3
       },
       {
         "name": "Randee",
-        "miles": 127.67761274158865,
-        "feet": 5711.942257195,
-        "rides": 6
+        "miles": 16.017395907897875,
+        "feet": 2211.28608923,
+        "rides": 1
       }
     ],
     "prs": [
       {
         "name": "Jose",
-        "seg": "Highlands",
-        "id": "4905033",
+        "seg": "Newport Coast Climb",
+        "id": "913750",
         "tries": 1,
-        "leader": null,
-        "behind": null,
+        "leader": "Abe",
+        "behind": 22,
         "took": false,
         "with": [],
-        "time": "9:52",
-        "was": "11:42",
-        "gain": 110,
+        "time": "10:21",
+        "was": "11:02",
+        "gain": 41,
         "first": false
       },
       {
         "name": "Jose",
-        "seg": "Park Ave",
-        "id": "609924",
+        "seg": "Back Bay 2 mile TT",
+        "id": "22971497",
         "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": true,
-        "with": [],
-        "time": "13:19",
-        "was": null,
-        "gain": null,
-        "first": true
-      },
-      {
-        "name": "Oscar",
-        "seg": "Pacific Island North",
-        "id": "611821",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": true,
-        "with": [],
-        "time": "9:54",
-        "was": null,
-        "gain": null,
-        "first": true
-      },
-      {
-        "name": "Oscar",
-        "seg": "Pacific Island South",
-        "id": "596560",
-        "tries": 1,
-        "leader": "Jose",
-        "behind": 25,
+        "leader": "Oscar",
+        "behind": 12,
         "took": false,
         "with": [],
-        "time": "12:21",
-        "was": null,
-        "gain": null,
-        "first": true
+        "time": "5:16",
+        "was": "7:02",
+        "gain": 106,
+        "first": false
       },
       {
-        "name": "Oscar",
+        "name": "Jose",
         "seg": "Starcrest",
         "id": "757408",
         "tries": 1,
@@ -128,37 +81,23 @@
         "behind": null,
         "took": true,
         "with": [],
-        "time": "4:17",
-        "was": null,
-        "gain": null,
-        "first": true
-      },
-      {
-        "name": "Jake",
-        "seg": "Torrey Pines",
-        "id": "3615418",
-        "tries": 1,
-        "leader": "Randee",
-        "behind": 11,
-        "took": false,
-        "with": [],
-        "time": "8:47",
-        "was": "9:42",
-        "gain": 55,
+        "time": "3:59",
+        "was": "4:44",
+        "gain": 45,
         "first": false
       },
       {
-        "name": "Abe",
-        "seg": "Quail Hill Sprint Climb",
-        "id": "7855869",
-        "tries": 2,
-        "leader": "Jake",
-        "behind": 8,
+        "name": "Oscar",
+        "seg": "Newport Coast Climb",
+        "id": "913750",
+        "tries": 1,
+        "leader": "Abe",
+        "behind": 62,
         "took": false,
         "with": [],
-        "time": "2:20",
-        "was": "2:36",
-        "gain": 16,
+        "time": "11:01",
+        "was": "11:10",
+        "gain": 9,
         "first": false
       }
     ],
@@ -176,14 +115,14 @@
       },
       {
         "name": "Jose",
-        "seg": "Santa Vittoria Dr. bump",
-        "id": "860396",
+        "seg": "Back Bay Climb Out",
+        "id": "3256589",
         "tries": 1,
-        "leader": null,
-        "behind": null,
+        "leader": "Randee",
+        "behind": 20,
         "took": false,
         "with": [],
-        "best": "1:06"
+        "best": "1:35"
       },
       {
         "name": "Ali",
@@ -197,26 +136,15 @@
         "best": "4:16"
       },
       {
-        "name": "Ali",
-        "seg": "Quail Hill Sprint Climb",
-        "id": "7855869",
-        "tries": 1,
-        "leader": "Jake",
-        "behind": 4,
+        "name": "Oscar",
+        "seg": "Back Bay Climb Out",
+        "id": "3256589",
+        "tries": 2,
+        "leader": "Randee",
+        "behind": 3,
         "took": false,
         "with": [],
-        "best": "2:16"
-      },
-      {
-        "name": "Ali",
-        "seg": "Newport Coast Climb",
-        "id": "913750",
-        "tries": 1,
-        "leader": "Abe",
-        "behind": 62,
-        "took": false,
-        "with": [],
-        "best": "11:01"
+        "best": "1:18"
       },
       {
         "name": "Jake",
@@ -233,7 +161,7 @@
         "name": "Jake",
         "seg": "Back Bay 2 mile TT",
         "id": "22971497",
-        "tries": 1,
+        "tries": 2,
         "leader": "Oscar",
         "behind": 32,
         "took": false,
@@ -244,7 +172,7 @@
         "name": "Jake",
         "seg": "Irvine Speedway",
         "id": "25403641",
-        "tries": 1,
+        "tries": 2,
         "leader": "Jose",
         "behind": 3,
         "took": false,
@@ -252,15 +180,48 @@
         "best": "1:10"
       },
       {
-        "name": "Abe",
-        "seg": "Jeronimoooo!",
-        "id": "13737114",
+        "name": "Jake",
+        "seg": "Back Bay Climb Out",
+        "id": "3256589",
         "tries": 1,
-        "leader": "Oscar",
-        "behind": 7,
+        "leader": "Randee",
+        "behind": 14,
         "took": false,
         "with": [],
-        "best": "0:53"
+        "best": "1:29"
+      },
+      {
+        "name": "Abe",
+        "seg": "Portola KOM Climb",
+        "id": "649404",
+        "tries": 4,
+        "leader": null,
+        "behind": null,
+        "took": false,
+        "with": [],
+        "best": "3:52"
+      },
+      {
+        "name": "Abe",
+        "seg": "Quail Hill Sprint Climb",
+        "id": "7855869",
+        "tries": 1,
+        "leader": "Jake",
+        "behind": 8,
+        "took": false,
+        "with": [],
+        "best": "2:20"
+      },
+      {
+        "name": "Abe",
+        "seg": "Starcrest",
+        "id": "757408",
+        "tries": 1,
+        "leader": "Jose",
+        "behind": 34,
+        "took": false,
+        "with": [],
+        "best": "4:33"
       },
       {
         "name": "Randee",
@@ -272,46 +233,29 @@
         "took": false,
         "with": [],
         "best": "2:14"
-      },
-      {
-        "name": "Randee",
-        "seg": "Torrey Pines",
-        "id": "3615418",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": false,
-        "with": [],
-        "best": "8:36"
       }
     ],
     "power": [
       {
         "name": "Jose",
         "window": "5 min",
-        "watts": 353,
-        "was": 315
+        "watts": 365,
+        "was": 353
       },
       {
         "name": "Jose",
         "window": "10 min",
-        "watts": 337,
-        "was": 273
-      },
-      {
-        "name": "Jose",
-        "window": "20 min",
-        "watts": 271,
-        "was": 259
-      },
-      {
-        "name": "Jose",
-        "window": "30 min",
-        "watts": 252,
-        "was": 248
+        "watts": 358,
+        "was": 337
       }
     ],
-    "jerseys": [],
+    "jerseys": [
+      {
+        "jersey": "green",
+        "to": "Jose",
+        "from": "Randee"
+      }
+    ],
     "segs": {
       "added": [],
       "removed": [],
@@ -319,50 +263,19 @@
     },
     "koms": [
       {
-        "seg": "Pacific Island North",
-        "id": "611821",
-        "to": [
-          "Oscar"
-        ],
-        "from": [
-          "Jose"
-        ],
-        "with": [],
-        "joint": false,
-        "time": "9:54",
-        "by": 44
-      },
-      {
-        "seg": "Park Ave",
-        "id": "609924",
-        "to": [
-          "Jose"
-        ],
-        "from": [
-          "Abe"
-        ],
-        "with": [],
-        "joint": false,
-        "time": "13:19",
-        "by": 107
-      },
-      {
         "seg": "Starcrest",
         "id": "757408",
         "to": [
-          "Oscar"
+          "Jose"
         ],
         "from": [
-          "Ali"
+          "Oscar"
         ],
         "with": [],
         "joint": false,
-        "time": "4:17",
-        "by": 7
+        "time": "3:59",
+        "by": 18
       }
-    ],
-    "joined": [
-      "Oscar"
     ]
   }
 }
