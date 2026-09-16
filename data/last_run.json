@@ -20,11 +20,11 @@
     }
   },
   "notes": [],
-  "finished_utc": "2026-09-16T14:48:28Z",
+  "finished_utc": "2026-09-16T18:49:24Z",
   "reads_this_run": 25,
   "window_waits": 0,
-  "rate_limit_window": "16/200",
-  "rate_limit_daily": "77/2000",
+  "rate_limit_window": "82/200",
+  "rate_limit_daily": "159/2000",
   "tokens_present": [
     "abe",
     "ali",
