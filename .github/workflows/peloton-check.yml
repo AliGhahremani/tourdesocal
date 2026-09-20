@@ -50,7 +50,7 @@ jobs:
           RT_OSCAR: ${{ secrets.STRAVA_REFRESH_OSCAR }}
         run: |
           python3 - <<'PYEOF'
-          import datetime, json, os, time, urllib.error, urllib.parse, urllib.request
+          import collections, datetime, json, os, time, urllib.error, urllib.parse, urllib.request
 
           # The site went live on 2026-08-27. "Since we built this" means since
           # then; everything before it was backfilled under the same rule.
@@ -111,6 +111,16 @@ jobs:
 
               def day(a):
                   return (a.get("start_date_local") or a.get("start_date") or "")[:10]
+
+              # What else is everyone doing instead of riding a bike. sport_type
+              # is the truthful field; legacy `type` collapses several sports.
+              def sports(rows):
+                  c = collections.Counter(str(a.get("sport_type") or a.get("type"))
+                                          for a in rows)
+                  return ", ".join(f"{k} {v}" for k, v in c.most_common()) or "nothing"
+              recent = [a for a in acts if day(a) >= LIVE.isoformat()]
+              print(f"[{who}] sports all year:     " + sports(acts))
+              print(f"[{who}] sports since 27 Aug: " + sports(recent))
 
               for a in ebikes:
                   findings.append((who, day(a), "EBikeRide", "",
