@@ -559,6 +559,46 @@ def rebuild_index():
         '</div></body></html>')
 
 
+# A one-off announcement, shown ONLY in the digest for the week it names.
+# Keyed on week_end so it expires by itself. An announcement that fires twice is
+# worse than one that never fires, and this email has repeated itself before.
+# To retire it, leave it here with an old date, or delete the whole dict.
+NOTICE = {
+    "week_end": "Sep 20, 2026",
+    "title": "The poll results",
+    "items": [
+        ("4000 meter is gone",
+         "You voted to drop the dangerous one, and 4000 meter is out. The "
+         "standings above are already computed without it, so this is not a "
+         "preview. Twenty segments now. Not one GC position changed because of "
+         "it, but everybody's time came down and some of you did better out of "
+         "that than others. Your own card below has the details."),
+        ("Torrey Pines stays",
+         "The vote on segments outside Orange County went to keeping them. "
+         "Torrey Pines survives, so the drive south still counts for something."),
+        ("Driving to the start is legal",
+         "Officially fine to put the bike on the car and drive to a segment. "
+         "Abe, consider this your amnesty. You have been doing it all season "
+         "and now there is nothing anybody can say about it."),
+        ("Drafting is legal",
+         "Allowed, on the grounds that policing it is impossible. If you can "
+         "find a wheel, sit on it."),
+        ("Last place buys",
+         "Whoever is last on GC when the season closes on 31 December buys "
+         "pizza and beers for everyone. Location to be argued about nearer the "
+         "time. As of tonight that is Randee."),
+        ("Randee, about that",
+         "Since this site went live you have logged ten weight training "
+         "sessions and eight road rides. Four runs. Two trail runs. Three rock "
+         "climbs. One sail. On Saturday the whole Tour de SoCal crew went out, "
+         "the ride left from your house, and you were not on it. You are "
+         "leading the polka dot jersey and sitting last on GC, which is a hard "
+         "thing to manage on purpose. That used to look like bad luck. It is "
+         "starting to look like a change of sport."),
+    ],
+}
+
+
 def render(cur, d, week_end, note, head=None, cards=None, shame=None,
            fresh=None):
     """One HTML body used for both the email and the archive page."""
@@ -580,6 +620,18 @@ def render(cur, d, week_end, note, head=None, cards=None, shame=None,
     # The blurb. Everything in it is earned by something in the numbers below.
     A('<div style="background:#fff6e5;border:1px solid #f0d9a8;padding:14px 16px;'
       'border-radius:10px;font-size:14.5px;line-height:1.6">' + note + '</div>')
+
+    # One-off announcement, and only for its own week. See NOTICE above.
+    if NOTICE and NOTICE.get("week_end") == week_end and NOTICE.get("items"):
+        A('<div style="border:2px solid #fc5200;border-radius:10px;'
+          'padding:16px 18px;margin:18px 0 0">')
+        A('<div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;'
+          'font-size:12px;letter-spacing:.08em;color:#fc5200;margin-bottom:10px">'
+          + NOTICE["title"].upper() + '</div>')
+        for headline_, body_ in NOTICE["items"]:
+            A(f'<div style="margin:0 0 11px;font-size:14.5px;line-height:1.6">'
+              f'<b>{headline_}.</b> {body_}</div>')
+        A('</div>')
 
     # jerseys
     A('<h2 style="font-size:15px;margin:22px 0 8px">Jerseys</h2><table '
