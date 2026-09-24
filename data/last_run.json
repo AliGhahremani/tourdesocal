@@ -7,7 +7,7 @@
       "activities_seen": 2
     },
     "randee": {
-      "activities_seen": 6
+      "activities_seen": 5
     },
     "abe": {
       "activities_seen": 0
@@ -20,11 +20,11 @@
     }
   },
   "notes": [],
-  "finished_utc": "2026-09-24T04:33:45Z",
+  "finished_utc": "2026-09-24T09:29:19Z",
   "reads_this_run": 30,
   "window_waits": 0,
   "rate_limit_window": "19/200",
-  "rate_limit_daily": "19/2000",
+  "rate_limit_daily": "52/2000",
   "tokens_present": [
     "abe",
     "ali",
@@ -34,9 +34,7 @@
     "randee"
   ],
   "tokens_missing": [],
-  "changes": [
-    "Ali new 2026 best on segment 3256589: 1:21"
-  ],
+  "changes": [],
   "backfill_complete": true,
   "daily_spent_on": null
 }
