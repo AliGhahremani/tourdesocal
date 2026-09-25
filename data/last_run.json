@@ -7,7 +7,7 @@
       "activities_seen": 2
     },
     "randee": {
-      "activities_seen": 5
+      "activities_seen": 4
     },
     "abe": {
       "activities_seen": 2
@@ -16,15 +16,15 @@
       "activities_seen": 2
     },
     "oscar": {
-      "activities_seen": 4
+      "activities_seen": 3
     }
   },
   "notes": [],
-  "finished_utc": "2026-09-25T17:03:30Z",
-  "reads_this_run": 32,
+  "finished_utc": "2026-09-25T20:24:38Z",
+  "reads_this_run": 28,
   "window_waits": 0,
-  "rate_limit_window": "20/200",
-  "rate_limit_daily": "101/2000",
+  "rate_limit_window": "18/200",
+  "rate_limit_daily": "202/2000",
   "tokens_present": [
     "abe",
     "ali",
