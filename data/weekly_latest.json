@@ -1,30 +1,24 @@
 {
-  "generated": "Sep 20, 2026",
+  "generated": "Sep 27, 2026",
   "baseline": false,
-  "blurb": "The numbers are in and they are talking. Jose held Highlands coming into this week and does not hold it now. Abe went 9:30. 15 seconds is all that stood between Oscar and Randee on Temple Hills. Ali slid 2 places down the GC without touching a bike wrong. Just got out-ridden. Quail Hill Sprint Climb beat Randee once this week. Not dramatic, just quietly humiliating. Ali, Jake, Randee, Abe, Jose and Oscar have each spent the season attacking a segment they still do not hold.",
+  "blurb": "Weekly reckoning time. Oscar took Irvine Speedway off Jose by 2 seconds, 1:05. That one has a new owner. Randee took 2:34 off Pacific Island South and set 14:29. That is a proper improvement, not a rounding error. Ali came within 6 seconds of Randee on Back Bay Climb Out and no closer. Jake climbed 2 places on GC. Quietly, like someone with a plan. Down 1 place for Abe, who is learning that standings move whether you do or not. Jose went at Back Bay 2 mile TT once and came away with nothing. There is always next week.",
   "diff": {
     "baseline": false,
     "movers": [
       {
-        "name": "Oscar",
-        "from": 3,
-        "to": 2,
-        "up": true
-      },
-      {
-        "name": "Abe",
+        "name": "Jake",
         "from": 5,
         "to": 3,
         "up": true
       },
       {
-        "name": "Ali",
-        "from": 2,
+        "name": "Abe",
+        "from": 3,
         "to": 4,
         "up": false
       },
       {
-        "name": "Jake",
+        "name": "Ali",
         "from": 4,
         "to": 5,
         "up": false
@@ -33,97 +27,179 @@
     "week": [
       {
         "name": "Jose",
-        "miles": 124.18855136005703,
-        "feet": 5833.33333331,
-        "rides": 5
-      },
-      {
-        "name": "Oscar",
-        "miles": 94.88512089397905,
-        "feet": 5328.08398948,
-        "rides": 7
-      },
-      {
-        "name": "Abe",
-        "miles": 123.30744700946391,
-        "feet": 6295.931758505,
-        "rides": 5
-      },
-      {
-        "name": "Ali",
-        "miles": 85.13580688777527,
-        "feet": 4717.84776901,
+        "miles": 97.09595959596005,
+        "feet": 4786.745406805,
         "rides": 4
       },
       {
+        "name": "Oscar",
+        "miles": 91.5746415930955,
+        "feet": 3664.6981627150003,
+        "rides": 8
+      },
+      {
         "name": "Jake",
-        "miles": 73.63658732999261,
-        "feet": 4189.632545915,
+        "miles": 85.84740117712559,
+        "feet": 5367.45406822,
+        "rides": 4
+      },
+      {
+        "name": "Abe",
+        "miles": 96.32166895331277,
+        "feet": 5915.354330685001,
         "rides": 3
       },
       {
+        "name": "Ali",
+        "miles": 65.82309313608526,
+        "feet": 4314.304461925,
+        "rides": 4
+      },
+      {
         "name": "Randee",
-        "miles": 70.56751073729443,
-        "feet": 6906.167978975001,
-        "rides": 3
+        "miles": 77.67363596595857,
+        "feet": 6017.06036743,
+        "rides": 5
       }
     ],
     "prs": [
       {
         "name": "Oscar",
-        "seg": "Bluebird/Summit",
-        "id": "6140474",
-        "tries": 1,
-        "leader": "Jose",
-        "behind": 70,
+        "seg": "Highlands",
+        "id": "4905033",
+        "tries": 2,
+        "leader": "Abe",
+        "behind": 53,
         "took": false,
         "with": [],
-        "time": "11:22",
+        "time": "10:23",
         "was": null,
         "gain": null,
         "first": true
       },
       {
         "name": "Oscar",
-        "seg": "Temple Hills",
-        "id": "580930",
-        "tries": 1,
-        "leader": "Randee",
-        "behind": 15,
-        "took": false,
-        "with": [],
-        "time": "18:02",
-        "was": null,
-        "gain": null,
-        "first": true
-      },
-      {
-        "name": "Abe",
-        "seg": "Highlands",
-        "id": "4905033",
+        "seg": "Irvine Speedway",
+        "id": "25403641",
         "tries": 1,
         "leader": null,
         "behind": null,
         "took": true,
         "with": [],
-        "time": "9:30",
+        "time": "1:05",
+        "was": "1:08",
+        "gain": 3,
+        "first": false
+      },
+      {
+        "name": "Jake",
+        "seg": "Pacific Island South",
+        "id": "596560",
+        "tries": 1,
+        "leader": "Jose",
+        "behind": 103,
+        "took": false,
+        "with": [],
+        "time": "13:39",
         "was": null,
         "gain": null,
         "first": true
       },
       {
-        "name": "Jake",
-        "seg": "Starcrest",
-        "id": "757408",
-        "tries": 3,
-        "leader": "Jose",
-        "behind": 47,
+        "name": "Ali",
+        "seg": "Back Bay Climb Out",
+        "id": "3256589",
+        "tries": 1,
+        "leader": "Randee",
+        "behind": 6,
         "took": false,
         "with": [],
-        "time": "4:46",
-        "was": "5:00",
+        "time": "1:21",
+        "was": "1:35",
         "gain": 14,
         "first": false
+      },
+      {
+        "name": "Randee",
+        "seg": "Pacific Island South",
+        "id": "596560",
+        "tries": 1,
+        "leader": "Jose",
+        "behind": 153,
+        "took": false,
+        "with": [],
+        "time": "14:29",
+        "was": "17:03",
+        "gain": 154,
+        "first": false
+      }
+    ],
+    "tried": [
+      {
+        "name": "Jose",
+        "seg": "Back Bay 2 mile TT",
+        "id": "22971497",
+        "tries": 1,
+        "leader": "Oscar",
+        "behind": 12,
+        "took": false,
+        "with": [],
+        "best": "5:16"
+      },
+      {
+        "name": "Jose",
+        "seg": "Back Bay Climb Out",
+        "id": "3256589",
+        "tries": 1,
+        "leader": "Randee",
+        "behind": 20,
+        "took": false,
+        "with": [],
+        "best": "1:35"
+      },
+      {
+        "name": "Oscar",
+        "seg": "Back Bay 2 mile TT",
+        "id": "22971497",
+        "tries": 1,
+        "leader": null,
+        "behind": null,
+        "took": false,
+        "with": [],
+        "best": "5:04"
+      },
+      {
+        "name": "Jake",
+        "seg": "Newport Coast Climb",
+        "id": "913750",
+        "tries": 1,
+        "leader": "Abe",
+        "behind": 35,
+        "took": false,
+        "with": [],
+        "best": "10:34"
+      },
+      {
+        "name": "Jake",
+        "seg": "Back Bay 2 mile TT",
+        "id": "22971497",
+        "tries": 1,
+        "leader": "Oscar",
+        "behind": 32,
+        "took": false,
+        "with": [],
+        "best": "5:36"
+      },
+      {
+        "name": "Jake",
+        "seg": "Irvine Speedway",
+        "id": "25403641",
+        "tries": 1,
+        "leader": "Oscar",
+        "behind": 5,
+        "took": false,
+        "with": [],
+        "best": "1:10"
       },
       {
         "name": "Jake",
@@ -134,67 +210,29 @@
         "behind": 18,
         "took": false,
         "with": [],
-        "time": "5:22",
-        "was": "5:41",
-        "gain": 19,
-        "first": false
-      }
-    ],
-    "tried": [
-      {
-        "name": "Jose",
-        "seg": "Portola KOM Climb",
-        "id": "649404",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": false,
-        "with": [],
-        "best": "3:52"
-      },
-      {
-        "name": "Oscar",
-        "seg": "Jeronimoooo!",
-        "id": "13737114",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": false,
-        "with": [],
-        "best": "0:46"
-      },
-      {
-        "name": "Abe",
-        "seg": "Portola KOM Climb",
-        "id": "649404",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": false,
-        "with": [],
-        "best": "3:52"
-      },
-      {
-        "name": "Abe",
-        "seg": "Jeronimoooo!",
-        "id": "13737114",
-        "tries": 1,
-        "leader": "Oscar",
-        "behind": 7,
-        "took": false,
-        "with": [],
-        "best": "0:53"
+        "best": "5:22"
       },
       {
         "name": "Ali",
-        "seg": "Portola KOM Climb",
-        "id": "649404",
+        "seg": "Quail Hill Sprint Climb",
+        "id": "7855869",
         "tries": 1,
-        "leader": "Abe and Jose",
-        "behind": 24,
+        "leader": "Jake",
+        "behind": 4,
         "took": false,
         "with": [],
-        "best": "4:16"
+        "best": "2:16"
+      },
+      {
+        "name": "Ali",
+        "seg": "Back Bay 2 mile TT",
+        "id": "22971497",
+        "tries": 1,
+        "leader": "Oscar",
+        "behind": 126,
+        "took": false,
+        "with": [],
+        "best": "7:10"
       },
       {
         "name": "Randee",
@@ -209,78 +247,37 @@
       },
       {
         "name": "Randee",
-        "seg": "Temple Hills",
-        "id": "580930",
+        "seg": "Newport Coast Climb",
+        "id": "913750",
         "tries": 1,
-        "leader": null,
-        "behind": null,
+        "leader": "Abe",
+        "behind": 39,
         "took": false,
         "with": [],
-        "best": "17:47"
-      },
-      {
-        "name": "Randee",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "tries": 1,
-        "leader": "Ali and Jake",
-        "behind": 133,
-        "took": false,
-        "with": [],
-        "best": "17:49"
+        "best": "10:38"
       }
     ],
-    "power": [
-      {
-        "name": "Jose",
-        "window": "20 min",
-        "watts": 273,
-        "was": 271
-      },
-      {
-        "name": "Jose",
-        "window": "1 hr",
-        "watts": 223,
-        "was": 220
-      },
-      {
-        "name": "Abe",
-        "window": "5 min",
-        "watts": 308,
-        "was": 296
-      },
-      {
-        "name": "Abe",
-        "window": "10 min",
-        "watts": 288,
-        "was": 268
-      }
-    ],
+    "power": [],
     "jerseys": [],
     "segs": {
       "added": [],
-      "removed": [
-        {
-          "id": "618874",
-          "name": "4000 meter"
-        }
-      ],
+      "removed": [],
       "known": true
     },
     "koms": [
       {
-        "seg": "Highlands",
-        "id": "4905033",
+        "seg": "Irvine Speedway",
+        "id": "25403641",
         "to": [
-          "Abe"
+          "Oscar"
         ],
         "from": [
           "Jose"
         ],
         "with": [],
         "joint": false,
-        "time": "9:30",
-        "by": 22
+        "time": "1:05",
+        "by": 2
       }
     ]
   }
