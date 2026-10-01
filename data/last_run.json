@@ -1,13 +1,13 @@
 {
   "riders": {
     "ali": {
-      "activities_seen": 5
+      "activities_seen": 4
     },
     "jake": {
       "activities_seen": 0
     },
     "randee": {
-      "activities_seen": 5
+      "activities_seen": 4
     },
     "abe": {
       "activities_seen": 0
@@ -20,11 +20,11 @@
     }
   },
   "notes": [],
-  "finished_utc": "2026-09-30T20:16:24Z",
+  "finished_utc": "2026-10-01T00:08:41Z",
   "reads_this_run": 26,
   "window_waits": 0,
   "rate_limit_window": "17/200",
-  "rate_limit_daily": "158/2000",
+  "rate_limit_daily": "17/2000",
   "tokens_present": [
     "abe",
     "ali",
