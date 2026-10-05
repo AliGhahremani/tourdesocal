@@ -10,21 +10,21 @@
       "activities_seen": 6
     },
     "abe": {
-      "activities_seen": 1
+      "activities_seen": 2
     },
     "jose": {
-      "activities_seen": 3
+      "activities_seen": 4
     },
     "oscar": {
       "activities_seen": 4
     }
   },
   "notes": [],
-  "finished_utc": "2026-10-05T06:51:55Z",
-  "reads_this_run": 36,
+  "finished_utc": "2026-10-05T15:52:41Z",
+  "reads_this_run": 40,
   "window_waits": 0,
-  "rate_limit_window": "23/200",
-  "rate_limit_daily": "97/2000",
+  "rate_limit_window": "25/200",
+  "rate_limit_daily": "122/2000",
   "tokens_present": [
     "abe",
     "ali",
