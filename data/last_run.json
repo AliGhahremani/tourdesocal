@@ -4,27 +4,27 @@
       "activities_seen": 2
     },
     "jake": {
-      "activities_seen": 4
+      "activities_seen": 3
     },
     "randee": {
-      "activities_seen": 7
+      "activities_seen": 6
     },
     "abe": {
       "activities_seen": 3
     },
     "jose": {
-      "activities_seen": 4
+      "activities_seen": 3
     },
     "oscar": {
-      "activities_seen": 4
+      "activities_seen": 3
     }
   },
   "notes": [],
-  "finished_utc": "2026-10-06T16:14:07Z",
-  "reads_this_run": 45,
+  "finished_utc": "2026-10-06T21:11:03Z",
+  "reads_this_run": 39,
   "window_waits": 0,
-  "rate_limit_window": "27/200",
-  "rate_limit_daily": "104/2000",
+  "rate_limit_window": "24/200",
+  "rate_limit_daily": "213/2000",
   "tokens_present": [
     "abe",
     "ali",
