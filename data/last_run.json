@@ -1,7 +1,7 @@
 {
   "riders": {
     "ali": {
-      "activities_seen": 2
+      "activities_seen": 1
     },
     "jake": {
       "activities_seen": 2
@@ -13,18 +13,18 @@
       "activities_seen": 4
     },
     "jose": {
-      "activities_seen": 3
+      "activities_seen": 2
     },
     "oscar": {
-      "activities_seen": 3
+      "activities_seen": 4
     }
   },
   "notes": [],
-  "finished_utc": "2026-10-07T14:42:53Z",
-  "reads_this_run": 39,
+  "finished_utc": "2026-10-07T20:33:12Z",
+  "reads_this_run": 36,
   "window_waits": 0,
-  "rate_limit_window": "24/200",
-  "rate_limit_daily": "99/2000",
+  "rate_limit_window": "95/200",
+  "rate_limit_daily": "208/2000",
   "tokens_present": [
     "abe",
     "ali",
