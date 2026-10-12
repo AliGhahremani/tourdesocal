@@ -1,299 +1,106 @@
 {
-  "generated": "Oct 4, 2026",
+  "generated": "Oct 11, 2026",
   "baseline": false,
-  "blurb": "Another week, another set of receipts. Randee held Temple Hills coming into this week and does not hold it now. Jose went 13:18. Oscar took 2:00 off Laguna Canyon -LF 2 F and set 15:35. That is a proper improvement, not a rounding error. Jake went at Starcrest and finished 19 seconds behind Jose. Close enough to hurt. Ali went at Portola KOM Climb once and came away with nothing. There is always next week. Ali, Jake, Randee, Abe, Jose and Oscar have each spent the season attacking a segment they still do not hold.",
+  "blurb": "Another week, another set of receipts. Santa Vittoria Dr. bump belongs to Oscar now. 1:05, 1 second clear of Jose. Abe logged 3.4 hours indoors. That is not a training block, that is a hostage situation. Go and be a good friend. Randee came within 9 seconds of Oscar on Santa Vittoria Dr. bump and no closer. 146 miles from Jose, none of them anywhere near a segment that counts. Impressive commitment to the scenic route. Ali, Jake, Randee, Abe, Jose and Oscar have each spent the season attacking a segment they still do not hold.",
   "diff": {
     "baseline": false,
     "movers": [],
     "week": [
       {
         "name": "Jose",
-        "miles": 131.71789250775495,
-        "feet": 6384.51443567,
-        "rides": 5
-      },
-      {
-        "name": "Oscar",
-        "miles": 185.51993855881733,
-        "feet": 7746.0629920950005,
-        "rides": 13
-      },
-      {
-        "name": "Jake",
-        "miles": 39.36628837588564,
-        "feet": 2076.771653535,
+        "miles": 145.52370406824215,
+        "feet": 8421.916010465,
         "rides": 4
       },
       {
+        "name": "Oscar",
+        "miles": 73.37685417163799,
+        "feet": 2631.23359579,
+        "rides": 6
+      },
+      {
+        "name": "Jake",
+        "miles": 137.6099827010259,
+        "feet": 7762.46719157,
+        "rides": 5
+      },
+      {
         "name": "Abe",
-        "miles": 15.221978644715096,
-        "feet": 456.03674540500003,
-        "rides": 1
+        "miles": 61.811644993239014,
+        "feet": 1965.223097105,
+        "rides": 4
       },
       {
         "name": "Ali",
-        "miles": 84.78709337469157,
-        "feet": 6167.9790026,
+        "miles": 115.63282927702218,
+        "feet": 10121.391076075,
         "rides": 4
       },
       {
         "name": "Randee",
-        "miles": 76.61475731726716,
-        "feet": 4550.524934365,
-        "rides": 7
+        "miles": 150.4541602044057,
+        "feet": 10236.220472399977,
+        "rides": 6
       }
     ],
     "prs": [
       {
-        "name": "Jose",
-        "seg": "Temple Hills",
-        "id": "580930",
+        "name": "Oscar",
+        "seg": "Portola KOM Climb",
+        "id": "649404",
         "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": true,
-        "with": [],
-        "time": "13:18",
-        "was": null,
-        "gain": null,
-        "first": true
-      },
-      {
-        "name": "Jose",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "tries": 1,
-        "leader": "Oscar",
-        "behind": 79,
+        "leader": "Abe and Jose",
+        "behind": 25,
         "took": false,
         "with": [],
-        "time": "16:54",
-        "was": "18:03",
-        "gain": 69,
-        "first": false
-      },
-      {
-        "name": "Jose",
-        "seg": "Jeronimoooo!",
-        "id": "13737114",
-        "tries": 1,
-        "leader": "Oscar",
-        "behind": 4,
-        "took": false,
-        "with": [],
-        "time": "0:50",
-        "was": "1:07",
-        "gain": 17,
-        "first": false
-      },
-      {
-        "name": "Jose",
-        "seg": "Back Bay Climb Out",
-        "id": "3256589",
-        "tries": 1,
-        "leader": "Randee",
-        "behind": 15,
-        "took": false,
-        "with": [],
-        "time": "1:30",
-        "was": "1:35",
-        "gain": 5,
+        "time": "4:17",
+        "was": "4:29",
+        "gain": 12,
         "first": false
       },
       {
         "name": "Oscar",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": true,
-        "with": [],
-        "time": "15:35",
-        "was": "17:35",
-        "gain": 120,
-        "first": false
-      },
-      {
-        "name": "Oscar",
-        "seg": "Ridgeline Dr - Turtle Rock Dr Stop Sign",
-        "id": "1189771",
+        "seg": "Santa Vittoria Dr. bump",
+        "id": "860396",
         "tries": 2,
         "leader": null,
         "behind": null,
         "took": true,
         "with": [],
-        "time": "4:58",
-        "was": "5:25",
-        "gain": 27,
-        "first": false
+        "time": "1:05",
+        "was": null,
+        "gain": null,
+        "first": true
       },
       {
-        "name": "Jake",
-        "seg": "Back Bay 2 mile TT",
-        "id": "22971497",
+        "name": "Randee",
+        "seg": "Santa Vittoria Dr. bump",
+        "id": "860396",
         "tries": 1,
         "leader": "Oscar",
-        "behind": 22,
+        "behind": 9,
         "took": false,
         "with": [],
-        "time": "5:26",
-        "was": "5:36",
-        "gain": 10,
-        "first": false
-      },
-      {
-        "name": "Jake",
-        "seg": "Starcrest",
-        "id": "757408",
-        "tries": 1,
-        "leader": "Jose",
-        "behind": 19,
-        "took": false,
-        "with": [],
-        "time": "4:18",
-        "was": "4:46",
-        "gain": 28,
-        "first": false
+        "time": "1:14",
+        "was": null,
+        "gain": null,
+        "first": true
       }
     ],
     "tried": [
       {
-        "name": "Jose",
-        "seg": "Portola KOM Climb",
-        "id": "649404",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": false,
-        "with": [],
-        "best": "3:52"
-      },
-      {
-        "name": "Jose",
-        "seg": "Starcrest",
-        "id": "757408",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": false,
-        "with": [],
-        "best": "3:59"
-      },
-      {
-        "name": "Jose",
+        "name": "Randee",
         "seg": "Ridgeline Dr - Turtle Rock Dr Stop Sign",
         "id": "1189771",
         "tries": 1,
         "leader": "Oscar",
-        "behind": 13,
+        "behind": 71,
         "took": false,
         "with": [],
-        "best": "5:11"
-      },
-      {
-        "name": "Oscar",
-        "seg": "Portola KOM Climb",
-        "id": "649404",
-        "tries": 1,
-        "leader": "Abe and Jose",
-        "behind": 37,
-        "took": false,
-        "with": [],
-        "best": "4:29"
-      },
-      {
-        "name": "Oscar",
-        "seg": "Newport Coast Climb",
-        "id": "913750",
-        "tries": 1,
-        "leader": "Abe",
-        "behind": 62,
-        "took": false,
-        "with": [],
-        "best": "11:01"
-      },
-      {
-        "name": "Jake",
-        "seg": "Irvine Speedway",
-        "id": "25403641",
-        "tries": 1,
-        "leader": "Oscar",
-        "behind": 5,
-        "took": false,
-        "with": [],
-        "best": "1:10"
-      },
-      {
-        "name": "Jake",
-        "seg": "Ridgeline Dr - Turtle Rock Dr Stop Sign",
-        "id": "1189771",
-        "tries": 1,
-        "leader": "Oscar",
-        "behind": 24,
-        "took": false,
-        "with": [],
-        "best": "5:22"
-      },
-      {
-        "name": "Ali",
-        "seg": "Portola KOM Climb",
-        "id": "649404",
-        "tries": 1,
-        "leader": "Abe and Jose",
-        "behind": 24,
-        "took": false,
-        "with": [],
-        "best": "4:16"
-      },
-      {
-        "name": "Ali",
-        "seg": "Newport Coast Climb",
-        "id": "913750",
-        "tries": 1,
-        "leader": "Abe",
-        "behind": 62,
-        "took": false,
-        "with": [],
-        "best": "11:01"
-      },
-      {
-        "name": "Ali",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "tries": 1,
-        "leader": "Oscar",
-        "behind": 1,
-        "took": false,
-        "with": [],
-        "best": "15:36"
-      },
-      {
-        "name": "Ali",
-        "seg": "Back Bay Climb Out",
-        "id": "3256589",
-        "tries": 1,
-        "leader": "Randee",
-        "behind": 6,
-        "took": false,
-        "with": [],
-        "best": "1:21"
+        "best": "6:09"
       }
     ],
-    "power": [
-      {
-        "name": "Randee",
-        "window": "30 min",
-        "watts": 216,
-        "was": 214
-      },
-      {
-        "name": "Randee",
-        "window": "1 hr",
-        "watts": 203,
-        "was": 201
-      }
-    ],
+    "power": [],
     "jerseys": [],
     "segs": {
       "added": [],
@@ -302,47 +109,18 @@
     },
     "koms": [
       {
-        "seg": "Temple Hills",
-        "id": "580930",
+        "seg": "Santa Vittoria Dr. bump",
+        "id": "860396",
         "to": [
+          "Oscar"
+        ],
+        "from": [
           "Jose"
         ],
-        "from": [
-          "Randee"
-        ],
         "with": [],
         "joint": false,
-        "time": "13:18",
-        "by": 269
-      },
-      {
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "to": [
-          "Oscar"
-        ],
-        "from": [
-          "Ali",
-          "Jake"
-        ],
-        "with": [],
-        "joint": false,
-        "time": "15:35",
+        "time": "1:05",
         "by": 1
-      },
-      {
-        "seg": "Ridgeline Dr - Turtle Rock Dr Stop Sign",
-        "id": "1189771",
-        "to": [
-          "Oscar"
-        ],
-        "from": [
-          "Abe"
-        ],
-        "with": [],
-        "joint": false,
-        "time": "4:58",
-        "by": 6
       }
     ]
   }
