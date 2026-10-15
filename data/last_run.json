@@ -4,7 +4,7 @@
       "activities_seen": 1
     },
     "jake": {
-      "activities_seen": 2
+      "activities_seen": 1
     },
     "randee": {
       "activities_seen": 4
@@ -20,11 +20,11 @@
     }
   },
   "notes": [],
-  "finished_utc": "2026-10-15T17:43:03Z",
-  "reads_this_run": 22,
+  "finished_utc": "2026-10-15T21:16:08Z",
+  "reads_this_run": 20,
   "window_waits": 0,
-  "rate_limit_window": "14/200",
-  "rate_limit_daily": "81/2000",
+  "rate_limit_window": "13/200",
+  "rate_limit_daily": "174/2000",
   "tokens_present": [
     "abe",
     "ali",
