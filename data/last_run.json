@@ -20,11 +20,11 @@
     }
   },
   "notes": [],
-  "finished_utc": "2026-10-24T18:56:51Z",
+  "finished_utc": "2026-10-24T21:29:52Z",
   "reads_this_run": 25,
   "window_waits": 0,
   "rate_limit_window": "17/200",
-  "rate_limit_daily": "167/2000",
+  "rate_limit_daily": "199/2000",
   "tokens_present": [
     "abe",
     "ali",
@@ -34,12 +34,7 @@
     "randee"
   ],
   "tokens_missing": [],
-  "changes": [
-    "Jose new 2026 20 min power: 283 W",
-    "Jose new 2026 30 min power: 262 W",
-    "Jose new 2026 60 min power: 252 W",
-    "Oscar new 2026 best on segment 7855869: 2:07"
-  ],
+  "changes": [],
   "backfill_complete": true,
   "daily_spent_on": null
 }
