@@ -1,16 +1,16 @@
 {
-  "updated": "Oct 25, 2026 at 10:34 AM",
+  "updated": "Oct 25, 2026 at 12:55 PM",
   "athletes": {
     "ali": {
       "id": 20156041,
       "display": "Ali",
-      "last_epoch": 1792949660,
+      "last_epoch": 1792958108,
       "strava_id": 20156041,
       "season": {
         "2026": {
-          "dist_m": 5152841.6,
-          "elev_m": 65508.1,
-          "rides": 172,
+          "dist_m": 5158059.1,
+          "elev_m": 65551.1,
+          "rides": 173,
           "ids": [
             16916344510,
             16926889720,
@@ -183,7 +183,8 @@
             20590249073,
             20624297811,
             20706915030,
-            20716398350
+            20716398350,
+            20729862666
           ],
           "bests": {
             "8410981": {
@@ -422,7 +423,7 @@
             "1800": 234,
             "3600": 220
           },
-          "time_s": 840899,
+          "time_s": 842304,
           "vtime_s": 140918,
           "vrides": 54
         }
@@ -431,7 +432,7 @@
     "jake": {
       "id": 2977194,
       "display": "Jake",
-      "last_epoch": 1792949664,
+      "last_epoch": 1792958113,
       "strava_id": 2977194,
       "season": {
         "2026": {
@@ -908,7 +909,7 @@
     "randee": {
       "id": 100854849,
       "display": "Randee",
-      "last_epoch": 1792949669,
+      "last_epoch": 1792958118,
       "strava_id": 100854849,
       "season": {
         "2026": {
@@ -1445,7 +1446,7 @@
     "abe": {
       "id": "abe",
       "display": "Abe",
-      "last_epoch": 1792949670,
+      "last_epoch": 1792958119,
       "strava_id": 17625052,
       "season": {
         "2026": {
@@ -1789,7 +1790,7 @@
     "jose": {
       "id": "jose",
       "display": "Jose",
-      "last_epoch": 1792949670,
+      "last_epoch": 1792958119,
       "strava_id": 106484862,
       "season": {
         "2026": {
@@ -2287,7 +2288,7 @@
     "oscar": {
       "id": 103800251,
       "display": "Oscar",
-      "last_epoch": 1792949674,
+      "last_epoch": 1792958123,
       "strava_id": 103800251,
       "season": {
         "2025": {
