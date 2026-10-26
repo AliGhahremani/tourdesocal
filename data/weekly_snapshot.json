@@ -1,5 +1,5 @@
 {
-  "taken_utc": "2026-10-19T03:32:22Z",
+  "taken_utc": "2026-10-26T03:32:20Z",
   "year": "2026",
   "riders": {
     "Ali": {
@@ -79,10 +79,10 @@
         "1800": 234,
         "3600": 220
       },
-      "dist_m": 5064616.1,
-      "elev_m": 64555.1,
-      "rides": 170,
-      "time_s": 827362,
+      "dist_m": 5158059.1,
+      "elev_m": 65551.1,
+      "rides": 173,
+      "time_s": 842304,
       "vtime_s": 140918,
       "vrides": 54
     },
@@ -151,12 +151,12 @@
         "1800": 245,
         "3600": 219
       },
-      "dist_m": 5220745.299999999,
-      "elev_m": 44549.0,
-      "rides": 129,
-      "time_s": 664439,
-      "vtime_s": 7557,
-      "vrides": 5
+      "dist_m": 5323337.799999998,
+      "elev_m": 45401.0,
+      "rides": 134,
+      "time_s": 677382,
+      "vtime_s": 20500,
+      "vrides": 10
     },
     "Randee": {
       "bests": {
@@ -241,10 +241,10 @@
         "1800": 216,
         "3600": 203
       },
-      "dist_m": 6629130.399999999,
-      "elev_m": 67833.79999999999,
-      "rides": 220,
-      "time_s": 1046975,
+      "dist_m": 6699703.1,
+      "elev_m": 68516.79999999999,
+      "rides": 222,
+      "time_s": 1058349,
       "vtime_s": 21794,
       "vrides": 10
     },
@@ -387,23 +387,23 @@
         "609701": 1,
         "6140474": 1,
         "830079": 1,
-        "22971497": 3,
+        "22971497": 4,
         "7855869": 1,
-        "3256589": 7,
+        "3256589": 8,
         "609924": 1,
         "580930": 1
       },
       "power": {
         "300": 365,
         "600": 358,
-        "1200": 273,
-        "1800": 252,
-        "3600": 223
+        "1200": 283,
+        "1800": 262,
+        "3600": 252
       },
-      "dist_m": 6917302.800000001,
-      "elev_m": 66710.0,
-      "rides": 147,
-      "time_s": 891022,
+      "dist_m": 7107554.200000001,
+      "elev_m": 68527.0,
+      "rides": 151,
+      "time_s": 915786,
       "vtime_s": 0,
       "vrides": 0
     },
@@ -412,8 +412,8 @@
         "22971497": 304,
         "3256589": 78,
         "649404": 257,
-        "25403641": 65,
-        "7855869": 145,
+        "25403641": 51,
+        "7855869": 127,
         "913750": 661,
         "13737114": 46,
         "1189771": 298,
@@ -426,14 +426,15 @@
         "6140474": 682,
         "580930": 1082,
         "4905033": 623,
-        "860396": 65
+        "860396": 65,
+        "609924": 870
       },
       "best_dates": {
         "22971497": "Mar 17, 2026",
         "3256589": "May 26, 2026",
         "649404": "Oct 6, 2026",
-        "25403641": "Sep 24, 2026",
-        "7855869": "Jun 9, 2026",
+        "25403641": "Oct 22, 2026",
+        "7855869": "Oct 24, 2026",
         "913750": "Sep 8, 2026",
         "13737114": "Aug 25, 2026",
         "1189771": "Oct 1, 2026",
@@ -446,18 +447,19 @@
         "6140474": "Sep 17, 2026",
         "580930": "Sep 17, 2026",
         "4905033": "Sep 22, 2026",
-        "860396": "Oct 8, 2026"
+        "860396": "Oct 8, 2026",
+        "609924": "Oct 21, 2026"
       },
       "attempts": {
-        "22971497": 25,
-        "3256589": 25,
+        "22971497": 26,
+        "3256589": 26,
         "649404": 10,
-        "25403641": 4,
-        "7855869": 4,
+        "25403641": 5,
+        "7855869": 5,
         "913750": 6,
         "13737114": 10,
         "1189771": 4,
-        "8410981": 2,
+        "8410981": 4,
         "633514": 2,
         "618874": 2,
         "757408": 1,
@@ -466,7 +468,8 @@
         "6140474": 1,
         "580930": 1,
         "4905033": 2,
-        "860396": 2
+        "860396": 2,
+        "609924": 1
       },
       "power": {
         "300": 288,
@@ -475,10 +478,10 @@
         "1800": 201,
         "3600": 185
       },
-      "dist_m": 5757862.1,
-      "elev_m": 45181.399999999994,
-      "rides": 226,
-      "time_s": 859407,
+      "dist_m": 6132975.699999998,
+      "elev_m": 47787.399999999994,
+      "rides": 235,
+      "time_s": 912391,
       "vtime_s": 18496,
       "vrides": 5
     }
@@ -490,9 +493,9 @@
       "ridden": 20
     },
     "Oscar": {
-      "sec": 10117,
+      "sec": 9844,
       "pos": 2,
-      "ridden": 17
+      "ridden": 18
     },
     "Abe": {
       "sec": 10350,
@@ -517,64 +520,64 @@
   },
   "jerseys": {
     "yellow": "Jose",
-    "polka": "Randee",
+    "polka": "Jose",
     "green": "Jose"
   },
   "assess_seen": {
     "Jose": [
+      "behind",
+      "spread",
       "lasts",
       "pace",
       "grind",
       "volume",
       "complete",
       "polka",
-      "koms",
-      "table",
-      "leader"
+      "koms"
     ],
     "Ali": [
+      "volume",
+      "no_koms",
+      "behind",
       "polka",
       "ahead",
       "never",
       "grind",
       "yellow",
-      "fpm",
-      "lasts",
-      "no_koms",
-      "behind"
+      "fpm"
     ],
     "Jake": [
+      "ahead",
+      "grind",
       "volume",
       "table",
       "no_koms",
       "spread",
       "lasts",
       "yellow",
-      "never",
-      "koms",
-      "behind"
+      "never"
     ],
     "Abe": [
+      "grind",
+      "ahead",
       "yellow",
       "koms",
       "behind",
       "indoor",
       "volume",
       "table",
-      "never",
-      "ahead",
-      "grind"
+      "never"
     ],
     "Randee": [
+      "polka",
+      "lasts",
       "green",
       "yellow",
       "complete",
       "ahead",
       "grind",
       "koms",
-      "never",
-      "volume",
-      "lasts"
+      "never"
     ],
     "Oscar": [
       "koms",
@@ -588,6 +591,9 @@
   },
   "assess_said": {
     "Jose": [
+      "Once at Back Bay 2 mile TT this week and no improvement. 5:16 still stands, 12 seconds off Oscar.",
+      "Oscar is 13:36 behind you and closing is easier than defending. Do not get comfortable.",
+      "120 attempts, but only twenty distinct segments. Volume in the wrong direction.",
       "Once at Santa Vittoria Dr. bump this week and no improvement. 1:06 still stands, 1 seconds off Oscar.",
       "The other side of it: two last places, more time given away than you probably think.",
       "On a typical segment you finish within 3 percent of the fastest time set. You are closer to the front than the table suggests.",
@@ -598,12 +604,12 @@
       "4 seconds. That is all that stood between you and Oscar on Jeronimoooo! this week. You did take a personal best out of it.",
       "All twenty segments ridden this year. Whatever else is true, nobody can say you dodged anything.",
       "You lost Irvine Speedway to Oscar by 2 seconds. It is 1:05 to get it back.",
-      "You went at Back Bay 2 mile TT once this week and did not beat your own 5:16, which is still 12 seconds off Oscar.",
-      "Polka dot sits 6,804 feet away, which is a handful of proper days in the hills.",
-      "Abe took Highlands off you by 22 seconds this week. You held that one coming in and you do not hold it now.",
-      "One fewer thing to avoid: 4000 meter is off the board and you never did ride it."
+      "You went at Back Bay 2 mile TT once this week and did not beat your own 5:16, which is still 12 seconds off Oscar."
     ],
     "Ali": [
+      "173 rides and 234 hours in the bank. Nobody is going to accuse you of not turning up.",
+      "Nineteen segments ridden and not one of them is yours.",
+      "Check your mirrors. Randee sits 3:41 back.",
       "You went at Laguna Canyon -LF 2 F once and finished 2 seconds behind Randee. You did take a personal best out of it. That is close enough to be annoying and close enough to fix.",
       "Polka dot sits 10,757 feet away, which is a handful of proper days in the hills.",
       "You sit fifth, 55 seconds behind Jake. Nobody is going to hand you that.",
@@ -614,12 +620,12 @@
       "You went at Laguna Canyon -LF 2 F once this week and did not beat your own 15:36, which is still 1 seconds off Oscar.",
       "Yellow is 26:40 away. Not close, not impossible.",
       "You went at Quail Hill Sprint Climb once this week and did not beat your own 2:16, which is still 4 seconds off Jake.",
-      "67 feet per mile. You do not ride flat and it shows.",
-      "The other side of it: seven last places, more time given away than you probably think.",
-      "You went at Portola KOM Climb once this week and did not beat your own 4:16, which is still 24 seconds off Abe and Jose.",
-      "One segment out of eighteen ridden has your name on it. One."
+      "67 feet per mile. You do not ride flat and it shows."
     ],
     "Jake": [
+      "You lost Quail Hill Sprint Climb to Oscar by 5 seconds. It is 2:07 to get it back.",
+      "The only man you actually have to beat is Abe, and he is 2:24 ahead. Everything past him is a bonus.",
+      "44 runs at Irvine Speedway and it is still Oscar's. At some point that stops being persistence.",
       "Twice at Irvine Speedway this week and no improvement. 1:10 still stands, 5 seconds off Oscar.",
       "129 rides this year. The consistency is real even when the results are not.",
       "Add up everything you are giving away by not riding the segments you skip and it comes to about 11:19. That is not training, that is paperwork.",
@@ -630,12 +636,12 @@
       "A 39 mile week from a man who normally turns in 77. The bike was right there.",
       "You went at Irvine Speedway once this week and did not beat your own 1:10, which is still 5 seconds off Oscar.",
       "Once at Irvine Speedway this week and no improvement. 1:10 still stands, 5 seconds off Oscar.",
-      "You are also the slowest man on two segments, Dump Hill among them.",
-      "15:22 covers the whole gap to the race lead.",
-      "4000 meter came off the list this week and you were the fastest man on it. That one is gone and it is not coming back.",
-      "Ridgeline Dr - Turtle Rock Dr Stop Sign once this week, still 18 seconds off Abe. You did take a personal best out of it. He has not had to respond yet."
+      "You are also the slowest man on two segments, Dump Hill among them."
     ],
     "Abe": [
+      "Nothing at all this week. The season has a deadline and it does not care what came up.",
+      "Jeronimoooo! has taken fifteen attempts off you and given nothing back. Oscar has not had to defend it once.",
+      "8:26 to Oscar. Say that out loud and it stops sounding like a lot.",
       "You went at Laguna Canyon -LF 2 F once and finished 4 seconds behind Randee. You did take a personal best out of it. That is close enough to be annoying and close enough to fix.",
       "22:02 covers the whole gap to the race lead.",
       "You are fastest on three segments, and Portola KOM Climb is one of them.",
@@ -646,12 +652,12 @@
       "15 miles. Your own average week is 78. Whatever that was, it was not a week of riding.",
       "About 15:52 is sitting on the table for you, and all of it is in segments you have simply not ridden this year.",
       "Your 2026 blank list is five deep. Nyes Place sits on top of it holding 3:19 of your time hostage.",
-      "Jake is 51 seconds up the road in third. That is one good segment, not a rebuild.",
-      "Fifteen runs at Jeronimoooo! and it is still Oscar's. At some point that stops being persistence.",
-      "You took Highlands off Jose by 22 seconds, in 9:30. That segment is yours until somebody comes and gets it.",
-      "Once at Jeronimoooo! this week and no improvement. 0:53 still stands, 7 seconds off Oscar."
+      "Jake is 51 seconds up the road in third. That is one good segment, not a rebuild."
     ],
     "Randee": [
+      "Let us talk about the 44 miles. You average 98 a week. This was 45 percent of a normal you, and nobody made you do that.",
+      "Polka dot sits 33 feet away, which is a handful of proper days in the hills.",
+      "The other side of it: seven last places, more time given away than you probably think.",
       "Laguna Canyon -LF 2 F is yours. 14:56, by 39 seconds of Oscar, who held it coming into this week.",
       "You are 179 miles off green. That is a fortnight of deciding to go outside.",
       "Yellow is 29:02 away. Not close, not impossible.",
@@ -662,12 +668,12 @@
       "You sit sixth, 3:23 behind Ali. Nobody is going to hand you that.",
       "Irvine Speedway has taken seventeen attempts off you and given nothing back. Oscar has not had to defend it once.",
       "You went at Quail Hill Sprint Climb once this week and did not beat your own 2:14, which is still 2 seconds off Jake.",
-      "Three segments on this site are yours until somebody goes quicker.",
-      "One segment stands between you and the full set this year: Santa Vittoria Dr. bump. Riding it once is worth about 2 seconds to your GC.",
-      "Bad news aimed squarely at you: 4000 meter has been removed, and it was yours. Everyone else lost a segment. You lost a win.",
-      "198 rides, 262 hours, top of the pile on volume. That is a season nobody can argue with."
+      "Three segments on this site are yours until somebody goes quicker."
     ],
     "Oscar": [
+      "The headline from your week: Jake no longer owns Quail Hill Sprint Climb. You do, on 2:07.",
+      "You went at Back Bay Climb Out once this week and did not beat your own 1:18, which is still 3 seconds off Randee.",
+      "233 miles against your own 90 average. Something has got into you and the rest of them should hope it wears off.",
       "Laguna Canyon -LF 2 F was yours until this week. Randee went 14:56 and it is his problem to defend now, not yours.",
       "Zero rides. Not a slow week, not a short week. Zero.",
       "Nobody has beaten you on six of the twenty.",
@@ -678,10 +684,7 @@
       "You went at Portola KOM Climb once this week and did not beat your own 4:29, which is still 37 seconds off Abe and Jose.",
       "That is 209 percent of a normal week for you. Credit where it is due, and a warning to everybody above you.",
       "You took Irvine Speedway off Jose by 2 seconds, in 1:05. That segment is yours until somebody comes and gets it.",
-      "Highlands twice this week, still 53 seconds off Abe. You did take a personal best out of it. He has not had to respond yet.",
-      "Jake is 4:33 behind you and closing is easier than defending. Do not get comfortable.",
-      "You went at Temple Hills once and finished 15 seconds behind Randee. You did take a personal best out of it. That is close enough to be annoying and close enough to fix.",
-      "Jose is 15:07 up the road in first. That is one good segment, not a rebuild."
+      "Highlands twice this week, still 53 seconds off Abe. You did take a personal best out of it. He has not had to respond yet."
     ]
   },
   "seg_ids": [

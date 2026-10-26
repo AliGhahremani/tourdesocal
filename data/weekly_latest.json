@@ -1,300 +1,176 @@
 {
-  "generated": "Oct 18, 2026",
+  "generated": "Oct 25, 2026",
   "baseline": false,
-  "blurb": "Another week, another set of receipts. Oscar held Laguna Canyon -LF 2 F coming into this week and does not hold it now. Randee went 14:56. Oscar put in zero miles this week. Not a slow week. Zero. Someone go and knock on the door. Jose, Abe, Jake and Ali all went at segments this week and all came up short of the man holding them.",
+  "blurb": "Another week, another set of receipts. Randee held the polka dot right up until Jose decided otherwise. Jake held Quail Hill Sprint Climb coming into this week and does not hold it now. Oscar went 2:07. Abe recorded nothing this week. We are choosing to believe the head unit broke. Jake did 3.6 hours in the pain cave. Watopia is not a real place and those are not real hills. Ali, Jake, Randee, Abe, Jose and Oscar are all hammering away at segments somebody else owns. 6 riders, plenty of attempts, no records.",
   "diff": {
     "baseline": false,
-    "movers": [
-      {
-        "name": "Abe",
-        "from": 4,
-        "to": 3,
-        "up": true
-      },
-      {
-        "name": "Jake",
-        "from": 3,
-        "to": 4,
-        "up": false
-      }
-    ],
+    "movers": [],
     "week": [
       {
         "name": "Jose",
-        "miles": 115.29617036506754,
-        "feet": 6387.795275565,
-        "rides": 5
+        "miles": 118.21673924282214,
+        "feet": 5961.286089215,
+        "rides": 4
       },
       {
         "name": "Oscar",
+        "miles": 233.08478485643758,
+        "feet": 8549.86876637,
+        "rides": 9
+      },
+      {
+        "name": "Abe",
         "miles": 0.0,
         "feet": 0.0,
         "rides": 0
       },
       {
-        "name": "Abe",
-        "miles": 105.61707130358717,
-        "feet": 5164.041994730001,
-        "rides": 3
-      },
-      {
         "name": "Jake",
-        "miles": 68.85731080489973,
-        "feet": 3500.6561679650003,
-        "rides": 4
+        "miles": 63.748024039608104,
+        "feet": 2795.27559054,
+        "rides": 5
       },
       {
         "name": "Ali",
-        "miles": 74.57467141891343,
-        "feet": 3599.081364815,
-        "rides": 2
+        "miles": 58.062788316233195,
+        "feet": 3267.7165354200242,
+        "rides": 3
       },
       {
         "name": "Randee",
-        "miles": 121.41649019724773,
-        "feet": 3290.6824146850004,
-        "rides": 4
+        "miles": 43.85184273840781,
+        "feet": 2240.813648285,
+        "rides": 2
       }
     ],
     "prs": [
       {
-        "name": "Jose",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "tries": 1,
-        "leader": "Randee",
-        "behind": 6,
-        "took": false,
-        "with": [],
-        "time": "15:02",
-        "was": "16:54",
-        "gain": 112,
-        "first": false
-      },
-      {
-        "name": "Jose",
-        "seg": "Ridgeline Dr - Turtle Rock Dr Stop Sign",
-        "id": "1189771",
-        "tries": 1,
-        "leader": "Oscar",
-        "behind": 8,
-        "took": false,
-        "with": [],
-        "time": "5:06",
-        "was": "5:11",
-        "gain": 5,
-        "first": false
-      },
-      {
-        "name": "Abe",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "tries": 1,
-        "leader": "Randee",
-        "behind": 4,
-        "took": false,
-        "with": [],
-        "time": "15:00",
-        "was": "19:24",
-        "gain": 264,
-        "first": false
-      },
-      {
-        "name": "Jake",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "tries": 1,
-        "leader": "Randee",
-        "behind": 7,
-        "took": false,
-        "with": [],
-        "time": "15:03",
-        "was": "15:36",
-        "gain": 33,
-        "first": false
-      },
-      {
-        "name": "Ali",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "tries": 1,
-        "leader": "Randee",
-        "behind": 2,
-        "took": false,
-        "with": [],
-        "time": "14:58",
-        "was": "15:36",
-        "gain": 38,
-        "first": false
-      },
-      {
-        "name": "Ali",
-        "seg": "Santa Vittoria Dr. bump",
-        "id": "860396",
-        "tries": 1,
-        "leader": "Oscar",
-        "behind": 4,
-        "took": false,
-        "with": [],
-        "time": "1:09",
-        "was": null,
-        "gain": null,
-        "first": true
-      },
-      {
-        "name": "Ali",
-        "seg": "Ridgeline Dr - Turtle Rock Dr Stop Sign",
-        "id": "1189771",
-        "tries": 1,
-        "leader": "Oscar",
-        "behind": 8,
-        "took": false,
-        "with": [],
-        "time": "5:06",
-        "was": "7:34",
-        "gain": 148,
-        "first": false
-      },
-      {
-        "name": "Randee",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
+        "name": "Oscar",
+        "seg": "Quail Hill Sprint Climb",
+        "id": "7855869",
         "tries": 1,
         "leader": null,
         "behind": null,
         "took": true,
         "with": [],
-        "time": "14:56",
-        "was": "17:49",
-        "gain": 173,
+        "time": "2:07",
+        "was": "2:25",
+        "gain": 18,
+        "first": false
+      },
+      {
+        "name": "Oscar",
+        "seg": "Park Ave",
+        "id": "609924",
+        "tries": 1,
+        "leader": "Jose",
+        "behind": 71,
+        "took": false,
+        "with": [],
+        "time": "14:30",
+        "was": null,
+        "gain": null,
+        "first": true
+      },
+      {
+        "name": "Oscar",
+        "seg": "Irvine Speedway",
+        "id": "25403641",
+        "tries": 1,
+        "leader": null,
+        "behind": null,
+        "took": false,
+        "with": [],
+        "time": "0:51",
+        "was": "1:05",
+        "gain": 14,
         "first": false
       }
     ],
     "tried": [
       {
         "name": "Jose",
-        "seg": "Newport Coast Climb",
-        "id": "913750",
-        "tries": 1,
-        "leader": "Abe",
-        "behind": 22,
-        "took": false,
-        "with": [],
-        "best": "10:21"
-      },
-      {
-        "name": "Jose",
-        "seg": "Santa Vittoria Dr. bump",
-        "id": "860396",
-        "tries": 1,
-        "leader": "Oscar",
-        "behind": 1,
-        "took": false,
-        "with": [],
-        "best": "1:06"
-      },
-      {
-        "name": "Jose",
-        "seg": "Starcrest",
-        "id": "757408",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": false,
-        "with": [],
-        "best": "3:59"
-      },
-      {
-        "name": "Abe",
-        "seg": "Newport Coast Climb",
-        "id": "913750",
-        "tries": 1,
-        "leader": null,
-        "behind": null,
-        "took": false,
-        "with": [],
-        "best": "9:59"
-      },
-      {
-        "name": "Abe",
-        "seg": "Irvine Speedway",
-        "id": "25403641",
-        "tries": 1,
-        "leader": "Oscar",
-        "behind": 5,
-        "took": false,
-        "with": [],
-        "best": "1:10"
-      },
-      {
-        "name": "Jake",
-        "seg": "Newport Coast Climb",
-        "id": "913750",
-        "tries": 1,
-        "leader": "Abe",
-        "behind": 35,
-        "took": false,
-        "with": [],
-        "best": "10:34"
-      },
-      {
-        "name": "Jake",
         "seg": "Back Bay 2 mile TT",
         "id": "22971497",
         "tries": 1,
         "leader": "Oscar",
-        "behind": 22,
+        "behind": 12,
         "took": false,
         "with": [],
-        "best": "5:26"
+        "best": "5:16"
       },
       {
-        "name": "Jake",
-        "seg": "Irvine Speedway",
-        "id": "25403641",
-        "tries": 2,
-        "leader": "Oscar",
-        "behind": 5,
-        "took": false,
-        "with": [],
-        "best": "1:10"
-      },
-      {
-        "name": "Ali",
-        "seg": "Newport Coast Climb",
-        "id": "913750",
-        "tries": 1,
-        "leader": "Abe",
-        "behind": 62,
-        "took": false,
-        "with": [],
-        "best": "11:01"
-      },
-      {
-        "name": "Ali",
-        "seg": "Irvine Speedway",
-        "id": "25403641",
-        "tries": 1,
-        "leader": "Oscar",
-        "behind": 5,
-        "took": false,
-        "with": [],
-        "best": "1:10"
-      },
-      {
-        "name": "Randee",
+        "name": "Jose",
         "seg": "Back Bay Climb Out",
         "id": "3256589",
+        "tries": 1,
+        "leader": "Randee",
+        "behind": 15,
+        "took": false,
+        "with": [],
+        "best": "1:30"
+      },
+      {
+        "name": "Oscar",
+        "seg": "Laguna Canyon -LF 2 F",
+        "id": "8410981",
+        "tries": 2,
+        "leader": "Randee",
+        "behind": 39,
+        "took": false,
+        "with": [],
+        "best": "15:35"
+      },
+      {
+        "name": "Oscar",
+        "seg": "Back Bay 2 mile TT",
+        "id": "22971497",
         "tries": 1,
         "leader": null,
         "behind": null,
         "took": false,
         "with": [],
-        "best": "1:15"
+        "best": "5:04"
+      },
+      {
+        "name": "Oscar",
+        "seg": "Back Bay Climb Out",
+        "id": "3256589",
+        "tries": 1,
+        "leader": "Randee",
+        "behind": 3,
+        "took": false,
+        "with": [],
+        "best": "1:18"
       }
     ],
-    "power": [],
-    "jerseys": [],
+    "power": [
+      {
+        "name": "Jose",
+        "window": "20 min",
+        "watts": 283,
+        "was": 273
+      },
+      {
+        "name": "Jose",
+        "window": "30 min",
+        "watts": 262,
+        "was": 252
+      },
+      {
+        "name": "Jose",
+        "window": "1 hr",
+        "watts": 252,
+        "was": 223
+      }
+    ],
+    "jerseys": [
+      {
+        "jersey": "polka",
+        "to": "Jose",
+        "from": "Randee"
+      }
+    ],
     "segs": {
       "added": [],
       "removed": [],
@@ -302,18 +178,18 @@
     },
     "koms": [
       {
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
+        "seg": "Quail Hill Sprint Climb",
+        "id": "7855869",
         "to": [
-          "Randee"
+          "Oscar"
         ],
         "from": [
-          "Oscar"
+          "Jake"
         ],
         "with": [],
         "joint": false,
-        "time": "14:56",
-        "by": 39
+        "time": "2:07",
+        "by": 5
       }
     ]
   }
