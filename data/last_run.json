@@ -20,11 +20,11 @@
     }
   },
   "notes": [],
-  "finished_utc": "2026-10-29T20:29:58Z",
+  "finished_utc": "2026-10-30T00:12:49Z",
   "reads_this_run": 27,
   "window_waits": 0,
   "rate_limit_window": "19/200",
-  "rate_limit_daily": "163/2000",
+  "rate_limit_daily": "19/2000",
   "tokens_present": [
     "abe",
     "ali",
@@ -34,9 +34,7 @@
     "randee"
   ],
   "tokens_missing": [],
-  "changes": [
-    "Oscar new 2026 best on segment 596560: 11:10"
-  ],
+  "changes": [],
   "backfill_complete": true,
   "daily_spent_on": null
 }
