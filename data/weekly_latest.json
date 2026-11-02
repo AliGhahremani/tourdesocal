@@ -1,131 +1,198 @@
 {
-  "generated": "Oct 25, 2026",
+  "generated": "Nov 1, 2026",
   "baseline": false,
-  "blurb": "Another week, another set of receipts. Randee held the polka dot right up until Jose decided otherwise. Jake held Quail Hill Sprint Climb coming into this week and does not hold it now. Oscar went 2:07. Abe recorded nothing this week. We are choosing to believe the head unit broke. Jake did 3.6 hours in the pain cave. Watopia is not a real place and those are not real hills. Ali, Jake, Randee, Abe, Jose and Oscar are all hammering away at segments somebody else owns. 6 riders, plenty of attempts, no records.",
+  "blurb": "Another week, another set of receipts. Changing of the guard: Randee now wears the polka dot. Jose may collect their belongings. Jose held Pacific Island South coming into this week and does not hold it now. Oscar went 11:10. 32 seconds off Starcrest for Abe. Something has changed and the rest of you should be worried. 12 seconds is all that stood between Jose and Abe on Newport Coast Climb. Ali went at Santa Vittoria Dr. bump once and came away with nothing. There is always next week. Ali, Jake, Randee, Abe, Jose and Oscar are all hammering away at segments somebody else owns. 6 riders, plenty of attempts, no records.",
   "diff": {
     "baseline": false,
     "movers": [],
     "week": [
       {
         "name": "Jose",
-        "miles": 118.21673924282214,
-        "feet": 5961.286089215,
-        "rides": 4
-      },
-      {
-        "name": "Oscar",
-        "miles": 233.08478485643758,
-        "feet": 8549.86876637,
-        "rides": 9
-      },
-      {
-        "name": "Abe",
-        "miles": 0.0,
-        "feet": 0.0,
-        "rides": 0
-      },
-      {
-        "name": "Jake",
-        "miles": 63.748024039608104,
-        "feet": 2795.27559054,
-        "rides": 5
-      },
-      {
-        "name": "Ali",
-        "miles": 58.062788316233195,
-        "feet": 3267.7165354200242,
+        "miles": 91.26656575598493,
+        "feet": 5314.960629900001,
         "rides": 3
       },
       {
-        "name": "Randee",
-        "miles": 43.85184273840781,
-        "feet": 2240.813648285,
+        "name": "Oscar",
+        "miles": 103.5837583512279,
+        "feet": 4645.66929132,
+        "rides": 10
+      },
+      {
+        "name": "Abe",
+        "miles": 89.97821472600039,
+        "feet": 4596.456692895,
+        "rides": 3
+      },
+      {
+        "name": "Jake",
+        "miles": 34.05828710331663,
+        "feet": 1118.766404195,
+        "rides": 3
+      },
+      {
+        "name": "Ali",
+        "miles": 54.286964129483465,
+        "feet": 6151.5748031250005,
         "rides": 2
+      },
+      {
+        "name": "Randee",
+        "miles": 79.85290901137346,
+        "feet": 8879.593175817501,
+        "rides": 5
       }
     ],
     "prs": [
       {
+        "name": "Jose",
+        "seg": "Newport Coast Climb",
+        "id": "913750",
+        "tries": 1,
+        "leader": "Abe",
+        "behind": 12,
+        "took": false,
+        "with": [],
+        "time": "10:11",
+        "was": "10:21",
+        "gain": 10,
+        "first": false
+      },
+      {
+        "name": "Jose",
+        "seg": "Ridgeline Dr - Turtle Rock Dr Stop Sign",
+        "id": "1189771",
+        "tries": 1,
+        "leader": "Abe",
+        "behind": 4,
+        "took": false,
+        "with": [],
+        "time": "4:56",
+        "was": "5:06",
+        "gain": 10,
+        "first": false
+      },
+      {
         "name": "Oscar",
-        "seg": "Quail Hill Sprint Climb",
-        "id": "7855869",
+        "seg": "Pacific Island South",
+        "id": "596560",
         "tries": 1,
         "leader": null,
         "behind": null,
         "took": true,
         "with": [],
-        "time": "2:07",
-        "was": "2:25",
-        "gain": 18,
+        "time": "11:10",
+        "was": "12:21",
+        "gain": 71,
         "first": false
       },
       {
         "name": "Oscar",
-        "seg": "Park Ave",
-        "id": "609924",
+        "seg": "Torrey Pines",
+        "id": "3615418",
         "tries": 1,
-        "leader": "Jose",
-        "behind": 71,
-        "took": false,
+        "leader": null,
+        "behind": null,
+        "took": true,
         "with": [],
-        "time": "14:30",
+        "time": "7:06",
         "was": null,
         "gain": null,
         "first": true
       },
       {
-        "name": "Oscar",
-        "seg": "Irvine Speedway",
-        "id": "25403641",
+        "name": "Abe",
+        "seg": "Jeronimoooo!",
+        "id": "13737114",
+        "tries": 1,
+        "leader": "Oscar",
+        "behind": 4,
+        "took": false,
+        "with": [],
+        "time": "0:50",
+        "was": "0:53",
+        "gain": 3,
+        "first": false
+      },
+      {
+        "name": "Abe",
+        "seg": "Starcrest",
+        "id": "757408",
+        "tries": 1,
+        "leader": "Jose",
+        "behind": 2,
+        "took": false,
+        "with": [],
+        "time": "4:01",
+        "was": "4:33",
+        "gain": 32,
+        "first": false
+      },
+      {
+        "name": "Abe",
+        "seg": "Ridgeline Dr - Turtle Rock Dr Stop Sign",
+        "id": "1189771",
         "tries": 1,
         "leader": null,
         "behind": null,
-        "took": false,
+        "took": true,
         "with": [],
-        "time": "0:51",
-        "was": "1:05",
-        "gain": 14,
+        "time": "4:52",
+        "was": "5:04",
+        "gain": 12,
         "first": false
       }
     ],
     "tried": [
       {
         "name": "Jose",
-        "seg": "Back Bay 2 mile TT",
-        "id": "22971497",
+        "seg": "Laguna Canyon -LF 2 F",
+        "id": "8410981",
         "tries": 1,
-        "leader": "Oscar",
-        "behind": 12,
+        "leader": "Randee",
+        "behind": 6,
         "took": false,
         "with": [],
-        "best": "5:16"
+        "best": "15:02"
       },
       {
         "name": "Jose",
-        "seg": "Back Bay Climb Out",
-        "id": "3256589",
+        "seg": "Irvine Speedway",
+        "id": "25403641",
         "tries": 1,
-        "leader": "Randee",
-        "behind": 15,
+        "leader": "Oscar",
+        "behind": 16,
         "took": false,
         "with": [],
-        "best": "1:30"
+        "best": "1:07"
       },
       {
-        "name": "Oscar",
-        "seg": "Laguna Canyon -LF 2 F",
-        "id": "8410981",
-        "tries": 2,
-        "leader": "Randee",
-        "behind": 39,
+        "name": "Jose",
+        "seg": "Santa Vittoria Dr. bump",
+        "id": "860396",
+        "tries": 1,
+        "leader": "Oscar",
+        "behind": 1,
         "took": false,
         "with": [],
-        "best": "15:35"
+        "best": "1:06"
+      },
+      {
+        "name": "Jose",
+        "seg": "Starcrest",
+        "id": "757408",
+        "tries": 1,
+        "leader": null,
+        "behind": null,
+        "took": false,
+        "with": [],
+        "best": "3:59"
       },
       {
         "name": "Oscar",
         "seg": "Back Bay 2 mile TT",
         "id": "22971497",
-        "tries": 1,
+        "tries": 2,
         "leader": null,
         "behind": null,
         "took": false,
@@ -136,39 +203,126 @@
         "name": "Oscar",
         "seg": "Back Bay Climb Out",
         "id": "3256589",
-        "tries": 1,
+        "tries": 2,
         "leader": "Randee",
         "behind": 3,
         "took": false,
         "with": [],
         "best": "1:18"
+      },
+      {
+        "name": "Abe",
+        "seg": "Newport Coast Climb",
+        "id": "913750",
+        "tries": 1,
+        "leader": null,
+        "behind": null,
+        "took": false,
+        "with": [],
+        "best": "9:59"
+      },
+      {
+        "name": "Abe",
+        "seg": "Laguna Canyon -LF 2 F",
+        "id": "8410981",
+        "tries": 1,
+        "leader": "Randee",
+        "behind": 4,
+        "took": false,
+        "with": [],
+        "best": "15:00"
+      },
+      {
+        "name": "Abe",
+        "seg": "Irvine Speedway",
+        "id": "25403641",
+        "tries": 1,
+        "leader": "Oscar",
+        "behind": 19,
+        "took": false,
+        "with": [],
+        "best": "1:10"
+      },
+      {
+        "name": "Abe",
+        "seg": "Santa Vittoria Dr. bump",
+        "id": "860396",
+        "tries": 1,
+        "leader": "Oscar",
+        "behind": 7,
+        "took": false,
+        "with": [],
+        "best": "1:12"
+      },
+      {
+        "name": "Ali",
+        "seg": "Santa Vittoria Dr. bump",
+        "id": "860396",
+        "tries": 1,
+        "leader": "Oscar",
+        "behind": 4,
+        "took": false,
+        "with": [],
+        "best": "1:09"
+      },
+      {
+        "name": "Ali",
+        "seg": "Starcrest",
+        "id": "757408",
+        "tries": 1,
+        "leader": "Jose",
+        "behind": 25,
+        "took": false,
+        "with": [],
+        "best": "4:24"
+      },
+      {
+        "name": "Ali",
+        "seg": "Ridgeline Dr - Turtle Rock Dr Stop Sign",
+        "id": "1189771",
+        "tries": 1,
+        "leader": "Abe",
+        "behind": 14,
+        "took": false,
+        "with": [],
+        "best": "5:06"
+      },
+      {
+        "name": "Randee",
+        "seg": "Quail Hill Sprint Climb",
+        "id": "7855869",
+        "tries": 1,
+        "leader": "Oscar",
+        "behind": 7,
+        "took": false,
+        "with": [],
+        "best": "2:14"
+      },
+      {
+        "name": "Randee",
+        "seg": "Back Bay Climb Out",
+        "id": "3256589",
+        "tries": 1,
+        "leader": null,
+        "behind": null,
+        "took": false,
+        "with": [],
+        "best": "1:15"
       }
     ],
     "power": [
       {
         "name": "Jose",
-        "window": "20 min",
-        "watts": 283,
-        "was": 273
-      },
-      {
-        "name": "Jose",
-        "window": "30 min",
-        "watts": 262,
-        "was": 252
-      },
-      {
-        "name": "Jose",
-        "window": "1 hr",
-        "watts": 252,
-        "was": 223
+        "window": "5 min",
+        "watts": 366,
+        "was": 365
       }
     ],
     "jerseys": [
       {
         "jersey": "polka",
-        "to": "Jose",
-        "from": "Randee"
+        "to": "Randee",
+        "from": "Jose"
       }
     ],
     "segs": {
@@ -178,18 +332,46 @@
     },
     "koms": [
       {
-        "seg": "Quail Hill Sprint Climb",
-        "id": "7855869",
+        "seg": "Pacific Island South",
+        "id": "596560",
         "to": [
           "Oscar"
         ],
         "from": [
-          "Jake"
+          "Jose"
         ],
         "with": [],
         "joint": false,
-        "time": "2:07",
-        "by": 5
+        "time": "11:10",
+        "by": 46
+      },
+      {
+        "seg": "Torrey Pines",
+        "id": "3615418",
+        "to": [
+          "Oscar"
+        ],
+        "from": [
+          "Randee"
+        ],
+        "with": [],
+        "joint": false,
+        "time": "7:06",
+        "by": 90
+      },
+      {
+        "seg": "Ridgeline Dr - Turtle Rock Dr Stop Sign",
+        "id": "1189771",
+        "to": [
+          "Abe"
+        ],
+        "from": [
+          "Oscar"
+        ],
+        "with": [],
+        "joint": false,
+        "time": "4:52",
+        "by": 6
       }
     ]
   }
