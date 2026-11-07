@@ -1,0 +1,188 @@
+name: One rider's rides in detail
+
+# "Oscar did Torrey Pines on the 27th but hid it on Strava, what was the ride?"
+#
+# state.json keeps only the segment best (time, date, watts). It does not keep
+# the activity the effort came from, so no amount of reading the repo answers
+# "how long was the ride". data/history.js gets you the DAY's miles and feet by
+# differencing the cumulative series, which is how the first answer was built,
+# but not moving time, speed, normalised power or the ride's own name.
+#
+# This reads one rider's activities in a fixed window straight from Strava and
+# prints everything the API gives, including every effort on a tracked segment.
+#
+# Hiding an effort from the Strava leaderboard does not hide it from here: the
+# updater authenticates as the rider, so their own private activities and
+# leaderboard-hidden efforts come back normally. That is also why this is a
+# dispatch-only workflow and not something that runs on a schedule.
+#
+# Window and rider are hardcoded on purpose. A workflow input is NOT a secret:
+# it is echoed into a world-readable log on a public repo. Edit the two
+# constants below and push rather than adding inputs.
+#
+# Read-only, commits nothing. Costs about 1 read for the list plus 1.26 per
+# activity in the window, so a two-week window on one rider is single digits
+# against the shared 2,000/day budget.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  detail:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Ask Strava
+        env:
+          CID: "274192"
+          CSEC: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          RT_OSCAR: ${{ secrets.STRAVA_REFRESH_OSCAR }}
+        run: |
+          python3 - <<'PYEOF'
+          import datetime, json, os, time, urllib.error, urllib.parse, urllib.request
+
+          WHO    = "oscar"
+          AFTER  = "2026-10-20"
+          BEFORE = "2026-11-02"
+
+          M, FT, MPH = 1609.344, 3.280839895, 2.23693629
+          META  = json.load(open("data/meta.json"))
+          TRACKED = {s["id"]: s["name"] for s in META["segments"]}
+          STATE = json.load(open("data/state.json"))
+          usage = None
+
+          def epoch(d):
+              return int(datetime.datetime.fromisoformat(d).replace(
+                  tzinfo=datetime.timezone.utc).timestamp())
+
+          def post(url, data):
+              r = urllib.request.Request(
+                  url, data=urllib.parse.urlencode(data).encode(), method="POST")
+              with urllib.request.urlopen(r) as f:
+                  return json.load(f)
+
+          def get(url, token):
+              global usage
+              r = urllib.request.Request(url, headers={"Authorization": "Bearer " + token})
+              with urllib.request.urlopen(r) as f:
+                  usage = f.headers.get("X-RateLimit-Usage")
+                  return json.load(f)
+
+          def hms(s):
+              s = int(s or 0)
+              return f"{s//3600}:{(s%3600)//60:02d}:{s%60:02d}" if s >= 3600 else f"{s//60}:{s%60:02d}"
+
+          ath = STATE["athletes"].get(WHO) or {}
+          disp = ath.get("display", WHO)
+          held = {int(i) for i in ((ath.get("season") or {}).get("2026") or {}).get("ids", [])}
+
+          rt = os.environ.get("RT_" + WHO.upper())
+          if not rt:
+              print(f"No refresh token for {disp}. Nothing to do.")
+              raise SystemExit(0)
+          tok = post("https://www.strava.com/oauth/token", {
+              "client_id": os.environ["CID"], "client_secret": os.environ["CSEC"],
+              "grant_type": "refresh_token", "refresh_token": rt})["access_token"]
+
+          acts = get("https://www.strava.com/api/v3/athlete/activities"
+                     f"?after={epoch(AFTER)}&before={epoch(BEFORE)}&per_page=100&page=1", tok)
+          acts.sort(key=lambda a: a.get("start_date_local") or "")
+          print(f"{disp}: {len(acts)} activities between {AFTER} and {BEFORE}\n")
+
+          for a in acts:
+              aid = int(a["id"])
+              try:
+                  d = get("https://www.strava.com/api/v3/activities/"
+                          f"{aid}?include_all_efforts=true", tok)
+                  time.sleep(0.3)
+                  derr = None
+              except urllib.error.HTTPError as e:
+                  d, derr = {}, e.code
+
+              src = {**a, **d}
+              when = (src.get("start_date_local") or "").replace("T", " ")[:16]
+              mi   = (src.get("distance") or 0) / M
+              ft   = (src.get("total_elevation_gain") or 0) * FT
+              el   = src.get("elapsed_time") or 0
+              mv   = src.get("moving_time") or 0
+              avg  = (src.get("average_speed") or 0) * MPH
+              mx   = (src.get("max_speed") or 0) * MPH
+              # Strava's average_speed is over MOVING time. Door to door is the
+              # honest number for "how fast was he going" on a ride with stops.
+              door = (mi / (el / 3600)) if el else 0
+
+              print("=" * 74)
+              print(f"{when}   {src.get('name')}")
+              if derr:
+                  print(f"  (detail call returned {derr}, so the fields below are"
+                        " summary-only: no device, power meter flag or efforts)")
+              print(f"  id {aid}   {src.get('type')} / {src.get('sport_type')}"
+                    + ("   [COUNTED in our standings]" if aid in held
+                       else "   [NOT counted by us]"))
+              print(f"  {mi:.2f} mi, {ft:,.0f} ft climbed")
+              print(f"  elapsed {hms(el)}, moving {hms(mv)}"
+                    + (f", stopped {hms(el-mv)}" if el > mv else ""))
+              print(f"  {avg:.1f} mph moving average, {door:.1f} mph door to door,"
+                    f" {mx:.1f} mph max")
+              w, nw = src.get("average_watts"), src.get("weighted_average_watts")
+              if w or nw:
+                  how = "power meter" if src.get("device_watts") else "ESTIMATED by Strava"
+                  print(f"  power: {w or '-'}W average, {nw or '-'}W weighted average,"
+                        f" {src.get('kilojoules') or '-'} kJ  ({how})")
+              else:
+                  print("  power: none recorded")
+              hr = src.get("average_heartrate")
+              if hr:
+                  print(f"  heart rate: {hr:.0f} average, {src.get('max_heartrate') or '-'} max")
+              if src.get("average_cadence"):
+                  print(f"  cadence: {src['average_cadence']:.0f} rpm")
+              lo, hi = src.get("elev_low"), src.get("elev_high")
+              if lo is not None and hi is not None:
+                  print(f"  elevation {lo*FT:,.0f} ft to {hi*FT:,.0f} ft")
+              print(f"  device: {src.get('device_name') or 'unknown'}"
+                    f"   gear: {src.get('gear_id') or 'none'}")
+              flags = [k for k in ("trainer", "commute", "manual", "private") if src.get(k)]
+              print(f"  visibility: {src.get('visibility') or 'unknown'}"
+                    f"   flags: {', '.join(flags) if flags else 'none'}")
+              pr, ach, kud = (src.get("pr_count") or 0, src.get("achievement_count") or 0,
+                              src.get("kudos_count") or 0)
+              print(f"  {pr} PR{'' if pr == 1 else 's'}, "
+                    f"{ach} achievement{'' if ach == 1 else 's'}, "
+                    f"{kud} kudo{'' if kud == 1 else 's'}")
+
+              effs = d.get("segment_efforts") or []
+              if derr:
+                  effs = []
+              ours = [e for e in effs if (e.get("segment") or {}).get("id") in TRACKED]
+              print(f"  {len(effs)} segment efforts on this ride,"
+                    f" {len(ours)} on segments we track")
+              for e in sorted(ours, key=lambda e: -(e.get("elapsed_time") or 0)):
+                  sid  = (e.get("segment") or {}).get("id")
+                  secs = int(e.get("elapsed_time") or 0)
+                  seg  = e.get("segment") or {}
+                  sd   = (seg.get("distance") or 0) / M
+                  speed = (sd / (secs / 3600)) if secs else 0
+                  vam  = ((seg.get("elevation_high", 0) - seg.get("elevation_low", 0))
+                          / secs * 3600) if secs else 0
+                  bits = [f"{hms(secs)}", f"{speed:.1f} mph"]
+                  if e.get("average_watts"):
+                      bits.append(f"{e['average_watts']:.0f}W")
+                  if vam > 0:
+                      bits.append(f"VAM {vam:,.0f} m/h")
+                  if e.get("hidden"):
+                      bits.append("HIDDEN FROM LEADERBOARD")
+                  print(f"     {TRACKED[sid][:34]:34} " + "  ".join(bits))
+
+          print("\n" + "=" * 74)
+          print(f"Strava rate limit usage after this run: {usage}")
+          PYEOF
