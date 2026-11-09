@@ -16,15 +16,15 @@
       "activities_seen": 1
     },
     "oscar": {
-      "activities_seen": 8
+      "activities_seen": 6
     }
   },
   "notes": [],
-  "finished_utc": "2026-11-08T23:57:37Z",
-  "reads_this_run": 25,
+  "finished_utc": "2026-11-09T05:19:40Z",
+  "reads_this_run": 24,
   "window_waits": 0,
-  "rate_limit_window": "17/200",
-  "rate_limit_daily": "213/2000",
+  "rate_limit_window": "16/200",
+  "rate_limit_daily": "31/2000",
   "tokens_present": [
     "abe",
     "ali",
