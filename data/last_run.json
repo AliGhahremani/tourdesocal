@@ -16,15 +16,15 @@
       "activities_seen": 2
     },
     "oscar": {
-      "activities_seen": 4
+      "activities_seen": 5
     }
   },
   "notes": [],
-  "finished_utc": "2026-11-15T21:39:30Z",
-  "reads_this_run": 32,
+  "finished_utc": "2026-11-16T01:50:00Z",
+  "reads_this_run": 33,
   "window_waits": 0,
-  "rate_limit_window": "19/200",
-  "rate_limit_daily": "196/2000",
+  "rate_limit_window": "20/200",
+  "rate_limit_daily": "20/2000",
   "tokens_present": [
     "abe",
     "ali",
@@ -34,11 +34,7 @@
     "randee"
   ],
   "tokens_missing": [],
-  "changes": [
-    "Ali new 2026 best on segment 633514: 7:45",
-    "Randee new 2026 best on segment 633514: 7:52",
-    "Jose new 2026 best on segment 633514: 6:21"
-  ],
+  "changes": [],
   "backfill_complete": true,
   "daily_spent_on": null
 }
