@@ -10,21 +10,21 @@
       "activities_seen": 4
     },
     "abe": {
-      "activities_seen": 1
-    },
-    "jose": {
       "activities_seen": 2
     },
+    "jose": {
+      "activities_seen": 3
+    },
     "oscar": {
-      "activities_seen": 1
+      "activities_seen": 2
     }
   },
   "notes": [],
-  "finished_utc": "2026-11-25T12:34:57Z",
-  "reads_this_run": 22,
+  "finished_utc": "2026-11-25T21:57:45Z",
+  "reads_this_run": 27,
   "window_waits": 0,
-  "rate_limit_window": "14/200",
-  "rate_limit_daily": "114/2000",
+  "rate_limit_window": "17/200",
+  "rate_limit_daily": "146/2000",
   "tokens_present": [
     "abe",
     "ali",
@@ -34,7 +34,10 @@
     "randee"
   ],
   "tokens_missing": [],
-  "changes": [],
+  "changes": [
+    "Abe new 2026 best on segment 611821: 8:22",
+    "Abe new 2026 best on segment 596560: 10:52"
+  ],
   "backfill_complete": true,
   "daily_spent_on": null
 }
