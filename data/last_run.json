@@ -20,11 +20,11 @@
     }
   },
   "notes": [],
-  "finished_utc": "2026-11-26T22:55:09Z",
+  "finished_utc": "2026-11-27T04:55:36Z",
   "reads_this_run": 36,
   "window_waits": 0,
   "rate_limit_window": "22/200",
-  "rate_limit_daily": "101/2000",
+  "rate_limit_daily": "89/2000",
   "tokens_present": [
     "abe",
     "ali",
@@ -34,14 +34,7 @@
     "randee"
   ],
   "tokens_missing": [],
-  "changes": [
-    "Ali new 2026 best on segment 611821: 10:24",
-    "Ali new 2026 best on segment 596560: 13:20",
-    "Jake new 2026 best on segment 25403641: 1:05",
-    "Jose new 2026 best on segment 611821: 8:26",
-    "Jose new 2026 best on segment 596560: 10:51",
-    "Oscar new 2026 best on segment 6140474: 9:16"
-  ],
+  "changes": [],
   "backfill_complete": true,
   "daily_spent_on": null
 }
